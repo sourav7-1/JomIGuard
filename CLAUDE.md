@@ -30,6 +30,23 @@ docker compose exec backend uv run alembic revision --autogenerate -m "message"
 docker compose exec backend uv run ruff check . && uv run ruff format .
 ```
 
+## ML data
+
+Run from `ml/`. Output goes to `data/` (gitignored). Dataset card: `docs/datasets/v1.md`.
+
+```bash
+# generate (clean synthetic documents)
+PYTHONPATH=../backend uv run python -m synth.khatian --n 50 --seed 42 --out ../data/synthetic/khatian
+PYTHONPATH=../backend uv run python -m synth.deed --n 50 --seed 43 --mismatch-rate 0.4 --out ../data/synthetic/cases
+# augment (phone-photo copies, ground truth unchanged)
+uv run python -m synth.augment --per-source 2 --seed 44 --src ../data/synthetic --out ../data/augmented
+# freeze: write ml/datasets/v1.json (commands, versions, counts, sha256 per file)
+uv run python -m synth.dataset build --version v1
+# verify: regenerate in a temp folder; JSON/CSV must match exactly, PNG differences only warn
+uv run python -m synth.dataset verify --version v1
+uv run pytest -v                                  # ml tests
+```
+
 ## Folder layout
 
 ```
