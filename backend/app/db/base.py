@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
-    pass
+    __mapper_args__ = {"eager_defaults": True}
 
 
 class IdTimestampMixin:
