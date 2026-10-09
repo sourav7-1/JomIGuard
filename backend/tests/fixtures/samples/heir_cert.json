@@ -1,0 +1,38 @@
+{
+  "doc_type": "heir_cert",
+  "issuing_authority": "৫ নং চাঁদশী ইউনিয়ন পরিষদ",
+  "issuer_title": "চেয়ারম্যান",
+  "deceased_name": "রহমান",
+  "deceased_father_or_husband_name": "ইউসুফ আলী",
+  "deceased_address": {
+    "district": "বরিশাল",
+    "upazila": "গৌরনদী",
+    "mouza": "চাঁদশী",
+    "address_text": "গ্রাম চাঁদশী"
+  },
+  "date_of_death": "2009-08-20",
+  "date_of_death_text": "২০/০৮/২০০৯",
+  "heirs": [
+    {
+      "name": "মোঃ রহিম উদ্দিন",
+      "name_normalized": "রহিম উদ্দিন",
+      "father_or_husband_name": "রহমান",
+      "relation": "son",
+      "relation_text": "পুত্র"
+    },
+    {
+      "name": "মোঃ করিম উদ্দিন",
+      "name_normalized": "করিম উদ্দিন",
+      "father_or_husband_name": "রহমান",
+      "relation": "son",
+      "relation_text": "পুত্র"
+    },
+    {
+      "name": "মোছাঃ সালমা খাতুন",
+      "name_normalized": "সালমা খাতুন",
+      "father_or_husband_name": "রহমান",
+      "relation": "daughter",
+      "relation_text": "কন্যা"
+    }
+  ]
+}
