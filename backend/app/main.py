@@ -16,6 +16,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="JomiGuard API", lifespan=lifespan)
 app.include_router(documents_router)
 
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
