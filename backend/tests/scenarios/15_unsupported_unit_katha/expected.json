@@ -1,0 +1,15 @@
+{
+  "title_bn": "দলিলে জমির পরিমাণ \"২ কাঠা\"",
+  "description_bn": "দলিলে পরিমাণ কাঠায় লেখা। কাঠার মাপ এলাকাভেদে ভিন্ন হতে পারে, তাই app অনুমান করে শতাংশে রূপান্তর করে না; ফলে বিক্রির পরিমাণ অংশের সাথে মেলানো যায়নি।",
+  "expected_findings": [
+    {
+      "code": "unsupported_unit",
+      "severity": "warn",
+      "documents": [
+        "deed.json"
+      ]
+    }
+  ],
+  "expected_risk": "medium",
+  "needs_expert_check": false
+}

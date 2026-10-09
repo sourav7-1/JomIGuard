@@ -1,0 +1,16 @@
+{
+  "title_bn": "দলিলে বি.এস. খতিয়ান ৮৮৩, আসল খতিয়ান ৮৮২",
+  "description_bn": "দলিলের তফসিলে বি.এস. খতিয়ান নং ৮৮৩, কিন্তু মালিকদের বি.এস. খতিয়ান ৮৮২। খতিয়ান নম্বর না মিললে দলিল ভুল খতিয়ানের জমি দেখাতে পারে।",
+  "expected_findings": [
+    {
+      "code": "khatian_mismatch",
+      "severity": "bad",
+      "documents": [
+        "deed.json",
+        "khatian_bs.json"
+      ]
+    }
+  ],
+  "expected_risk": "high",
+  "needs_expert_check": false
+}

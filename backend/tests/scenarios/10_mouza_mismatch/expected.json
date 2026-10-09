@@ -1,0 +1,16 @@
+{
+  "title_bn": "দলিলে মৌজা বাটাজোর, খতিয়ানে মৌজা চাঁদশী",
+  "description_bn": "দলিলের তফসিলে মৌজা বাটাজোর, কিন্তু খতিয়ান ও নামজারিতে মৌজা চাঁদশী। একই দাগ নম্বর ভিন্ন মৌজায় সম্পূর্ণ ভিন্ন জমি হতে পারে।",
+  "expected_findings": [
+    {
+      "code": "mouza_mismatch",
+      "severity": "bad",
+      "documents": [
+        "deed.json",
+        "khatian_bs.json"
+      ]
+    }
+  ],
+  "expected_risk": "high",
+  "needs_expert_check": false
+}

@@ -1,0 +1,32 @@
+{
+  "title_bn": "দলিলে দাগ ৩০৬ এবং অংশের চেয়ে বেশি বিক্রি",
+  "description_bn": "দলিলে দাগ ৩০৬, যা খতিয়ানে নেই; আবার রহিমের অংশ ৬ শতাংশ হলেও বিক্রি ১০ শতাংশ। বাকি ৪ শতাংশের জন্য করিম বা সালমার সম্মতিও দলিলে নেই (কেস ০১-এর মতো)।",
+  "expected_findings": [
+    {
+      "code": "dag_mismatch",
+      "severity": "bad",
+      "documents": [
+        "deed.json",
+        "khatian_bs.json"
+      ]
+    },
+    {
+      "code": "area_exceeds_share",
+      "severity": "bad",
+      "documents": [
+        "deed.json",
+        "khatian_bs.json"
+      ]
+    },
+    {
+      "code": "heir_consent_missing",
+      "severity": "warn",
+      "documents": [
+        "deed.json",
+        "heir_cert.json"
+      ]
+    }
+  ],
+  "expected_risk": "high",
+  "needs_expert_check": false
+}

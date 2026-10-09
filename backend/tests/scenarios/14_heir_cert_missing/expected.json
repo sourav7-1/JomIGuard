@@ -1,0 +1,15 @@
+{
+  "title_bn": "দলিলে ওয়ারিশ সূত্রে মালিকানা, কিন্তু ওয়ারিশ সনদ নেই",
+  "description_bn": "দলিলে লেখা বিক্রেতা জমি \"ওয়ারিশ সূত্রে প্রাপ্ত\", কিন্তু কেসে কোনো ওয়ারিশ সনদ নেই। ওয়ারিশ সনদ ছাড়া রহমানের সব ওয়ারিশ কারা, তা যাচাই করা যায় না।",
+  "expected_findings": [
+    {
+      "code": "document_missing",
+      "severity": "warn",
+      "documents": [
+        "deed.json"
+      ]
+    }
+  ],
+  "expected_risk": "medium",
+  "needs_expert_check": false
+}

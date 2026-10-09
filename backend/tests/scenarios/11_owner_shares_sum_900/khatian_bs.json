@@ -1,0 +1,55 @@
+{
+  "doc_type": "khatian",
+  "survey_type": "BS",
+  "location": {
+    "district": "বরিশাল",
+    "upazila": "গৌরনদী",
+    "mouza": "চাঁদশী",
+    "jl_no": "45"
+  },
+  "khatian_no": "882",
+  "owners": [
+    {
+      "name": "রহিম উদ্দিন",
+      "name_normalized": "রহিম উদ্দিন",
+      "father_or_husband_name": "রহমান",
+      "relation_marker": "father",
+      "share_text": ".৪০০",
+      "share_fraction": "0.400",
+      "share_shatangsho": "6.00"
+    },
+    {
+      "name": "করিম উদ্দিন",
+      "name_normalized": "করিম উদ্দিন",
+      "father_or_husband_name": "রহমান",
+      "relation_marker": "father",
+      "share_text": ".৩০০",
+      "share_fraction": "0.300",
+      "share_shatangsho": "4.50"
+    },
+    {
+      "name": "সালমা খাতুন",
+      "name_normalized": "সালমা খাতুন",
+      "father_or_husband_name": "রহমান",
+      "relation_marker": "father",
+      "share_text": ".২০০",
+      "share_fraction": "0.200",
+      "share_shatangsho": "3.00"
+    }
+  ],
+  "plots": [
+    {
+      "dag_no": "305",
+      "land_class": "নাল",
+      "plot_total_area_text": ".১৫০০",
+      "plot_total_area_shatangsho": "15.00",
+      "khatian_share_text": "১.০০০",
+      "khatian_share_fraction": "1.000",
+      "area_text": ".১৫০০",
+      "area_shatangsho": "15.00"
+    }
+  ],
+  "area_unit_text": "একর",
+  "total_area_text": ".১৫০০",
+  "total_area_shatangsho": "15.00"
+}

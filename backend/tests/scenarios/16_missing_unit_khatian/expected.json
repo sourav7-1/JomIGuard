@@ -1,0 +1,15 @@
+{
+  "title_bn": "খতিয়ানে জমির পরিমাণের একক নেই",
+  "description_bn": "খতিয়ানের ঘরে শুধু \".১৫০০\" লেখা, ঘরে বা কলামের শিরোনামে কোনো একক (একর/শতাংশ) পড়া যায়নি। একক ছাড়া মালিকদের জমি শতাংশে হিসাব করা যায় না, তাই বিক্রির পরিমাণ অংশের সাথে মেলানো যায়নি।",
+  "expected_findings": [
+    {
+      "code": "missing_unit",
+      "severity": "warn",
+      "documents": [
+        "khatian_bs.json"
+      ]
+    }
+  ],
+  "expected_risk": "medium",
+  "needs_expert_check": false
+}

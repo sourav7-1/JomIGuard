@@ -1,0 +1,15 @@
+{
+  "title_bn": "খতিয়ানে মালিকদের অংশের যোগফল .৯০০",
+  "description_bn": "খতিয়ানে অংশ .৪০০ + .৩০০ + .২০০ = .৯০০, অর্থাৎ ১৫ শতাংশের মধ্যে ১.৫ শতাংশের মালিক দেখা যাচ্ছে না। এটা রেকর্ডের ভুল, অন্য কোনো মালিক বাদ পড়া, বা বৈধ কোনো কারণ কিনা তা কাগজ দেখে বলা যায় না; বিশেষজ্ঞ যাচাই দরকার।",
+  "expected_findings": [
+    {
+      "code": "area_sum_mismatch",
+      "severity": "warn",
+      "documents": [
+        "khatian_bs.json"
+      ]
+    }
+  ],
+  "expected_risk": "medium",
+  "needs_expert_check": true
+}

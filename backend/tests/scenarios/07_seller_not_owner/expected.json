@@ -1,0 +1,16 @@
+{
+  "title_bn": "বিক্রেতা জলিল খতিয়ানে মালিক নন",
+  "description_bn": "দলিলের দাতা জলিলের নাম খতিয়ান বা নামজারির মালিকদের মধ্যে নেই। মালিক না হলে তার বিক্রির অধিকার আছে কিনা কাগজ থেকে দেখা যায় না।",
+  "expected_findings": [
+    {
+      "code": "seller_not_owner",
+      "severity": "bad",
+      "documents": [
+        "deed.json",
+        "khatian_bs.json"
+      ]
+    }
+  ],
+  "expected_risk": "high",
+  "needs_expert_check": false
+}

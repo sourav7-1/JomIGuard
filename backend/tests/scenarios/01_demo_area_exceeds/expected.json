@@ -1,0 +1,24 @@
+{
+  "title_bn": "ডেমো: রহিমের অংশ ৬ শতাংশ, দলিলে বিক্রি ১০ শতাংশ",
+  "description_bn": "খতিয়ান ও নামজারিতে রহিম উদ্দিনের অংশ ৬ শতাংশ, কিন্তু দলিলে তিনি ১০ শতাংশ বিক্রি করছেন। বাকি ৪ শতাংশ করিম বা সালমার অংশ থেকে আসতে হবে, অথচ তারা দলিলে দাতা হিসাবে নেই এবং তাদের সম্মতির কোনো কাগজ নেই।",
+  "expected_findings": [
+    {
+      "code": "area_exceeds_share",
+      "severity": "bad",
+      "documents": [
+        "deed.json",
+        "khatian_bs.json"
+      ]
+    },
+    {
+      "code": "heir_consent_missing",
+      "severity": "warn",
+      "documents": [
+        "deed.json",
+        "heir_cert.json"
+      ]
+    }
+  ],
+  "expected_risk": "high",
+  "needs_expert_check": false
+}

@@ -1,0 +1,16 @@
+{
+  "title_bn": "বিক্রেতার নাম মিলেছে, কিন্তু পিতার নাম ভিন্ন",
+  "description_bn": "দলিলে বিক্রেতা রহিম উদ্দিন, পিতা কাশেম; খতিয়ানে রহিম উদ্দিনের পিতা রহমান। একই নামের অন্য ব্যক্তি হতে পারে, তাই পরিচয় যাচাই দরকার।",
+  "expected_findings": [
+    {
+      "code": "seller_father_mismatch",
+      "severity": "warn",
+      "documents": [
+        "deed.json",
+        "khatian_bs.json"
+      ]
+    }
+  ],
+  "expected_risk": "medium",
+  "needs_expert_check": false
+}

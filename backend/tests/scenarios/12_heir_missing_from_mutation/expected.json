@@ -1,0 +1,16 @@
+{
+  "title_bn": "ওয়ারিশ সনদে ৪ জন, নামজারিতে ৩ জন",
+  "description_bn": "ওয়ারিশ সনদে রহমানের স্ত্রী জমিলা খাতুনসহ ৪ জন ওয়ারিশ, কিন্তু নামজারি খতিয়ানে শুধু তিন সন্তান। স্ত্রী কেন নামজারিতে নেই (অংশ ছেড়ে দিয়েছেন, হস্তান্তর করেছেন, নাকি বাদ পড়েছেন) এবং এতে সন্তানদের অংশ বদলায় কিনা, তা আইনগত প্রশ্ন; বিশেষজ্ঞ যাচাই দরকার।",
+  "expected_findings": [
+    {
+      "code": "heir_missing_from_mutation",
+      "severity": "warn",
+      "documents": [
+        "heir_cert.json",
+        "mutation.json"
+      ]
+    }
+  ],
+  "expected_risk": "medium",
+  "needs_expert_check": true
+}

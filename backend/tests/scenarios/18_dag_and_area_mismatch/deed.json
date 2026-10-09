@@ -1,0 +1,54 @@
+{
+  "doc_type": "deed",
+  "deed_type": "saf_kabala",
+  "is_draft": true,
+  "sub_registry_office": "গৌরনদী",
+  "sellers": [
+    {
+      "name": "রহিম উদ্দিন",
+      "name_normalized": "রহিম উদ্দিন",
+      "father_or_husband_name": "রহমান",
+      "relation_marker": "father",
+      "address_text": "সাং- চাঁদশী, উপজেলা- গৌরনদী, জেলা- বরিশাল"
+    }
+  ],
+  "buyers": [
+    {
+      "name": "রফিক আহমেদ",
+      "name_normalized": "রফিক আহমেদ",
+      "father_or_husband_name": "আনোয়ার হোসেন",
+      "relation_marker": "father",
+      "address_text": "সাং- বাটাজোর, উপজেলা- গৌরনদী, জেলা- বরিশাল"
+    }
+  ],
+  "price_taka": "6000000",
+  "price_text": "৬০,০০,০০০/- টাকা",
+  "schedule_location": {
+    "district": "বরিশাল",
+    "upazila": "গৌরনদী",
+    "mouza": "চাঁদশী",
+    "jl_no": "45"
+  },
+  "schedule_khatians": [
+    {
+      "survey_type": "BS",
+      "khatian_no": "882"
+    },
+    {
+      "survey_type": "SA",
+      "khatian_no": "214"
+    }
+  ],
+  "schedule_plots": [
+    {
+      "dag_no": "306",
+      "land_class": "নাল",
+      "area_text": "১০ শতাংশ",
+      "area_shatangsho": "10.00"
+    }
+  ],
+  "transferred_area_text": "১০ শতাংশ",
+  "transferred_area_shatangsho": "10.00",
+  "prior_deeds": [],
+  "title_source_text": "পিতা রহমানের মৃত্যুতে ওয়ারিশ সূত্রে প্রাপ্ত"
+}

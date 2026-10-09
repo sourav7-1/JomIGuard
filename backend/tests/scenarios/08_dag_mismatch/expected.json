@@ -1,0 +1,16 @@
+{
+  "title_bn": "দলিলে দাগ ৩০৬, খতিয়ানে দাগ ৩০৫",
+  "description_bn": "দলিলের তফসিলে দাগ ৩০৬ লেখা, কিন্তু খতিয়ান ৮৮২-তে শুধু দাগ ৩০৫ আছে। দলিল অন্য জমির কথা বলছে কিনা যাচাই করা দরকার।",
+  "expected_findings": [
+    {
+      "code": "dag_mismatch",
+      "severity": "bad",
+      "documents": [
+        "deed.json",
+        "khatian_bs.json"
+      ]
+    }
+  ],
+  "expected_risk": "high",
+  "needs_expert_check": false
+}
