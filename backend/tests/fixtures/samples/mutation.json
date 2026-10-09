@@ -44,11 +44,12 @@
   "plots": [
     {
       "dag_no": "305",
-      "area_text": "১৫ শতাংশ",
+      "area_text": ".১৫০০",
       "area_shatangsho": "15.0"
     }
   ],
-  "total_area_text": "১৫ শতাংশ",
+  "area_unit_text": "একর",
+  "total_area_text": ".১৫০০",
   "total_area_shatangsho": "15.0",
   "basis_text": "ওয়ারিশ সূত্রে"
 }

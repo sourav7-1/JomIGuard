@@ -12,7 +12,7 @@ Example values follow the team demo (দাগ ৩০৫, খতিয়ান 
 - **Identifiers are strings.** `dag_no`, `khatian_no`, `jl_no`, `deed_no`, `case_no`, `holding_no` and similar are always `string` (`"305/1"`, `"১২৪৩/২৬"` normalised to `"1243/26"`). An int is rejected.
 - **Digits.** Store identifiers with ASCII digits; keep the printed Bangla form only in `*_text` fields.
 - **Area and share: always two values.**
-  - `*_text`: the exact text as printed (`".১৫০০ একর"`, `"৬ শতাংশ"`, `"।০ আনা"`).
+  - `*_text`: the exact text the cell shows (`".১৫০০"`, `"৬ শতাংশ"`, `"।০ আনা"`). No unit is added if the cell has none; a unit printed only in the column header goes in `area_unit_text` (khatian, mutation).
   - `*_shatangsho`: normalised `decimal` in শতাংশ (decimal). 1 একর = 100 শতাংশ.
   - Shares printed as a *fraction of the khatian/plot* (e.g. `.৪০০`) also get `*_fraction` (decimal 0–1). See Decisions.
 - **Decimals.** Areas, shares and money are `decimal`, never float.
@@ -64,11 +64,11 @@ Same fields as `Location` plus `address_text`, but **every field is optional**: 
 |---|---|---|---|---|---|---|---|
 | dag_no | দাগ নং | string | required | extractor | identity, chain | `"305"` | UNVERIFIED |
 | land_class | জমির শ্রেণী | string | optional | extractor | none yet | `"নাল"` | UNVERIFIED |
-| plot_total_area_text | দাগের মোট জমি | string | optional | extractor | area | `".১৫০০ একর"` | UNVERIFIED |
+| plot_total_area_text | দাগের মোট জমি | string | optional | extractor | area | `".১৫০০"` | UNVERIFIED |
 | plot_total_area_shatangsho | — | decimal | optional | normalize | area | `15.0` | UNVERIFIED |
 | khatian_share_text | দাগের মধ্যে অত্র খতিয়ানের অংশ | string | optional | extractor | area | `"১.০০০"` | UNVERIFIED |
 | khatian_share_fraction | — | decimal | optional | normalize | area | `1.0` | UNVERIFIED |
-| area_text | অংশানুযায়ী জমির পরিমাণ / জমির পরিমাণ | string | required | extractor | area | `".১৫০০ একর"` | UNVERIFIED |
+| area_text | অংশানুযায়ী জমির পরিমাণ / জমির পরিমাণ | string | required | extractor | area | `".১৫০০"` (khatian), `"১০ শতাংশ"` (deed) | UNVERIFIED |
 | area_shatangsho | — | decimal | optional | normalize | area | `15.0` | UNVERIFIED |
 
 ### `Heir` (heir certificate)
@@ -109,7 +109,8 @@ Same fields as `Location` plus `address_text`, but **every field is optional**: 
 | touzi_no | তৌজি নং / রেভিনিউ নং | string | optional | extractor | none yet | `"1520"` | UNVERIFIED |
 | owners | মালিক / অংশীদারগণের নাম ও ঠিকানা | list[`Owner`] | required | extractor | identity, area, heirs | `[{"name": "মোঃ রহিম উদ্দিন", "share_text": ".৪০০", "share_shatangsho": 6.0}, …]` | UNVERIFIED |
 | plots | দাগ নং ও জমির বিবরণ | list[`Plot`] | required | extractor | identity, area | `[{"dag_no": "305", "area_shatangsho": 15.0}]` | UNVERIFIED |
-| total_area_text | মোট জমি | string | optional | extractor | area | `".১৫০০ একর"` | UNVERIFIED |
+| area_unit_text | জমির পরিমাণ (একর): unit in the area column header | string | optional | extractor | area | `"একর"` | UNVERIFIED |
+| total_area_text | মোট জমি | string | optional | extractor | area | `".১৫০০"` | UNVERIFIED |
 | total_area_shatangsho | — | decimal | optional | normalize | area | `15.0` | UNVERIFIED |
 | annual_revenue_text | বার্ষিক খাজনা / রাজস্ব | string | optional | extractor | none yet | `"২ টাকা"` | UNVERIFIED |
 | landlord_name | জমিদার / ভূস্বামী (CS only) | string | optional | extractor | none yet | `"…"` | UNVERIFIED |
@@ -162,7 +163,8 @@ One schema for the mutation khatian plus the DCR fee receipt. All DCR fields (`d
 | holding_no | হোল্ডিং নং | string | optional | extractor | identity | `"312"` | UNVERIFIED |
 | owners | মালিকের নাম ও অংশ | list[`Owner`] | required | extractor | identity, area, heirs | `[{"name": "মোঃ রহিম উদ্দিন", "share_text": ".৪০০", "share_shatangsho": 6.0}, …]` | UNVERIFIED |
 | plots | দাগ নং ও জমির পরিমাণ | list[`Plot`] | required | extractor | identity, area | `[{"dag_no": "305", "area_shatangsho": 15.0}]` | UNVERIFIED |
-| total_area_text | মোট জমি | string | optional | extractor | area | `"১৫ শতাংশ"` | UNVERIFIED |
+| area_unit_text | জমির পরিমাণ (একর): unit in the area column header | string | optional | extractor | area | `"একর"` | UNVERIFIED |
+| total_area_text | মোট জমি | string | optional | extractor | area | `".১৫০০"` | UNVERIFIED |
 | total_area_shatangsho | — | decimal | optional | normalize | area | `15.0` | UNVERIFIED |
 | basis_text | নামজারির কারণ (ক্রয় / ওয়ারিশ / দান …) | string | optional | extractor | chain, heirs | `"ওয়ারিশ সূত্রে"` | UNVERIFIED |
 
@@ -191,3 +193,4 @@ One schema for the mutation khatian plus the DCR fee receipt. All DCR fields (`d
 5. **No inheritance-share calculation.** Heir shares come from the mutation / BS khatian. *(Needs expert check.)* The heir certificate only tells who all the heirs are. No religion field.
 6. **বঙ্গাব্দ dates.** Keep the text; the `date` field stays `null`.
 7. **Witnesses and deed writer** (সাক্ষী, দলিল লেখক) are not extracted.
+8. **Area unit.** normalize reads the unit from `area_text` first; if the cell has no unit, it uses `area_unit_text`; if neither has a unit, it emits a `missing_unit` warning and leaves `*_shatangsho` empty.

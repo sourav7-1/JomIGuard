@@ -125,6 +125,7 @@ class KhatianData(_Model):
     touzi_no: str | None = None
     owners: list[Owner]
     plots: list[Plot]
+    area_unit_text: str | None = None  # unit printed in the area column header, e.g. "একর"
     total_area_text: str | None = None
     total_area_shatangsho: Decimal | None = None  # normalize
     annual_revenue_text: str | None = None
@@ -174,6 +175,7 @@ class MutationData(_Model):
     holding_no: str | None = None
     owners: list[Owner]
     plots: list[Plot]
+    area_unit_text: str | None = None  # unit printed in the area column header, e.g. "একর"
     total_area_text: str | None = None
     total_area_shatangsho: Decimal | None = None  # normalize
     basis_text: str | None = None

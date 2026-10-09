@@ -18,7 +18,7 @@ node_modules/
 out/
 
 # Data & Models
-data/
+/data/
 
 # OS / Editor
 .DS_Store

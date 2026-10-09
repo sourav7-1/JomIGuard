@@ -41,15 +41,16 @@
     {
       "dag_no": "305",
       "land_class": "নাল",
-      "plot_total_area_text": ".১৫০০ একর",
+      "plot_total_area_text": ".১৫০০",
       "plot_total_area_shatangsho": "15.0",
       "khatian_share_text": "১.০০০",
       "khatian_share_fraction": "1.000",
-      "area_text": ".১৫০০ একর",
+      "area_text": ".১৫০০",
       "area_shatangsho": "15.0"
     }
   ],
-  "total_area_text": ".১৫০০ একর",
+  "area_unit_text": "একর",
+  "total_area_text": ".১৫০০",
   "total_area_shatangsho": "15.0",
   "mutation_case_ref": "512/18"
 }

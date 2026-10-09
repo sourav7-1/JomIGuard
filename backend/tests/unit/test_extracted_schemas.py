@@ -61,6 +61,14 @@ def test_validates_without_name_normalized(name, model):
     assert isinstance(model.model_validate(raw), model)
 
 
+def test_khatian_unit_in_header_only():
+    data = load("khatian.json")
+    data["plots"][0]["area_text"] = ".১৫০০"
+    data["area_unit_text"] = "একর"
+    k = KhatianData.model_validate(data)
+    assert (k.plots[0].area_text, k.area_unit_text) == (".১৫০০", "একর")
+
+
 def test_heir_cert_address_without_mouza():
     data = load("heir_cert.json")
     data["deceased_address"] = {"upazila": "গৌরনদী", "address_text": "গ্রাম চাঁদশী"}

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<style>
+  {% for face in font_faces %}
+  @font-face { font-family: "Synth"; src: url("{{ face.uri }}"); font-weight: {{ face.weight }}; }
+  {% endfor %}
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #111; font-family: "Synth"; font-size: 19px; }
+  .page { width: 1240px; padding: 48px 56px 32px; }
+  h1 { text-align: center; font-size: 30px; margin: 0 0 4px; }
+  .sub { text-align: center; margin-bottom: 22px; }
+  .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 24px; margin-bottom: 20px; }
+  .meta b { font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+  th, td { border: 1px solid #222; padding: 7px 10px; vertical-align: top; }
+  th { font-weight: 700; background: #f2f2f2; font-size: 17px; }
+  td.num { text-align: right; white-space: nowrap; }
+  td.c { text-align: center; }
+  .total td { font-weight: 700; }
+  .foot { display: flex; justify-content: space-between; margin-top: 26px; font-size: 16px; color: #444; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>{{ survey_label }} খতিয়ান</h1>
+  <div class="sub">খতিয়ান নং: <b>{{ khatian_no }}</b></div>
+
+  <div class="meta">
+    <div>জেলা: <b>{{ district }}</b></div>
+    <div>থানা/উপজেলা: <b>{{ upazila }}</b></div>
+    <div>মৌজা: <b>{{ mouza }}</b></div>
+    <div>জে.এল. নং: <b>{{ jl_no }}</b></div>
+    {% if touzi_no %}<div>রেভিনিউ/তৌজি নং: <b>{{ touzi_no }}</b></div>{% endif %}
+    {% if landlord_name %}<div>জমিদার: <b>{{ landlord_name }}</b></div>{% endif %}
+  </div>
+
+  <table>
+    <tr><th style="width:9%">ক্রমিক নং</th><th>মালিক, অংশীদারের নাম ও ঠিকানা</th><th style="width:16%">অংশ</th></tr>
+    {% for o in owners %}
+    <tr>
+      <td class="c">{{ o.serial }}</td>
+      <td>{{ o.name }}<br>{{ o.marker }}- {{ o.father_or_husband_name }}<br>{{ o.address_text }}</td>
+      <td class="num">{{ o.share_text }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <table>
+    <tr>
+      <th style="width:14%">দাগ নং</th><th style="width:14%">জমির শ্রেণী</th>
+      <th>দাগের মোট জমি (একর)</th><th>দাগের মধ্যে অত্র খতিয়ানের অংশ</th>
+      <th>অংশানুযায়ী জমির পরিমাণ (একর)</th>
+    </tr>
+    {% for p in plots %}
+    <tr>
+      <td class="c">{{ p.dag_no }}</td><td class="c">{{ p.land_class }}</td>
+      <td class="num">{{ p.plot_total_area_text }}</td><td class="num">{{ p.khatian_share_text }}</td>
+      <td class="num">{{ p.area_text }}</td>
+    </tr>
+    {% endfor %}
+    <tr class="total"><td colspan="4" style="text-align:right">মোট জমি</td><td class="num">{{ total_area_text }}</td></tr>
+  </table>
+
+  {% if annual_revenue_text %}<div>বার্ষিক খাজনা: {{ annual_revenue_text }}</div>{% endif %}
+
+  <div class="foot"><span>নমুনা / SAMPLE</span><span>কৃত্রিম তথ্য, বাস্তব রেকর্ড নয়</span></div>
+</div>
+</body>
+</html>

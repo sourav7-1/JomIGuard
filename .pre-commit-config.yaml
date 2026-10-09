@@ -1,3 +1,6 @@
+# vendored OFL fonts + licenses stay byte-identical to upstream (and exceed the size limit)
+exclude: ^ml/synth/fonts/
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.10  # keep in sync with ruff in backend/uv.lock
