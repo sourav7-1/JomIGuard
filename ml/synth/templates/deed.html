@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<style>
+  {% for face in font_faces %}
+  @font-face { font-family: "Synth"; src: url("{{ face.uri }}"); font-weight: {{ face.weight }}; }
+  {% endfor %}
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #111; font-family: "Synth"; font-size: 19px; line-height: 1.7; }
+  .page { width: 1240px; padding: 48px 64px 32px; }
+  h1 { text-align: center; font-size: 30px; margin: 0 0 6px; }
+  .draft { text-align: center; font-size: 17px; letter-spacing: 1px; margin-bottom: 4px; }
+  .head { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 32px; margin: 14px 0 18px; }
+  .blank { display: inline-block; min-width: 140px; border-bottom: 1px dotted #555; }
+  h2 { font-size: 21px; margin: 16px 0 6px; }
+  .party { margin: 0 0 6px 24px; }
+  p { margin: 6px 0 12px; text-align: justify; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 14px; }
+  th, td { border: 1px solid #222; padding: 6px 10px; vertical-align: top; }
+  th { font-weight: 700; background: #f2f2f2; font-size: 17px; text-align: left; width: 32%; }
+  .witness { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 10px; }
+  .sign { margin-top: 34px; border-top: 1px solid #555; padding-top: 4px; font-size: 16px; }
+  .foot { display: flex; justify-content: space-between; margin-top: 28px; font-size: 16px; color: #444; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>{{ deed_label }}</h1>
+  {% if is_draft %}<div class="draft">(খসড়া)</div>{% endif %}
+
+  <div class="head">
+    <div>দলিল নং: {% if deed_no %}<b>{{ deed_no }}</b>{% else %}<span class="blank"></span>{% endif %}</div>
+    <div>সন: {% if deed_year %}<b>{{ deed_year }}</b>{% else %}<span class="blank"></span>{% endif %}</div>
+    <div>সাব-রেজিস্ট্রি অফিস: <b>{{ sub_registry_office }}</b></div>
+    <div>রেজিস্ট্রির তারিখ: {% if registration_date_text %}<b>{{ registration_date_text }}</b>{% else %}<span class="blank"></span>{% endif %}</div>
+    {% if book_no %}<div>বহি নং: <b>{{ book_no }}</b></div>{% endif %}
+  </div>
+
+  <h2>দাতা / বিক্রেতা</h2>
+  {% for s in sellers %}
+  <div class="party">{{ s.name }}, {{ s.marker }}- {{ s.father_or_husband_name }}, {{ s.address_text }}</div>
+  {% endfor %}
+
+  <h2>গ্রহীতা / ক্রেতা</h2>
+  {% for b in buyers %}
+  <div class="party">{{ b.name }}, {{ b.marker }}- {{ b.father_or_husband_name }}, {{ b.address_text }}</div>
+  {% endfor %}
+
+  <h2>মালিকানার বিবরণ</h2>
+  <p>
+    নিম্ন তফসিল বর্ণিত সম্পত্তি দাতা {{ title_source_text }} হইয়া এ যাবৎ শান্তিপূর্ণভাবে ভোগদখলকার
+    আছেন{% if prior_deeds %} (বায়া দলিল নং {{ prior_deeds | join(", ") }}){% endif %}।
+    দাতা স্বেচ্ছায় ও সজ্ঞানে উক্ত সম্পত্তি গ্রহীতার বরাবরে হস্তান্তর করিলেন এবং অদ্য হইতে গ্রহীতা
+    উক্ত সম্পত্তিতে মালিক হিসাবে ভোগদখল করিবেন।
+  </p>
+
+  <h2>তফসিল</h2>
+  <table>
+    <tr><th>জেলা</th><td>{{ district }}</td></tr>
+    <tr><th>উপজেলা / থানা</th><td>{{ upazila }}</td></tr>
+    <tr><th>মৌজা</th><td>{{ mouza }}</td></tr>
+    <tr><th>জে.এল. নং</th><td>{{ jl_no }}</td></tr>
+    <tr><th>খতিয়ান নং</th><td>{{ khatian_refs }}</td></tr>
+    <tr><th>দাগ নং</th><td>{{ dag_no }} ({{ land_class }})</td></tr>
+    <tr><th>হস্তান্তরিত জমির পরিমাণ</th><td>{{ area_text }}</td></tr>
+  </table>
+
+  {% if price_text %}<div>পণ / মূল্য: <b>{{ price_text }}</b></div>{% endif %}
+
+  <h2>সাক্ষীগণ</h2>
+  <div class="witness">
+    {% for w in witnesses %}
+    <div>{{ w.serial }}. {{ w.name }}, {{ w.marker }}- {{ w.father_or_husband_name }}<div class="sign">স্বাক্ষর</div></div>
+    {% endfor %}
+  </div>
+
+  <div class="foot"><span>নমুনা / SAMPLE</span><span>কৃত্রিম তথ্য, বাস্তব দলিল নয়</span></div>
+</div>
+</body>
+</html>
