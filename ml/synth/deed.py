@@ -1,4 +1,6 @@
-"""Synthetic sale-deed cases: one khatian + one deed per case, some with one injected mismatch.
+"""Synthetic land cases: khatian + deed + mutation (+ heir certificate for family cases).
+
+Some deeds carry one injected mismatch.
 
 Usage (from ml/):
     PYTHONPATH=../backend uv run python -m synth.deed --n 50 --seed 43 --mismatch-rate 0.4 \
@@ -9,12 +11,12 @@ import argparse
 import csv
 import json
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-from app.schemas.extracted import DeedData, KhatianData, Owner
+from app.schemas.extracted import DeedData, HeirCertData, KhatianData, MutationData, Owner
 
 from synth.common import (
     PLACES,
@@ -26,8 +28,10 @@ from synth.common import (
     person,
     to_bn,
 )
+from synth.heir_cert import build_heir_cert, make_family
 from synth.khatian import SURVEY_LABELS, identifier
 from synth.khatian import build as build_khatian
+from synth.mutation import build_mutation
 
 MISMATCH_TYPES = (
     "area_exceeds_share",
@@ -45,7 +49,8 @@ MISMATCH_FIELDS = {
 }
 DEED_TYPES = {"saf_kabala": "সাফ কবলা দলিল", "heba": "হেবা দলিল", "dan": "দানপত্র দলিল"}
 DEED_TYPE_WEIGHTS = [85, 10, 5]
-TITLE_SOURCES = ["ওয়ারিশ সূত্রে প্রাপ্ত", "ক্রয় সূত্রে প্রাপ্ত"]
+TITLES = {"inheritance": "ওয়ারিশ সূত্রে প্রাপ্ত", "purchase": "ক্রয় সূত্রে প্রাপ্ত"}
+FAMILY_RATE = 0.5
 MARKERS = {"father": "পিতা", "husband": "স্বামী"}
 
 
@@ -60,7 +65,24 @@ class Case:
     deed: DeedData
     deed_printed: dict
     benign_name_variation: bool
-    mismatches: list[dict] = field(default_factory=list)
+    mismatches: list[dict]
+    family: bool
+    mutation_font: str
+    mutation: MutationData
+    mutation_printed: dict
+    heir_cert_font: str | None = None
+    heir_cert: HeirCertData | None = None
+    heir_cert_printed: dict | None = None
+
+    @property
+    def documents(self) -> list[str]:
+        return ["khatian", "deed", "mutation"] + (["heir_cert"] if self.heir_cert else [])
+
+    def mutation_json(self) -> str:
+        return self.mutation.model_dump_json(indent=2, exclude_none=True) + "\n"
+
+    def heir_cert_json(self) -> str:
+        return self.heir_cert.model_dump_json(indent=2, exclude_none=True) + "\n"
 
     def khatian_json(self) -> str:
         return self.khatian.model_dump_json(indent=2, exclude_none=True) + "\n"
@@ -73,6 +95,8 @@ class Case:
             "case_id": self.id,
             "seed": self.seed,
             "seller_name": self.deed.sellers[0].name,
+            "family": self.family,
+            "documents": self.documents,
             "benign_name_variation": self.benign_name_variation,
             "mismatches": self.mismatches,
         }
@@ -126,7 +150,7 @@ def sale_limit_tt(owner: Owner, plot) -> int:
 
 
 def build_deed(
-    rng: random.Random, khatian: KhatianData, mismatch: str | None
+    rng: random.Random, khatian: KhatianData, mismatch: str | None, title: str
 ) -> tuple[DeedData, dict, bool, list[dict]]:
     loc = khatian.location
     options = [(o, p) for o in khatian.owners for p in khatian.plots if sale_limit_tt(o, p) >= 1]
@@ -204,7 +228,6 @@ def build_deed(
         {"deed_no": str(rng.randint(100, 15000)), "deed_year": str(rng.randint(1960, year - 1))}
         for _ in range(rng.randint(1, 2) if rng.random() < 0.4 else 0)
     ]
-    title = TITLE_SOURCES[1] if prior_deeds else rng.choice(TITLE_SOURCES)
     witnesses = [person(rng) for _ in range(2)]  # distractor text only, not in ground truth
 
     deed = DeedData.model_validate(
@@ -307,9 +330,27 @@ def generate_cases(n: int, seed: int, mismatch_rate: float = 0.4) -> list[Case]:
         rng = random.Random(item_seed)
         khatian_font = choose_font(rng)
         khatian, khatian_printed = build_khatian(rng)
+        family = rng.random() < FAMILY_RATE
+        if family:  # owners become heirs of one deceased father
+            khatian, khatian_printed, deceased = make_family(rng, khatian, khatian_printed)
+        basis = "inheritance" if family else "purchase"
+
         deed_font = choose_font(rng)
         mismatch = rng.choice(MISMATCH_TYPES) if rng.random() < mismatch_rate else None
-        deed, deed_printed, benign, mismatches = build_deed(rng, khatian, mismatch)
+        deed, deed_printed, benign, mismatches = build_deed(rng, khatian, mismatch, TITLES[basis])
+
+        heir = {}
+        if family:
+            cert_font = choose_font(rng)
+            cert, cert_printed = build_heir_cert(rng, khatian, deceased)
+            heir = {
+                "heir_cert_font": cert_font,
+                "heir_cert": cert,
+                "heir_cert_printed": cert_printed,
+            }
+        mutation_font = choose_font(rng)
+        after = heir["heir_cert"].issue_date if family else None
+        mutation, mutation_printed = build_mutation(rng, khatian, khatian_printed, basis, after)
         cases.append(
             Case(
                 f"case_{i:05d}",
@@ -322,6 +363,11 @@ def generate_cases(n: int, seed: int, mismatch_rate: float = 0.4) -> list[Case]:
                 deed_printed,
                 benign,
                 mismatches,
+                family,
+                mutation_font,
+                mutation,
+                mutation_printed,
+                **heir,
             )
         )
     return cases
@@ -336,8 +382,17 @@ def generate(n: int, seed: int, mismatch_rate: float, out: Path) -> list[Case]:
             d.mkdir(exist_ok=True)
             renderer.render("khatian.html", c.khatian_font, c.khatian_printed, d / "khatian.png")
             renderer.render("deed.html", c.deed_font, c.deed_printed, d / "deed.png")
+            renderer.render(
+                "mutation.html", c.mutation_font, c.mutation_printed, d / "mutation.png"
+            )
+            if c.heir_cert:
+                renderer.render(
+                    "heir_cert.html", c.heir_cert_font, c.heir_cert_printed, d / "heir_cert.png"
+                )
+                (d / "heir_cert.json").write_text(c.heir_cert_json(), encoding="utf-8")
             (d / "khatian.json").write_text(c.khatian_json(), encoding="utf-8")
             (d / "deed.json").write_text(c.deed_json(), encoding="utf-8")
+            (d / "mutation.json").write_text(c.mutation_json(), encoding="utf-8")
             (d / "case.json").write_text(c.case_json(), encoding="utf-8")
 
     with (out / "manifest.csv").open("w", newline="", encoding="utf-8") as f:
@@ -353,6 +408,8 @@ def generate(n: int, seed: int, mismatch_rate: float, out: Path) -> list[Case]:
                 "is_draft",
                 "benign_name_variation",
                 "mismatch_type",
+                "family",
+                "documents",
             ]
         )
         for c in cases:
@@ -367,6 +424,8 @@ def generate(n: int, seed: int, mismatch_rate: float, out: Path) -> list[Case]:
                     c.deed.is_draft,
                     c.benign_name_variation,
                     c.mismatches[0]["type"] if c.mismatches else "",
+                    c.family,
+                    ";".join(c.documents),
                 ]
             )
     return cases

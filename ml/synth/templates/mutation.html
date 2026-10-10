@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<style>
+  {% for face in font_faces %}
+  @font-face { font-family: "Synth"; src: url("{{ face.uri }}"); font-weight: {{ face.weight }}; }
+  {% endfor %}
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #111; font-family: "Synth"; font-size: 19px; }
+  .page { width: 1240px; padding: 44px 56px 32px; }
+  .office { text-align: center; font-size: 20px; }
+  h1 { text-align: center; font-size: 30px; margin: 6px 0 4px; }
+  .sub { text-align: center; margin-bottom: 18px; }
+  .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 24px; margin-bottom: 18px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th, td { border: 1px solid #222; padding: 7px 10px; vertical-align: top; }
+  th { font-weight: 700; background: #f2f2f2; font-size: 17px; }
+  td.num { text-align: right; white-space: nowrap; }
+  td.c { text-align: center; }
+  .total td { font-weight: 700; }
+  .dcr { border: 1px dashed #333; padding: 12px 16px; margin-top: 22px; }
+  .dcr h2 { font-size: 20px; margin: 0 0 8px; }
+  .dcr .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 24px; }
+  .foot { display: flex; justify-content: space-between; margin-top: 24px; font-size: 16px; color: #444; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="office">{{ office }}</div>
+  <h1>নামজারি খতিয়ান</h1>
+  <div class="sub">নামজারি মোকদ্দমা নং: <b>{{ case_no }}</b> &nbsp; আদেশের তারিখ: <b>{{ order_date_text }}</b></div>
+
+  <div class="meta">
+    <div>জেলা: <b>{{ district }}</b></div>
+    <div>উপজেলা: <b>{{ upazila }}</b></div>
+    <div>মৌজা: <b>{{ mouza }}</b></div>
+    <div>জে.এল. নং: <b>{{ jl_no }}</b></div>
+    <div>খতিয়ান নং: <b>{{ khatian_no }}</b></div>
+    <div>পূর্বের খতিয়ান (এস.এ.): <b>{{ old_khatian_no }}</b></div>
+    <div>হোল্ডিং নং: <b>{{ holding_no }}</b></div>
+    <div>নামজারির কারণ: <b>{{ basis_text }}</b></div>
+  </div>
+
+  <table>
+    <tr><th style="width:9%">ক্রমিক নং</th><th>মালিকের নাম ও ঠিকানা</th><th style="width:16%">অংশ</th></tr>
+    {% for o in owners %}
+    <tr>
+      <td class="c">{{ o.serial }}</td>
+      <td>{{ o.name }}<br>{{ o.marker }}- {{ o.father_or_husband_name }}<br>{{ o.address_text }}</td>
+      <td class="num">{{ o.share_text }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <table>
+    <tr>
+      <th style="width:14%">দাগ নং</th><th style="width:14%">জমির শ্রেণী</th>
+      <th>দাগের মোট জমি (একর)</th><th>দাগের মধ্যে অত্র খতিয়ানের অংশ</th>
+      <th>অংশানুযায়ী জমির পরিমাণ (একর)</th>
+    </tr>
+    {% for p in plots %}
+    <tr>
+      <td class="c">{{ p.dag_no }}</td><td class="c">{{ p.land_class }}</td>
+      <td class="num">{{ p.plot_total_area_text }}</td><td class="num">{{ p.khatian_share_text }}</td>
+      <td class="num">{{ p.area_text }}</td>
+    </tr>
+    {% endfor %}
+    <tr class="total"><td colspan="4" style="text-align:right">মোট জমি</td><td class="num">{{ total_area_text }}</td></tr>
+  </table>
+
+  <div class="dcr">
+    <h2>ডুপ্লিকেট কার্বন রসিদ (ডি.সি.আর.)</h2>
+    <div class="row">
+      <div>ডি.সি.আর. নং: <b>{{ dcr_no }}</b></div>
+      <div>তারিখ: <b>{{ dcr_date_text }}</b></div>
+      <div>ফি: <b>{{ fee_text }}</b></div>
+    </div>
+  </div>
+
+  <div class="foot"><span>নমুনা / SAMPLE</span><span>কৃত্রিম তথ্য, বাস্তব রেকর্ড নয়</span></div>
+</div>
+</body>
+</html>

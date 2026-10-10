@@ -8,8 +8,6 @@ from app.schemas.extracted import DeedData, KhatianData
 from synth.deed import MISMATCH_TYPES, generate, generate_cases
 from synth.khatian import generate_records
 
-FILES = {"khatian.png", "khatian.json", "deed.png", "deed.json", "case.json"}
-
 
 def broken_checks(k: KhatianData, d: DeedData) -> set[str]:
     """The cross-document checks a deed can fail; names match the mismatch types."""
@@ -42,7 +40,10 @@ def test_rendered_cases_validate(out):
     case_dirs = sorted(p for p in out.iterdir() if p.is_dir())
     assert len(case_dirs) == 4
     for d in case_dirs:
-        assert {p.name for p in d.iterdir()} == FILES
+        case = json.loads((d / "case.json").read_text(encoding="utf-8"))
+        assert {"khatian", "deed", "mutation"} <= set(case["documents"])
+        files = {f"{doc}.{ext}" for doc in case["documents"] for ext in ("png", "json")}
+        assert {p.name for p in d.iterdir()} == files | {"case.json"}
         KhatianData.model_validate_json((d / "khatian.json").read_text(encoding="utf-8"))
         DeedData.model_validate_json((d / "deed.json").read_text(encoding="utf-8"))
     with (out / "manifest.csv").open(encoding="utf-8") as f:

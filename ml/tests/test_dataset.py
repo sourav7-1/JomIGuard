@@ -44,7 +44,8 @@ def test_build_lists_every_file_with_its_sha256(data, tmp_path):
     deed = next(f for f in manifest["files"] if f["path"].endswith("deed.json"))
     assert deed["doc_type"] == "deed" and deed["split"] in ("train", "test")
     assert manifest["counts"]["cases"] == 2
-    assert manifest["counts"]["augmented"] == 6  # 2 khatians + 2 cases x (khatian, deed)
+    clean_pngs = [p for p in on_disk if p.startswith("synthetic/") and p.endswith(".png")]
+    assert manifest["counts"]["augmented"] == len(clean_pngs)  # --per-source 1
 
 
 def test_verify_passes_on_unchanged_data(data, tmp_path):
