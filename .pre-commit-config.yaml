@@ -2,28 +2,46 @@
 exclude: ^ml/synth/fonts/
 
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.10  # keep in sync with ruff in backend/uv.lock
-    hooks:
-      - id: ruff-check
-        args: [--fix]
-        files: ^backend/
-      - id: ruff-format
-        files: ^backend/
-
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-        # Windows Smart App Control blocks the generated .exe shim; run the module instead
-        entry: python -m pre_commit_hooks.end_of_file_fixer
-      - id: check-yaml
-      - id: check-added-large-files
-      - id: detect-private-key
-
+  # Windows Smart App Control blocks the python.exe in pre-commit's own venvs, so every hook
+  # runs from backend/.venv (ruff and pre-commit-hooks are pinned in backend/uv.lock)
   - repo: local
     hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --project backend ruff check --fix
+        language: system
+        types: [python]
+        files: ^backend/
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --project backend ruff format
+        language: system
+        types: [python]
+        files: ^backend/
+      - id: trailing-whitespace
+        name: trim trailing whitespace
+        entry: uv run --project backend python -m pre_commit_hooks.trailing_whitespace_fixer
+        language: system
+        types: [text]
+      - id: end-of-file-fixer
+        name: fix end of files
+        entry: uv run --project backend python -m pre_commit_hooks.end_of_file_fixer
+        language: system
+        types: [text]
+      - id: check-yaml
+        name: check yaml
+        entry: uv run --project backend python -m pre_commit_hooks.check_yaml
+        language: system
+        types: [yaml]
+      - id: check-added-large-files
+        name: check for added large files
+        entry: uv run --project backend python -m pre_commit_hooks.check_added_large_files
+        language: system
+      - id: detect-private-key
+        name: detect private key
+        entry: uv run --project backend python -m pre_commit_hooks.detect_private_key
+        language: system
+        types: [text]
       - id: block-env-file
         name: block committing .env
         entry: ".env holds secrets; commit .env.example instead"
