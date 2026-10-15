@@ -169,10 +169,10 @@ def generate(n: int, seed: int, out: Path) -> list[Record]:
     with Renderer() as renderer:
         for r in records:
             renderer.render("khatian.html", r.font, r.printed, out / f"{r.id}.png")
-            (out / f"{r.id}.json").write_text(r.ground_truth_json(), encoding="utf-8")
+            (out / f"{r.id}.json").write_text(r.ground_truth_json(), encoding="utf-8", newline="\n")
 
     with (out / "manifest.csv").open("w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["id", "seed", "font", "survey_type", "owner_count", "plot_count"])
         for r in records:
             k = r.khatian

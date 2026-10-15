@@ -184,7 +184,9 @@ def build(version: str, root: Path = DATA, commands=COMMANDS, out: Path | None =
     }
     out = out or DATASETS / f"{version}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    out.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     return manifest
 
 

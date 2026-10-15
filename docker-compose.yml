@@ -30,6 +30,20 @@ services:
       redis: {condition: service_started}
       minio: {condition: service_started}
 
+  worker:
+    build: ./backend
+    # migrations run in the backend service; uv run skips the image's alembic entrypoint
+    entrypoint: ["uv", "run"]
+    command: celery -A app.workers.celery_app worker -l info --concurrency 2
+    env_file: .env
+    environment:
+      OMP_THREAD_LIMIT: "1"  # parallel Tesseract processes must not fight over cores
+    volumes: [./backend:/app, ./data:/data]  # /data: LLM cache and daily spend file
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_started}
+      minio: {condition: service_started}
+
 volumes:
   pgdata:
   miniodata:

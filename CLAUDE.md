@@ -72,6 +72,7 @@ docs/legal-notes.md  verified legal facts and their sources
 - `services/` must never import from `api/`, `agent/` or `workers/`. Those three call services, not each other.
 - The extractor returns only what is printed on the document (`*_text`, names, identifiers). It never does arithmetic or unit conversion.
 - `normalize.py` fills every derived field: `*_shatangsho`, `*_fraction`, `name_normalized`, ASCII digits.
+- OCR input is `preprocess(...).gray`, never `.binary`.
 - Identifiers (`dag_no`, `khatian_no`, `deed_no`, `case_no`) are always strings ("305/1" exists).
 - Areas are compared in shatangsho (decimal). Keep the printed text next to every derived number.
 - Supported units for now: একর, শতাংশ, decimal fractions. Other units (বিঘা, কাঠা, আনা) are kept as text and produce an `unsupported_unit` warning, never a guessed conversion.

@@ -389,14 +389,16 @@ def generate(n: int, seed: int, mismatch_rate: float, out: Path) -> list[Case]:
                 renderer.render(
                     "heir_cert.html", c.heir_cert_font, c.heir_cert_printed, d / "heir_cert.png"
                 )
-                (d / "heir_cert.json").write_text(c.heir_cert_json(), encoding="utf-8")
-            (d / "khatian.json").write_text(c.khatian_json(), encoding="utf-8")
-            (d / "deed.json").write_text(c.deed_json(), encoding="utf-8")
-            (d / "mutation.json").write_text(c.mutation_json(), encoding="utf-8")
-            (d / "case.json").write_text(c.case_json(), encoding="utf-8")
+                (d / "heir_cert.json").write_text(
+                    c.heir_cert_json(), encoding="utf-8", newline="\n"
+                )
+            (d / "khatian.json").write_text(c.khatian_json(), encoding="utf-8", newline="\n")
+            (d / "deed.json").write_text(c.deed_json(), encoding="utf-8", newline="\n")
+            (d / "mutation.json").write_text(c.mutation_json(), encoding="utf-8", newline="\n")
+            (d / "case.json").write_text(c.case_json(), encoding="utf-8", newline="\n")
 
     with (out / "manifest.csv").open("w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(
             [
                 "case_id",
