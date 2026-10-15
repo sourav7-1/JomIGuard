@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.documents import router as documents_router
+from app.api.lands import router as lands_router
 from app.services.storage import get_storage
 
 
@@ -15,6 +16,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="JomiGuard API", lifespan=lifespan)
 app.include_router(documents_router)
+app.include_router(lands_router)
 
 
 @app.get("/health")

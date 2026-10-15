@@ -4,11 +4,17 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.20.0",
+    "anthropic>=1.14.0",
+    "celery[redis]>=5.6.3",
     "fastapi>=0.143.0",
     "minio>=7.2.20",
+    "numpy>=2.5.3",
+    "opencv-python-headless>=5.0.0.93",
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.15.0",
+    "pytesseract>=0.3.13",
     "python-multipart>=0.0.32",
+    "rapidfuzz>=3.14.6",
     "sqlalchemy>=2.1.4",
     "uvicorn[standard]>=0.54.0",
 ]
@@ -16,6 +22,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
+    "pillow>=12.3.0",
     "pre-commit>=4.6.2",
     "pre-commit-hooks==6.0.0",
     "pytest>=9.1.1",

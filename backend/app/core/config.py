@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +13,21 @@ class Settings(BaseSettings):
     minio_root_user: str
     minio_root_password: str
     minio_bucket: str
+
+    # background processing (app/workers): Celery broker; extractor "llm" or "tesseract_regex"
+    celery_broker_url: str = "redis://redis:6379/0"
+    extractor: str = "llm"
+    stale_after_minutes: int = 10
+
+    # vision-LLM extraction (services/extraction); unset = the LLM extractor refuses to run
+    anthropic_api_key: SecretStr | None = None
+    llm_model: str | None = None
+    llm_price_input_per_mtok: Decimal | None = None  # USD per million input tokens
+    llm_price_output_per_mtok: Decimal | None = None  # USD per million output tokens
+    llm_daily_budget_usd: Decimal | None = None
+    llm_max_tokens: int = 8192
+    llm_budget_file: str = "../data/llm/spend.json"  # relative to the working directory
+    llm_cache_dir: str = "../data/cache/llm"
 
 
 settings = Settings()
