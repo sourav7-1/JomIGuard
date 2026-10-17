@@ -1,46 +1,36 @@
-import React, { Suspense } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 import { JourneyRail } from "./JourneyRail";
 import { strings } from "@/lib/strings";
 
+function ShieldMark() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 32 32" fill="none" className="h-9 w-9 shrink-0">
+      <path d="M16 2.8 27 7v7.2c0 7.2-4.8 12-11 15-6.2-3-11-7.8-11-15V7z" fill="#12342A" />
+      <path d="m10.5 16.2 3.4 3.3 7.6-8" stroke="#7FD1B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function Header() {
   return (
-    <header className="w-full bg-surface/90 backdrop-blur-sm border-b border-line sticky top-0 z-40 transition-colors">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-        <Link
-          href="/"
-          className="flex flex-col rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent py-0.5"
-        >
-          <span className="text-xl md:text-2xl font-bold font-heading text-accent tracking-tight">
-            {strings.app.name}
-          </span>
-          <span className="text-xs text-muted font-normal hidden xs:inline sm:inline">
-            {strings.app.taglineShort}
+    <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur-md">
+      <div className="mx-auto flex min-h-[68px] max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link href="/" className="flex min-w-0 items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+          <ShieldMark />
+          <span className="min-w-0">
+            <span className="block font-heading text-xl font-semibold leading-6 text-ink">{strings.app.name}</span>
+            <span className="hidden text-xs leading-4 text-muted sm:block">কাগজের তথ্য মিলিয়ে দেখুন</span>
           </span>
         </Link>
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href="/upload"
-            className="min-h-[44px] px-3.5 py-2 rounded-lg bg-accent text-white hover:opacity-90 transition-opacity flex items-center justify-center text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            {strings.buttons.upload}
-          </Link>
-          <Link
-            href="/chat"
-            className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-lg border border-line bg-surface text-ink hover:bg-bg transition-colors flex items-center justify-center text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            aria-label={strings.nav.chat}
-          >
-            💬
+        <div className="flex shrink-0 items-center gap-2">
+          <Link href="/upload" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#185541] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-4">
+            {strings.buttons.newCheck}
           </Link>
           <ThemeToggle />
         </div>
       </div>
-
-      <Suspense fallback={<div className="w-full max-w-5xl mx-auto px-4 py-3 min-h-[72px]" />}>
-        <JourneyRail />
-      </Suspense>
+      <JourneyRail />
     </header>
   );
 }

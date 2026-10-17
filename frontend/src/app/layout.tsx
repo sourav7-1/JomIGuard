@@ -43,11 +43,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-bg text-ink selection:bg-accent-soft selection:text-accent">
         <Header />
-        <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-24 sm:px-6 md:pb-6">
           {children}
         </main>
         <footer className="w-full border-t border-line bg-surface/50 mt-auto py-6">
-          <div className="max-w-5xl mx-auto px-4 text-center text-xs text-muted space-y-2">
+          <div className="mx-auto max-w-6xl space-y-2 px-4 pb-20 text-center text-xs text-muted sm:px-6 md:pb-6">
             <p className="max-w-2xl mx-auto leading-relaxed">
               {strings.app.disclaimer}
             </p>
