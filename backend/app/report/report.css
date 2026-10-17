@@ -1,0 +1,69 @@
+/* JomiGuard report: A4, ledger-green palette from the team demo. Fonts are bundled (OFL). */
+@font-face { font-family: "Hind Siliguri"; src: url("fonts/hindsiliguri/HindSiliguri-Regular.ttf"); font-weight: 400; }
+@font-face { font-family: "Hind Siliguri"; src: url("fonts/hindsiliguri/HindSiliguri-Bold.ttf"); font-weight: 700; }
+@font-face { font-family: "Tiro Bangla"; src: url("fonts/tirobangla/TiroBangla-Regular.ttf"); font-weight: 400; }
+
+:root {
+  --bg: #F2F4F1; --accent: #1E6A55; --ok: #2E7D4F; --warn: #A86A00; --bad: #B3261E;
+  --ink: #1d2320; --muted: #5b6460; --line: #cfd6d1;
+}
+
+@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  background: var(--bg);
+  @bottom-center {
+    content: "পৃষ্ঠা " counter(page, bengali) " / " counter(pages, bengali);
+    font-family: "Hind Siliguri"; font-size: 9pt; color: var(--muted);
+  }
+  @bottom-left { content: "JomiGuard"; font-family: "Hind Siliguri"; font-size: 9pt; color: var(--accent); }
+}
+
+body { font-family: "Hind Siliguri"; font-size: 10.5pt; line-height: 1.55; color: var(--ink); }
+h1, h2, .brand { font-family: "Tiro Bangla"; font-weight: 400; }
+h2 { color: var(--accent); font-size: 14pt; margin: 14pt 0 5pt; border-bottom: 1px solid var(--line); }
+p { margin: 3pt 0; }
+ul, ol { margin: 3pt 0; padding-left: 14pt; }
+section { break-inside: auto; }
+
+.head { border-bottom: 2px solid var(--accent); padding-bottom: 6pt; }
+.brand { font-size: 20pt; color: var(--accent); }
+.meta { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+.meta th { text-align: left; color: var(--muted); font-weight: 400; width: 14%; }
+.meta td { width: 36%; }
+
+.verdict { margin: 10pt 0; padding: 8pt 12pt; border-radius: 4pt; border-left: 6pt solid; background: #fff; }
+.verdict h1 { font-size: 17pt; margin: 0 0 2pt; }
+.risk-high { border-color: var(--bad); } .risk-high h1 { color: var(--bad); }
+.risk-medium { border-color: var(--warn); } .risk-medium h1 { color: var(--warn); }
+.risk-low { border-color: var(--ok); } .risk-low h1 { color: var(--ok); }
+
+.finding { background: #fff; border: 1px solid var(--line); border-left: 4pt solid; border-radius: 3pt;
+           padding: 5pt 9pt; margin: 5pt 0; break-inside: avoid; }
+.finding.bad { border-left-color: var(--bad); } .finding.warn { border-left-color: var(--warn); }
+.finding-title { font-weight: 700; }
+.finding.bad .mark { color: var(--bad); } .finding.warn .mark { color: var(--warn); }
+.mark { display: inline-block; width: 10pt; font-weight: 700; }
+.sources { font-size: 9pt; color: var(--muted); }
+
+.partial { background: #fff8ec; border: 1px solid var(--warn); border-radius: 3pt; padding: 2pt 10pt 6pt; }
+.partial h2 { color: var(--warn); border: 0; }
+
+.ok-list { list-style: none; padding-left: 0; }
+.tick { color: var(--ok); font-weight: 700; }
+
+.actions { list-style: none; padding-left: 0; }
+.actions li { margin: 4pt 0; break-inside: avoid; }
+.box { display: inline-block; width: 9pt; height: 9pt; border: 1.2pt solid var(--accent); margin-right: 5pt;
+       vertical-align: -1pt; background: #fff; }
+.num { color: var(--accent); font-weight: 700; }
+
+.docs { width: 100%; border-collapse: collapse; font-size: 9pt; background: #fff; }
+.docs th { background: var(--accent); color: #fff; font-weight: 400; text-align: left; padding: 3pt 5pt; }
+.docs td { border-bottom: 1px solid var(--line); padding: 3pt 5pt; vertical-align: top; }
+
+.disclaimer { margin-top: 14pt; padding: 6pt 10pt; border: 1px solid var(--accent); border-radius: 3pt;
+              background: #fff; font-size: 9.5pt; break-inside: avoid; }
+
+.watermark { position: fixed; top: 38%; left: 18%; font-family: "Tiro Bangla"; font-size: 110pt;
+             color: rgba(30, 106, 85, 0.08); transform: rotate(-30deg); z-index: -1; }

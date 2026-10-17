@@ -34,7 +34,7 @@ services:
     build: ./backend
     # migrations run in the backend service; uv run skips the image's alembic entrypoint
     entrypoint: ["uv", "run"]
-    command: celery -A app.workers.celery_app worker -l info --concurrency 2
+    command: celery -A app.workers.celery_app worker -l info  # concurrency: celery_app.py
     env_file: .env
     environment:
       OMP_THREAD_LIMIT: "1"  # parallel Tesseract processes must not fight over cores

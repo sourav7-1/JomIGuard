@@ -1,0 +1,230 @@
+"use client";
+
+import React, { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/Card";
+import { Spinner } from "@/components/ui/Spinner";
+import {
+  DocumentDropZone,
+  type PendingUpload,
+} from "@/components/upload/DocumentDropZone";
+import { DocumentProgressCard } from "@/components/upload/DocumentProgressCard";
+import { RecommendedDocList } from "@/components/upload/RecommendedDocList";
+import { api, type DocumentStatusOut, type LandOut } from "@/lib/api";
+import { strings } from "@/lib/strings";
+
+export interface UploadFlowClientProps {
+  landId: string;
+}
+
+export function UploadFlowClient({ landId }: UploadFlowClientProps) {
+  const router = useRouter();
+
+  const [land, setLand] = useState<LandOut | null>(null);
+  const [documents, setDocuments] = useState<DocumentStatusOut[]>([]);
+  const [pendingUploads, setPendingUploads] = useState<Record<string, PendingUpload>>({});
+  const [uploadPercents, setUploadPercents] = useState<Record<string, number>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAssessing, setIsAssessing] = useState(false);
+  const [assessError, setAssessError] = useState<string | null>(null);
+
+  // 1. Load land details and existing documents on mount (so page survives refresh)
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadData() {
+      try {
+        const [landData, docsData] = await Promise.all([
+          api.getLand(landId).catch(() => null),
+          api.getLandDocuments(landId).catch(() => []),
+        ]);
+
+        if (isMounted) {
+          if (landData) setLand(landData);
+          if (docsData) setDocuments(docsData);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [landId]);
+
+  // Handlers for upload lifecycle
+  const handleUploadStart = useCallback((pending: PendingUpload) => {
+    setPendingUploads((prev) => ({ ...prev, [pending.id]: pending }));
+    setUploadPercents((prev) => ({ ...prev, [pending.id]: 0 }));
+  }, []);
+
+  const handleUploadProgress = useCallback((tempId: string, percent: number) => {
+    setUploadPercents((prev) => ({ ...prev, [tempId]: percent }));
+  }, []);
+
+  const handleUploadError = useCallback((tempId: string, error: string) => {
+    setPendingUploads((prev) => {
+      const copy = { ...prev };
+      if (copy[tempId]) {
+        copy[tempId] = { ...copy[tempId], status: "error", error };
+      }
+      return copy;
+    });
+  }, []);
+
+  const handleUploadSuccess = useCallback((newDoc: DocumentStatusOut) => {
+    // Add to documents list or update if exists
+    setDocuments((prev) => {
+      const existingIdx = prev.findIndex((d) => d.id === newDoc.id);
+      if (existingIdx >= 0) {
+        const updated = [...prev];
+        updated[existingIdx] = newDoc;
+        return updated;
+      }
+      return [...prev, newDoc];
+    });
+
+    // Remove from pending uploads
+    setPendingUploads((prev) => {
+      const copy = { ...prev };
+      // delete any temp entry matching original_filename
+      for (const [k, v] of Object.entries(copy)) {
+        if (v.name === newDoc.original_filename) {
+          delete copy[k];
+        }
+      }
+      return copy;
+    });
+  }, []);
+
+  // Handler for document status updates during polling
+  const handleDocumentUpdate = useCallback((updated: DocumentStatusOut) => {
+    setDocuments((prev) =>
+      prev.map((doc) => (doc.id === updated.id ? updated : doc))
+    );
+  }, []);
+
+  // Handler for removing a document from list
+  const handleDocumentRemove = useCallback(async (docId: string) => {
+    // Optimistically remove from state
+    setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    try {
+      await api.detachDocument(docId);
+    } catch {
+      // Ignore error on detach
+    }
+  }, []);
+
+  // Handler for "যাচাই করুন" (Assess)
+  const handleAssess = async () => {
+    setAssessError(null);
+    setIsAssessing(true);
+    try {
+      await api.assessLand(landId);
+      router.push(`/cases/${landId}`);
+    } catch (err: unknown) {
+      setAssessError(err instanceof Error ? err.message : strings.uploadFlow.errAssess);
+      setIsAssessing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-16 space-y-3">
+        <Spinner size="lg" />
+        <p className="text-sm text-muted">{strings.labels.loading}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-5xl mx-auto py-4">
+      {/* Top Banner: Step & Land Info */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-line pb-4">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-soft text-accent text-xs font-semibold">
+            <span>ধাপ ২</span> • {strings.uploadFlow.step2Title}
+          </div>
+          <h1 className="text-xl md:text-2xl font-bold font-heading text-ink">
+            {strings.uploadFlow.step2Title}
+          </h1>
+          {land && (
+            <p className="text-xs md:text-sm text-muted flex flex-wrap items-center gap-2">
+              <span className="font-semibold text-ink">
+                {strings.uploadFlow.landInfoPrefix}
+              </span>
+              <span>মৌজা: {land.mouza}</span>
+              {land.dag_no && <span>• দাগ: {land.dag_no}</span>}
+              {land.upazila && <span>• উপজেলা: {land.upazila}</span>}
+            </p>
+          )}
+        </div>
+
+        <Link
+          href="/upload"
+          className="min-h-[44px] px-3.5 py-2 text-xs font-medium rounded-lg border border-line bg-surface text-ink hover:bg-bg transition-colors flex items-center justify-center self-start sm:self-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          ← {strings.buttons.newCheck}
+        </Link>
+      </div>
+
+      {/* Main 2-column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left Column (2 cols on lg): Drop zone & Document Progress Cards */}
+        <div className="lg:col-span-2 space-y-6">
+          <DocumentDropZone
+            landId={landId}
+            onUploadStart={handleUploadStart}
+            onUploadProgress={handleUploadProgress}
+            onUploadError={handleUploadError}
+            onUploadSuccess={handleUploadSuccess}
+          />
+
+          {/* Documents Section */}
+          <div className="space-y-3">
+            <h2 className="text-base font-bold font-heading text-ink">
+              কাগজপত্র ({documents.length})
+            </h2>
+
+            {documents.length === 0 && Object.keys(pendingUploads).length === 0 ? (
+              <Card className="p-8 text-center border-dashed bg-surface/50">
+                <p className="text-sm text-muted">
+                  {strings.uploadFlow.noDocsYet}
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {/* Uploaded Documents */}
+                {documents.map((doc) => (
+                  <DocumentProgressCard
+                    key={doc.id}
+                    document={doc}
+                    uploadPercent={uploadPercents[doc.id]}
+                    onUpdate={handleDocumentUpdate}
+                    onRemove={handleDocumentRemove}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Recommended Document List Sidebar & Assess Action */}
+        <div className="lg:col-span-1 sticky top-20">
+          <RecommendedDocList
+            documents={documents}
+            onAssess={handleAssess}
+            isAssessing={isAssessing}
+            assessError={assessError}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}

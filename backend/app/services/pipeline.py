@@ -14,6 +14,7 @@ from minio.error import S3Error
 from sqlalchemy.orm import Session
 
 from app.models import DocStatus, DocType, Document, Extraction, ExtractionStatus
+from app.models.document import DocStep
 from app.services.classify import check_user_label, classify_ocr
 from app.services.extraction import BudgetExceeded, Extractor
 from app.services.normalize import normalize_document
@@ -34,9 +35,9 @@ BUDGET_BN = "আজকের LLM খরচের দৈনিক সীমা (d
 def make_extractor(name: str) -> Extractor:
     """Extractor from the EXTRACTOR setting: "llm" (default) or "tesseract_regex"."""
     if name == "llm":
-        from app.services.extraction.llm import AnthropicExtractor
+        from app.services.extraction.llm import make_llm_extractor
 
-        extractor = AnthropicExtractor()
+        extractor = make_llm_extractor()  # LLM_PROVIDER: anthropic | gemini
     elif name == "tesseract_regex":
         from app.services.extraction.tesseract_regex import TesseractRegexExtractor
 
@@ -78,6 +79,7 @@ def process_document(
     if doc.status == DocStatus.done and not force:
         return doc.status  # idempotent: a repeated task does nothing
     doc.status = DocStatus.processing
+    doc.current_step = DocStep.reading
     doc.started_at, doc.finished_at = _now(), None
     doc.attempts = (doc.attempts or 0) + 1
     doc.error_message = doc.label_warning = None
@@ -96,6 +98,8 @@ def process_document(
             gray = preprocess(data).gray
         except PreprocessError:
             return fail(BAD_IMAGE_BN)
+        doc.current_step = DocStep.classifying
+        db.commit()
         result = classify_ocr(lambda psm: ocr(gray, psm=psm).text)
         doc.detected_doc_type = DocType(result.doc_type)
         doc.classify_confidence = result.confidence
@@ -112,6 +116,8 @@ def process_document(
             return fail(OTHER_LABEL_BN)
         db.commit()
 
+        doc.current_step = DocStep.extracting
+        db.commit()
         ex = extractor.extract(data, doc_type.value)
         row = Extraction(
             document_id=doc.id,
@@ -128,6 +134,8 @@ def process_document(
             doc.error_message = f"{EXTRACT_FAILED_BN}: {ex.error}"
             db.commit()
             return doc.status
+        doc.current_step = DocStep.normalizing
+        db.commit()
         normalized = normalize_document(ex.document)
         row.data = normalized.doc.model_dump(mode="json")
         row.warnings = [asdict(w) for w in normalized.warnings]
@@ -138,6 +146,7 @@ def process_document(
             else ExtractionStatus.ok
         )
         db.add(row)
+        doc.current_step = DocStep.finished
         doc.status, doc.finished_at = DocStatus.done, _now()
         db.commit()
         return doc.status

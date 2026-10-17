@@ -10,4 +10,6 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     task_ignore_result=True,
+    # Gemini's free tier rate-limits: one task at a time
+    worker_concurrency=1 if settings.llm_provider == "gemini" else 2,
 )

@@ -23,9 +23,9 @@ LIMIT_SEED = 0  # --limit takes a fixed random sample, so it mixes doc types and
 
 def make_extractor(kind: str, model: str | None, image: str):
     if kind == "llm":
-        from app.services.extraction.llm import AnthropicExtractor
+        from app.services.extraction.llm import make_llm_extractor
 
-        return AnthropicExtractor(model=model, image=image)
+        return make_llm_extractor(model=model, image=image)  # LLM_PROVIDER
     if kind == "tesseract_regex":
         from app.services.extraction.tesseract_regex import TesseractRegexExtractor
 

@@ -1,26 +1,113 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #F2F4F1;
+  --surface: #FFFFFF;
+  --ink: #16201B;
+  --muted: #5B6862;
+  --line: #D9DFDA;
+  --accent: #1E6A55;
+  --accent-soft: #E1EEE8;
+  --ok: #2E7D4F;
+  --ok-bg: #E3F1E8;
+  --warn: #A86A00;
+  --warn-bg: #FBF0D9;
+  --bad: #B3261E;
+  --bad-bg: #F9E3E1;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --bg: #101613;
+    --surface: #18201C;
+    --ink: #E6ECE8;
+    --muted: #9AA8A1;
+    --line: #2A3530;
+    --accent: #5BBF9E;
+    --accent-soft: #1C3229;
+    --ok: #6CC08E;
+    --ok-bg: #1A2E22;
+    --warn: #E2B04A;
+    --warn-bg: #33291A;
+    --bad: #F08A82;
+    --bad-bg: #3A1F1D;
   }
 }
 
+[data-theme="dark"] {
+  --bg: #101613;
+  --surface: #18201C;
+  --ink: #E6ECE8;
+  --muted: #9AA8A1;
+  --line: #2A3530;
+  --accent: #5BBF9E;
+  --accent-soft: #1C3229;
+  --ok: #6CC08E;
+  --ok-bg: #1A2E22;
+  --warn: #E2B04A;
+  --warn-bg: #33291A;
+  --bad: #F08A82;
+  --bad-bg: #3A1F1D;
+}
+
+[data-theme="light"] {
+  --bg: #F2F4F1;
+  --surface: #FFFFFF;
+  --ink: #16201B;
+  --muted: #5B6862;
+  --line: #D9DFDA;
+  --accent: #1E6A55;
+  --accent-soft: #E1EEE8;
+  --ok: #2E7D4F;
+  --ok-bg: #E3F1E8;
+  --warn: #A86A00;
+  --warn-bg: #FBF0D9;
+  --bad: #B3261E;
+  --bad-bg: #F9E3E1;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-bad: var(--bad);
+  --color-bad-bg: var(--bad-bg);
+
+  --font-heading: var(--font-tiro-bangla), serif;
+  --font-body: var(--font-hind-siliguri), sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), monospace;
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  min-height: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}
+
+code,
+kbd,
+samp,
+pre,
+.font-mono,
+[data-mono="true"] {
+  font-family: var(--font-mono);
 }

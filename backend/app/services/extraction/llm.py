@@ -80,7 +80,17 @@ def prepare_image(image_bytes: bytes, mode: str) -> tuple[bytes, str, tuple[int,
     return buf.tobytes(), media, (img.shape[1], img.shape[0])
 
 
-class AnthropicExtractor:
+class ProviderError(RuntimeError):
+    """The provider call failed (network, auth, rate limit after retries): not cached."""
+
+
+class LLMExtractor:
+    """Shared by every vision-LLM provider: extractor-only schema, image preparation, cache,
+    budget guard and validation. A provider implements _default_model, _make_client and _call."""
+
+    provider = "llm"
+    model_setting = "LLM_MODEL"
+
     def __init__(
         self,
         *,
@@ -93,13 +103,13 @@ class AnthropicExtractor:
         cache_dir: Path | None = None,
         budget: Budget | None = None,
     ) -> None:
-        self.model = model or settings.llm_model
+        self.model = model or self._default_model()
         self.price_in = _first(price_input_per_mtok, settings.llm_price_input_per_mtok)
         self.price_out = _first(price_output_per_mtok, settings.llm_price_output_per_mtok)
         missing = [
             name
             for name, value in (
-                ("LLM_MODEL", self.model),
+                (self.model_setting, self.model),
                 ("LLM_PRICE_INPUT_PER_MTOK", self.price_in),
                 ("LLM_PRICE_OUTPUT_PER_MTOK", self.price_out),
                 ("LLM_DAILY_BUDGET_USD", budget or settings.llm_daily_budget_usd),
@@ -118,20 +128,30 @@ class AnthropicExtractor:
         )
         self._client = client
 
+    # --- provider hooks ---
+
+    def _default_model(self) -> str | None:
+        raise NotImplementedError
+
+    def _make_client(self):
+        raise NotImplementedError
+
+    def _call(self, data: bytes, media_type: str, doc_type: str):
+        """-> (tool_input | None, error | None, input_tokens, output_tokens).
+        Raises ProviderError when the call itself failed."""
+        raise NotImplementedError
+
     @property
     def client(self):
         if self._client is None:  # created lazily: cache hits need no API key
-            key = settings.anthropic_api_key
-            if key is None:
-                raise ValueError("ANTHROPIC_API_KEY is not set")
-            self._client = anthropic.Anthropic(api_key=key.get_secret_value())
+            self._client = self._make_client()
         return self._client
 
     # --- cache ---
 
     def cache_key(self, image_bytes: bytes, doc_type: str) -> str:
         h = hashlib.sha256(image_bytes)
-        for part in (self.model, PROMPT_VERSION, doc_type, self.image):
+        for part in (self.provider, self.model, PROMPT_VERSION, doc_type, self.image):
             h.update(b"\0" + part.encode())
         return h.hexdigest()
 
@@ -181,6 +201,48 @@ class AnthropicExtractor:
         self.budget.check(self.estimate_usd(size, doc_type))  # raises BudgetExceeded
 
         try:
+            tool_input, error, tokens_in, tokens_out = self._call(data, media_type, doc_type)
+        except ProviderError as e:  # not cached: a later run may succeed
+            return done(None, f"api: {e}")
+
+        meta.input_tokens, meta.output_tokens = tokens_in, tokens_out
+        cost = cost_usd(tokens_in, tokens_out, self.price_in, self.price_out)
+        self.budget.add(cost)
+        meta.cost_usd = float(cost)
+        self._cache_put(
+            key,
+            {
+                "tool_input": tool_input,
+                "error": error,
+                "meta": {
+                    "provider": self.provider,
+                    "model": self.model,
+                    "prompt_version": PROMPT_VERSION,
+                    "input_tokens": tokens_in,
+                    "output_tokens": tokens_out,
+                    "cost_usd": meta.cost_usd,
+                },
+            },
+        )
+        return done(tool_input, error)
+
+
+class AnthropicExtractor(LLMExtractor):
+    """Structured output through a forced tool call (input_schema = extractor-only schema)."""
+
+    provider = "anthropic"
+
+    def _default_model(self) -> str | None:
+        return settings.llm_model
+
+    def _make_client(self):
+        key = settings.anthropic_api_key
+        if key is None:
+            raise ValueError("ANTHROPIC_API_KEY is not set")
+        return anthropic.Anthropic(api_key=key.get_secret_value())
+
+    def _call(self, data: bytes, media_type: str, doc_type: str):
+        try:
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
@@ -210,30 +272,21 @@ class AnthropicExtractor:
                     }
                 ],
             )
-        except anthropic.APIError as e:  # not cached: a later run may succeed
-            return done(None, f"api: {type(e).__name__}")
-
-        meta.input_tokens = response.usage.input_tokens
-        meta.output_tokens = response.usage.output_tokens
-        cost = cost_usd(meta.input_tokens, meta.output_tokens, self.price_in, self.price_out)
-        self.budget.add(cost)
-        meta.cost_usd = float(cost)
+        except anthropic.APIError as e:
+            raise ProviderError(type(e).__name__) from e
         tool_input, error = _tool_input(response)
-        self._cache_put(
-            key,
-            {
-                "tool_input": tool_input,
-                "error": error,
-                "meta": {
-                    "model": self.model,
-                    "prompt_version": PROMPT_VERSION,
-                    "input_tokens": meta.input_tokens,
-                    "output_tokens": meta.output_tokens,
-                    "cost_usd": meta.cost_usd,
-                },
-            },
-        )
-        return done(tool_input, error)
+        return tool_input, error, response.usage.input_tokens, response.usage.output_tokens
+
+
+def make_llm_extractor(**kwargs) -> LLMExtractor:
+    """The vision-LLM extractor for LLM_PROVIDER (anthropic | gemini)."""
+    if settings.llm_provider == "gemini":
+        from app.services.extraction.gemini import GeminiExtractor
+
+        return GeminiExtractor(**kwargs)
+    if settings.llm_provider == "anthropic":
+        return AnthropicExtractor(**kwargs)
+    raise ValueError(f"LLM_PROVIDER must be anthropic or gemini, not {settings.llm_provider!r}")
 
 
 def _first(value, default):

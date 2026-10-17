@@ -7,6 +7,8 @@ dependencies = [
     "anthropic>=1.14.0",
     "celery[redis]>=5.6.3",
     "fastapi>=0.143.0",
+    "google-genai>=2.31.0",
+    "jinja2>=3.1.6",
     "minio>=7.2.20",
     "numpy>=2.5.3",
     "opencv-python-headless>=5.0.0.93",
@@ -17,6 +19,7 @@ dependencies = [
     "rapidfuzz>=3.14.6",
     "sqlalchemy>=2.1.4",
     "uvicorn[standard]>=0.54.0",
+    "weasyprint>=70.0",
 ]
 
 [dependency-groups]
@@ -25,6 +28,7 @@ dev = [
     "pillow>=12.3.0",
     "pre-commit>=4.6.2",
     "pre-commit-hooks==6.0.0",
+    "pypdfium2>=5.14.0",
     "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]

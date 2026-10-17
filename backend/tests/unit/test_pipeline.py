@@ -12,6 +12,7 @@ from conftest import TestSession
 from sqlalchemy import select
 
 from app.models import DocStatus, DocType, Document, Extraction, ExtractionStatus
+from app.models.document import DocStep
 from app.schemas.extracted import KhatianData
 from app.services import pipeline
 from app.services.classify import ClassifyResult
@@ -219,3 +220,30 @@ def test_extractor_config_error_fails_the_document(db, monkeypatch):
     assert pipeline.process_with_settings(doc.id, db, FakeStorage({}), "llm") == DocStatus.failed
     db.refresh(doc)
     assert "LLM_MODEL" in doc.error_message
+
+
+def test_pipeline_sets_current_step_in_order(db, classified):
+    doc = new_document(db)
+    assert doc.current_step == DocStep.queued
+
+    steps_seen = []
+    original_commit = db.commit
+
+    def tracking_commit():
+        if doc.current_step not in steps_seen:
+            steps_seen.append(doc.current_step)
+        original_commit()
+
+    db.commit = tracking_commit
+    try:
+        assert run(db, doc) == DocStatus.done
+    finally:
+        db.commit = original_commit
+
+    assert steps_seen == [
+        DocStep.reading,
+        DocStep.classifying,
+        DocStep.extracting,
+        DocStep.normalizing,
+        DocStep.finished,
+    ]

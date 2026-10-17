@@ -1,6 +1,8 @@
 FROM python:3.12-slim
+# Tesseract (OCR); WeasyPrint (PDF reports) needs Pango, HarfBuzz (+ subset) and fontconfig
 RUN apt-get update \
     && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-ben tesseract-ocr-eng \
+       libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libharfbuzz-subset0 libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 # tessdata_best Bangla model in its own folder (apt pack stays); eng/osd linked so ben+eng works
 ADD --checksum=sha256:1cd0129288d1f74f6661c35e638e487bd146a66bb732ecd9e011e48dcb0df623 \

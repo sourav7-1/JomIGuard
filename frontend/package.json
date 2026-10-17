@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "gen:api": "node -e \"const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\\/+$/, ''); const cp = require('child_process'); cp.execSync('npx openapi-typescript ' + base + '/openapi.json -o src/lib/api-types.ts', { stdio: 'inherit' });\""
   },
   "dependencies": {
     "next": "16.4.0",
@@ -20,6 +21,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

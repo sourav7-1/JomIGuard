@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>JomiGuard যাচাই রিপোর্ট {{ report_id }}</title>
+<link rel="stylesheet" href="report.css">
+</head>
+<body>
+{% if sample %}<div class="watermark">নমুনা</div>{% endif %}
+
+<header class="head">
+  <div class="brand">JomiGuard যাচাই রিপোর্ট</div>
+  <table class="meta">
+    <tr><th>তারিখ</th><td>{{ date_bn }}</td><th>রিপোর্ট নং</th><td>{{ report_id }}</td></tr>
+    <tr><th>মৌজা</th><td>{{ mouza or "উল্লেখ নেই" }}</td><th>দাগ</th><td>{{ dags or "উল্লেখ নেই" }}</td></tr>
+    <tr><th>খতিয়ান</th><td colspan="3">{{ khatian or "উল্লেখ নেই" }}</td></tr>
+  </table>
+</header>
+
+<section class="verdict risk-{{ a.risk_level }}">
+  <h1>{{ a.headline_bn }}</h1>
+  <p>{{ a.summary_bn }}</p>
+</section>
+
+{% if a.passed %}
+<section>
+  <h2>যা মিলেছে</h2>
+  <ul class="ok-list">{% for p in a.passed %}<li><span class="tick">✓</span> {{ p.message_bn }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{% if a.findings %}
+<section>
+  <h2>যা মেলেনি</h2>
+  {% for f in a.findings %}
+  <div class="finding {{ f.status.value }}">
+    <div class="finding-title"><span class="mark">{{ "!" if f.status.value == "bad" else "?" }}</span> {{ f.title_bn }}</div>
+    <p>{{ f.message_bn }}</p>
+    {% if f.sources %}
+    <div class="sources">উৎস: {% for s in f.sources | unique(attribute="label_bn") %}{{ s.label_bn }}{% if not loop.last %}; {% endif %}{% endfor %}
+      {% set printed = describe_sources(f.sources) %}{% if printed %}<br>লেখা আছে: {{ printed }}{% endif %}</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if not a.coverage.complete %}
+<section class="partial">
+  <h2>আংশিক যাচাই</h2>
+  <p>কিছু পরীক্ষা চালানো যায়নি{% if a.coverage.documents_missing_bn %}; এই কাগজ upload করলে আরও যাচাই করা যাবে: <b>{{ a.coverage.documents_missing_bn | join(", ") }}</b>{% endif %}।</p>
+  <ul>{% for s in a.coverage.checks_skipped %}<li>{{ s.reason_bn }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+
+{% if a.review_needed %}
+<section>
+  <h2>নিজে মিলিয়ে নিন</h2>
+  <ul>{% for r in a.review_needed %}<li>{{ r.document_label_bn }}: {{ r.label_bn }}{% if r.printed_text %} ("{{ r.printed_text }}"){% endif %}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+<section>
+  <h2>এখন আপনার কাজ</h2>
+  <ol class="actions">{% for x in a.actions %}<li><span class="box"></span><span class="num">{{ bn(loop.index) }}.</span> {{ x.text_bn }}</li>{% endfor %}</ol>
+</section>
+
+<section>
+  <h2>যে কাগজ পড়া হয়েছে</h2>
+  <table class="docs">
+    <thead><tr><th>কাগজ</th><th>মালিক / বিক্রেতা</th><th>দাগ</th><th>খতিয়ান</th><th>জমি</th></tr></thead>
+    <tbody>{% for d in documents %}<tr><td>{{ d.label }}</td><td>{{ d.names }}</td><td>{{ d.dags }}</td><td>{{ d.khatian }}</td><td>{{ d.area }}</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+
+<section class="disclaimer">
+  <p>{{ a.disclaimer_bn }}</p>
+  <p>এটি আইনি পরামর্শ নয়। প্রয়োজনে একজন আইনজীবীর সাথে কথা বলুন।</p>
+</section>
+</body>
+</html>

@@ -57,6 +57,8 @@ class SourceRef(BaseModel):
     label_bn: str
     field_path: str  # "owners[0].share_fraction"
     printed_text: str | None  # the *_text or name as printed, else the stored value
+    doc_bn: str = ""  # where, for people: "খতিয়ানে", "দলিলে", "নামজারিতে", "ওয়ারিশ সনদে"
+    value_bn: str = ""  # the labelled value: "রহিম উদ্দিনের অংশ .৪০০", "দাগ ৩০৫-এ জমি .১৫০০ একর"
 
 
 class LandCase(BaseModel):
@@ -149,12 +151,94 @@ def ref(doc: CaseDocument, field_path: str) -> SourceRef:
         value = printed if printed is not None else getattr(node, field)
     else:
         value = _get(node, field)
+    printed = None if value is None else str(value)
     return SourceRef(
         source_id=doc.source_id,
         label_bn=doc.label_bn,
         field_path=field_path,
-        printed_text=None if value is None else str(value),
+        printed_text=printed,
+        doc_bn=DOC_IN_BN.get(doc.doc_type, ""),
+        value_bn=_value_bn(doc, parents, _printed_field(m.group(1)) if m else field, printed),
     )
+
+
+# --- labelled values for people (report "লেখা আছে", case page) ---
+
+DOC_IN_BN = {"khatian": "খতিয়ানে", "dcr": "নামজারিতে", "deed": "দলিলে", "heir_cert": "ওয়ারিশ সনদে"}
+_ROLE_BN = {"owners": "মালিক", "sellers": "বিক্রেতা", "buyers": "ক্রেতা", "heirs": "ওয়ারিশ"}
+_AREA_FIELDS = ("area_text", "plot_total_area_text", "total_area_text")
+_VOWEL_SIGNS = "ািীুূৃেৈোৌ"
+_BN_DIGITS = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
+
+
+def genitive_bn(name: str) -> str:
+    """ "রহিম উদ্দিন" -> "রহিম উদ্দিনের", "রুনা" -> "রুনার"."""
+    name = name.strip()
+    return f"{name}র" if name and name[-1] in _VOWEL_SIGNS else f"{name}ের"
+
+
+def _value_bn(doc: CaseDocument, parents: list[str], field: str, printed: str | None) -> str:
+    if printed is None or field == "doc_type":
+        return ""
+    data = doc.data
+    item, list_name = None, None
+    if parents:
+        m = re.fullmatch(r"(\w+)\[(\d+)\]", parents[-1])
+        if m:
+            list_name, item = m.group(1), _get(data, parents[-1])
+    unit = getattr(data, "area_unit_text", None)
+    if field in _AREA_FIELDS and unit and unit not in printed:
+        printed = f"{printed} {unit}"
+    person = getattr(item, "name", None) if list_name in _ROLE_BN else None
+    dag = getattr(item, "dag_no", None) if list_name in ("plots", "schedule_plots") else None
+    if field == "name":
+        text = f"{_ROLE_BN[list_name]} {printed}" if list_name in _ROLE_BN else printed
+    elif person and field == "share_text":
+        text = f"{genitive_bn(person)} অংশ {printed}"
+    elif person and field == "father_or_husband_name":
+        text = f"{genitive_bn(person)} পিতা/স্বামী {printed}"
+    elif dag and field == "area_text":
+        text = f"দাগ {dag}-এ {'জমি ' if list_name == 'plots' else ''}{printed}"
+    elif dag and field == "plot_total_area_text":
+        text = f"দাগ {dag}-এর মোট জমি {printed}"
+    elif dag and field == "khatian_share_text":
+        text = f"দাগ {dag}-এ খতিয়ানের অংশ {printed}"
+    elif field == "dag_no":
+        text = f"দাগ নং {printed}"
+    elif list_name == "schedule_khatians" and field == "khatian_no":
+        text = f"খতিয়ান নং {item.survey_type} {printed}"
+    elif field in ("khatian_no", "new_khatian_no", "old_khatian_no"):
+        survey = getattr(data, "survey_type", "")
+        text = f"খতিয়ান নং {survey} {printed}".replace("  ", " ")
+    elif field == "total_area_text":
+        text = f"মোট জমি {printed}"
+    elif field == "transferred_area_text":
+        text = printed
+    elif field == "mouza":
+        text = f"মৌজা {printed}"
+    elif field == "jl_no":
+        text = f"জে.এল. নং {printed}"
+    elif field == "title_source_text":
+        text = f'মালিকানার সূত্র "{printed}"'
+    elif field == "deceased_name":
+        text = f"মৃত {printed}"
+    else:
+        text = printed
+    return text.translate(_BN_DIGITS)
+
+
+def describe_sources(sources: list[SourceRef]) -> str:
+    """ "খতিয়ানে রহিম উদ্দিনের অংশ .৪০০ · দাগ ৩০৫-এ জমি .১৫০০ একর · দলিলে ১০ শতাংশ":
+    the document is named only when it changes; duplicates are dropped."""
+    parts, last_doc, seen = [], None, set()
+    for s in sources:
+        if not s.value_bn or (s.source_id, s.value_bn) in seen:
+            continue
+        seen.add((s.source_id, s.value_bn))
+        prefix = f"{s.doc_bn} " if s.source_id != last_doc and s.doc_bn else ""
+        parts.append(prefix + s.value_bn)
+        last_doc = s.source_id
+    return " · ".join(parts)
 
 
 # --- API bodies for lands (api/lands.py) ---
