@@ -110,7 +110,7 @@ def test_empty_case_skips_rules_needing_roles():
 
 def test_codes_match_findings_md():
     table = re.findall(r"^\| `(\w+)` \| (\w+) \| (bad|warn) \|", FINDINGS_MD, re.MULTILINE)
-    assert len(table) == 13
+    assert len(table) == 15
     assert {code: (group, sev) for code, group, sev in table} == {
         c.code: (c.group, c.severity) for c in CODES.values()
     }

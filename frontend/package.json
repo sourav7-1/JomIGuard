@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "gen:api": "node -e \"const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\\/+$/, ''); const cp = require('child_process'); cp.execSync('npx openapi-typescript ' + base + '/openapi.json -o src/lib/api-types.ts', { stdio: 'inherit' });\""
+    "gen:api": "node -e \"const base = (process.env.BACKEND_INTERNAL_URL || 'http://localhost:8000').replace(/\\/+$/, ''); const cp = require('child_process'); cp.execSync('npx openapi-typescript ' + base + '/openapi.json -o src/lib/api-types.ts', { stdio: 'inherit' });\""
   },
   "dependencies": {
     "next": "16.4.0",

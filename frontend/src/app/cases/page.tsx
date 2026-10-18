@@ -1,59 +1,20 @@
-import React from "react";
-import Link from "next/link";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { strings } from "@/lib/strings";
+"use client";
 
-const sampleCases = [
-  {
-    id: "case-305",
-    mouza: "চাঁদশী",
-    dag: "৩০৫",
-    khatian: "BS ৮৮২",
-    status: "উচ্চ ঝুঁকি",
-    statusVariant: "bad" as const,
-    note: "খতিয়ানে রহিমের অংশ ৬ শতাংশ, দলিলে ১০ শতাংশ হস্তান্তর",
-  },
-];
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { api, LandOut } from "@/lib/api";
+import { strings } from "@/lib/strings";
+import { Spinner } from "@/components/ui/Spinner";
 
 export default function CasesPage() {
-  return (
-    <div className="space-y-6 max-w-4xl mx-auto py-4">
-      <div className="space-y-1">
-        <h1 className="text-xl md:text-2xl font-bold font-heading text-ink">
-          {strings.pages.cases.title}
-        </h1>
-        <p className="text-sm text-muted leading-relaxed">
-          {strings.pages.cases.desc}
-        </p>
-      </div>
-
-      <div className="space-y-3">
-        {sampleCases.map((c) => (
-          <Link
-            key={c.id}
-            href={`/cases/${c.id}`}
-            className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent rounded-xl"
-          >
-            <Card className="hover:border-accent/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-base font-heading text-ink">
-                    মৌজা {c.mouza}, দাগ {c.dag}
-                  </span>
-                  <Badge variant={c.statusVariant}>{c.status}</Badge>
-                </div>
-                <p className="text-xs text-muted">
-                  খতিয়ান: {c.khatian} • {c.note}
-                </p>
-              </div>
-              <span className="text-xs font-semibold text-accent self-end sm:self-center">
-                {strings.buttons.viewDetails} →
-              </span>
-            </Card>
-          </Link>
-        ))}
-      </div>
+  const [lands, setLands] = useState<LandOut[] | null>(null);
+  const [error, setError] = useState(false);
+  useEffect(() => { api.getLands().then(setLands).catch(() => setError(true)); }, []);
+  return <div className="mx-auto max-w-5xl space-y-8 py-2 sm:space-y-10">
+    <div className="flex flex-col gap-5 border-b border-line pb-7 sm:flex-row sm:items-end sm:justify-between">
+      <div className="max-w-2xl"><p className="mb-3 flex items-center gap-3 text-sm font-semibold text-accent"><span className="h-px w-8 bg-gold" />আপনার নথির কাজ</p><h1 className="text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">{strings.pages.cases.title}</h1><p className="mt-3 text-base leading-7 text-muted">{strings.pages.cases.desc}</p></div>
+      <Link href="/upload" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-accent px-4 text-sm font-semibold text-white">নতুন যাচাই শুরু করুন</Link>
     </div>
-  );
+    {error ? <p role="alert" className="border-y border-line py-10 text-sm text-bad">{strings.pages.cases.error}</p> : lands === null ? <div className="flex justify-center py-10"><Spinner /></div> : lands.length === 0 ? <div className="border-y border-line py-10"><p className="text-sm leading-6 text-muted">{strings.pages.cases.empty}</p><Link href="/upload" className="mt-4 inline-flex min-h-11 items-center rounded-md border border-line bg-surface px-4 text-sm font-semibold text-accent">নতুন যাচাই শুরু করুন</Link></div> : <ul className="grid gap-3 sm:grid-cols-2">{lands.map((land) => <li key={land.id} className="rounded-xl border border-line bg-surface p-4"><p className="font-heading text-lg font-bold text-ink">{land.mouza || "মৌজার তথ্য নেই"} · দাগ {land.dag_no || "—"}</p><p className="mt-1 text-sm text-muted">{land.district} {land.upazila} · খতিয়ান {land.khatian_no || "—"}</p><Link href={`/cases/${land.id}`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-accent underline">{strings.pages.cases.open}</Link></li>)}</ul>}
+  </div>;
 }

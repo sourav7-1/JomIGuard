@@ -1,7 +1,7 @@
 import enum
 import uuid
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -29,5 +29,7 @@ class Extraction(IdTimestampMixin, Base):
     data: Mapped[dict | None] = mapped_column(JSONB)  # normalized ExtractedDocument
     warnings: Mapped[list] = mapped_column(JSONB, default=list)  # normalize warnings
     field_flags: Mapped[dict] = mapped_column(JSONB, default=dict)  # field_path -> [codes]
+    handwritten: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    created_by: Mapped[str | None] = mapped_column(String(80))
     cost_usd: Mapped[float] = mapped_column(default=0.0)
     latency_s: Mapped[float] = mapped_column(default=0.0)

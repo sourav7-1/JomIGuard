@@ -222,6 +222,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--split", choices=["test", "train", "all"], default="test")
     ap.add_argument("--limit", type=int)
+    ap.add_argument("--sample", type=Path, help="only cases listed in a sample JSON file")
     ap.add_argument("--name", default="e2e_v1")
     ap.add_argument("--extractor", help="default: the EXTRACTOR setting")
     ap.add_argument("--images", choices=["clean", "aug0", "aug1"], default="clean")
@@ -237,6 +238,11 @@ def main() -> None:
     name = a.extractor or settings.extractor
     extractor = make_extractor(name)
     case_ids = load_cases(a.split, a.data_root, a.dataset)[: a.limit]
+    if a.sample:
+        wanted = set(json.loads(a.sample.read_text(encoding="utf-8"))["cases"])
+        case_ids = [
+            case_id for case_id in load_cases(a.split, a.data_root, a.dataset) if case_id in wanted
+        ]
     results, stopped = [], None
     for case_id in case_ids:
         case_dir = a.data_root / "synthetic/cases" / case_id

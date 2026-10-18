@@ -41,6 +41,7 @@ class Item:
     preset: str
     split: str | None
     gt_path: Path
+    image_path: Path | None = None
 
 
 def image_id(path: str) -> str:
@@ -72,7 +73,23 @@ def load_items(manifest: dict, data_root: Path, split: str, doc_type: str | None
             continue
         augmented = path.parts[0] == "augmented"
         preset = presets.get(path.stem, "unknown") if augmented else "clean"
-        items.append(Item(image_id(e["path"]), dt, preset, e.get("split"), gt_path))
+        items.append(Item(image_id(e["path"]), dt, preset, e.get("split"), gt_path,
+                          data_root / str(path)))
+    return items
+
+
+def load_handwritten_items(folder: Path) -> list[Item]:
+    """Load synthetic handwritten deed pairs named image.ext + image.json."""
+    items = []
+    for gt_path in sorted(folder.glob("*.json")):
+        image = next((gt_path.with_suffix(ext) for ext in (".png", ".jpg", ".jpeg")
+                      if gt_path.with_suffix(ext).is_file()), None)
+        if image is None:
+            continue
+        doc_type = json.loads(gt_path.read_text(encoding="utf-8"))["doc_type"]
+        if doc_type != "deed":
+            raise ValueError(f"handwritten sample must be a deed: {gt_path.name}")
+        items.append(Item(gt_path.stem, doc_type, "handwritten", None, gt_path, image))
     return items
 
 
@@ -302,6 +319,8 @@ def main(argv: list[str] | None = None) -> None:
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--pred", type=Path, help="folder of <image_id>.json predictions")
     src.add_argument("--baseline", choices=["oracle", "empty"])
+    src.add_argument("--handwritten-dir", type=Path,
+                     help="run current Gemini model on synthetic image/ground-truth pairs")
     ap.add_argument("--name", help="run name (default: baseline_<kind> for baselines)")
     ap.add_argument("--split", choices=["test", "train", "all"], default="test")
     ap.add_argument("--doc-type", help="khatian, deed, mutation (dcr) or heir_cert")
@@ -309,6 +328,47 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--data-root", type=Path, default=DATA)
     ap.add_argument("--out", type=Path, default=DATA / "eval")
     a = ap.parse_args(argv)
+    if a.handwritten_dir:
+        from app.core.config import settings
+        from app.services.extraction.llm import make_llm_extractor
+        from app.services.extraction import BudgetExceeded
+        from dataclasses import asdict
+
+        if settings.llm_provider != "gemini":
+            ap.error("handwritten evaluation requires LLM_PROVIDER=gemini")
+        items = load_handwritten_items(a.handwritten_dir)
+        if not items:
+            print(f"no paired synthetic handwritten deeds in {a.handwritten_dir}; evaluation skipped")
+            return
+        extractor = make_llm_extractor()
+        name = "handwritten_gemini_current"
+        pred_dir = DATA / "predictions" / name
+        pred_dir.mkdir(parents=True, exist_ok=True)
+        done = []
+        for i, item in enumerate(items, 1):
+            try:
+                result = extractor.extract(item.image_path.read_bytes(), item.doc_type)
+            except BudgetExceeded as exc:
+                print(f"stopped: {exc}")
+                break
+            meta = asdict(result.meta) | {"handwritten": result.handwritten}
+            raw = ({"error": result.error, "meta": meta} if result.document is None else
+                   result.document.model_dump(mode="json", exclude_none=True) | {"meta": meta})
+            (pred_dir / f"{item.image_id}.json").write_text(
+                json.dumps(raw, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
+            done.append(item)
+            print(f"[{i}/{len(items)}] {item.image_id}: "
+                  f"{'ok' if result.document else 'error'} ({result.meta.latency_s:.1f}s)")
+        if not done:
+            print("nothing to evaluate")
+            return
+        report, rows = evaluate(done, load_predictions(pred_dir, done))
+        args = {"dataset": "handwritten (synthetic)", "model": extractor.model,
+                "extractor": "gemini", "evaluated": len(done), "requested": len(items)}
+        write(a.out, name, report, rows, args)
+        print(f"{name}: {summary(report)}; mean latency {num(report['mean_latency_s'], '.2f')} s/document")
+        print(f"wrote {a.out / name}")
+        return
     name = a.name or (f"baseline_{a.baseline}" if a.baseline else None)
     if not name:
         ap.error("--name is required with --pred")

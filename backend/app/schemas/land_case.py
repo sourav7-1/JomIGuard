@@ -11,6 +11,7 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.extracted import ExtractedDocument
+from app.schemas.identity import IdentityVerificationOut
 
 SURVEY_RANK = {"CITY": 4, "BS": 4, "RS": 3, "SA": 2, "CS": 1}  # newer survey = higher
 
@@ -32,6 +33,7 @@ class CaseDocumentInput(BaseModel):
     data: ExtractedDocument
     extraction_status: str = "ok"  # "ok" | "needs_review"
     field_flags: dict[str, list[str]] = Field(default_factory=dict)
+    handwritten: bool = False
 
 
 class CaseDocument(BaseModel):
@@ -42,6 +44,7 @@ class CaseDocument(BaseModel):
     data: ExtractedDocument  # normalized
     extraction_status: str
     field_flags: dict[str, list[str]] = Field(default_factory=dict)
+    handwritten: bool = False
 
 
 class BuilderWarning(BaseModel):
@@ -50,6 +53,15 @@ class BuilderWarning(BaseModel):
     code: str  # multiple_current_khatians | multiple_proposed_deeds | document_not_read
     message_bn: str
     source_ids: list[str] = Field(default_factory=list)
+
+
+class IdentityCaseResult(BaseModel):
+    party: str
+    seller_name_on_deed: str | None = None
+    status: str
+    name_bn_as_per_nid: str | None = None
+    father_name_as_per_nid: str | None = None
+    verified_at: date | None = None
 
 
 class SourceRef(BaseModel):
@@ -65,6 +77,8 @@ class LandCase(BaseModel):
     land_id: uuid.UUID | None = None
     documents: list[CaseDocument] = Field(default_factory=list)
     builder_warnings: list[BuilderWarning] = Field(default_factory=list)
+    identity: list[IdentityCaseResult] | None = None
+    identity_records: list[IdentityVerificationOut] = Field(default_factory=list)
 
     def with_role(self, role: CaseRole) -> list[CaseDocument]:
         return [d for d in self.documents if d.role == role]

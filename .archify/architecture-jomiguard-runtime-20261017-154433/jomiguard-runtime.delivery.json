@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "2d78f314-36d0-4b62-ad4e-f9380ce20a6c",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\JomIGuard\\.archify\\architecture-jomiguard-runtime-20261017-154433\\candidate.json",
+  "output": "C:\\JomIGuard\\.archify\\architecture-jomiguard-runtime-20261017-154433\\jomiguard-runtime.html",
+  "specification": {
+    "sha256": "9121104fc44488f655ca717cf27995aa9f10e8682c27405ea83390790d215022",
+    "bytes": 8178
+  },
+  "artifact": {
+    "sha256": "a580da79b3f614abe0178fc57c6f7c5cc8bfa397e6e67722d0d526f9cc4ce2d2",
+    "bytes": 770500
+  }
+}

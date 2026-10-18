@@ -1,0 +1,33 @@
+{
+ "dataset": "v2",
+ "split": "test",
+ "method": "20 images stratified by document type and preset; selected with seed 0",
+ "images": [
+  "case_00012_deed",
+  "case_00013_khatian_0",
+  "case_00029_deed_1",
+  "case_00029_heir_cert_0",
+  "case_00029_heir_cert_1",
+  "case_00029_mutation_0",
+  "case_00044_deed_0",
+  "case_00045_mutation_0",
+  "case_00046_deed_0",
+  "case_00046_khatian",
+  "case_00046_khatian_0",
+  "case_00046_khatian_1",
+  "case_00046_mutation",
+  "case_00046_mutation_1",
+  "case_00047_deed",
+  "case_00047_mutation",
+  "case_00048_heir_cert",
+  "case_00048_heir_cert_0",
+  "case_00048_khatian",
+  "khatian_00012_khatian_1"
+ ],
+ "cases": [
+  "case_00002",
+  "case_00026",
+  "case_00029",
+  "case_00045"
+ ]
+}

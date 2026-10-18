@@ -13,13 +13,13 @@ export function Card({
   ...props
 }: CardProps) {
   const variants = {
-    surface: "bg-surface text-ink border border-line shadow-xs",
+    surface: "bg-surface text-ink border border-line/90",
     soft: "bg-accent-soft text-ink border border-line/60",
   };
 
   return (
     <Component
-      className={`rounded-xl p-5 ${variants[variant]} ${className}`}
+      className={`rounded-lg p-5 ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

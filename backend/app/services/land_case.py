@@ -11,14 +11,16 @@ from pydantic import TypeAdapter
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import DocStatus, Document, Extraction, ExtractionStatus
+from app.models import DocStatus, Document, Extraction, ExtractionStatus, IdentityVerification
 from app.schemas.extracted import ExtractedDocument
+from app.schemas.identity import IdentityVerificationOut
 from app.schemas.land_case import (
     SURVEY_RANK,
     BuilderWarning,
     CaseDocument,
     CaseDocumentInput,
     CaseRole,
+    IdentityCaseResult,
     LandCase,
     deed_date,
 )
@@ -127,6 +129,7 @@ def build_land_case(
                 data=d.data,
                 extraction_status=d.extraction_status,
                 field_flags=d.field_flags,
+                handwritten=d.handwritten,
             )
         )
     return LandCase(land_id=land_id, documents=case_docs, builder_warnings=warnings)
@@ -161,7 +164,27 @@ def load_land_case(db: Session, land_id: uuid.UUID) -> LandCase:
                 data=_documents.validate_python(latest.data),
                 extraction_status=latest.status.value,
                 field_flags=latest.field_flags or {},
+                handwritten=latest.handwritten,
             )
         )
     warnings = [_warning("document_not_read", not_read)] if not_read else []
-    return build_land_case(inputs, land_id=land_id, warnings=warnings)
+    case = build_land_case(inputs, land_id=land_id, warnings=warnings)
+    rows = db.scalars(
+        select(IdentityVerification)
+        .where(IdentityVerification.land_id == land_id)
+        .order_by(IdentityVerification.created_at)
+    ).all()
+    case.identity_records = [IdentityVerificationOut.model_validate(row) for row in rows]
+    case.identity = [
+        IdentityCaseResult(
+            party=row.party,
+            seller_name_on_deed=row.seller_name_on_deed,
+            status=row.status,
+            name_bn_as_per_nid=row.name_bn_as_per_nid,
+            father_name_as_per_nid=row.father_name_as_per_nid,
+            verified_at=row.verified_at.date() if row.verified_at else None,
+        )
+        for row in rows
+        if row.party == "seller"
+    ]
+    return case

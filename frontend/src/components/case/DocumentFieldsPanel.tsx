@@ -19,12 +19,14 @@ interface DocumentFieldsPanelProps {
   document: CaseViewDocOut;
   fieldMetaList: FieldMeta[];
   onExtractionUpdated: (docId: string, newExtraction: CaseViewExtractionOut) => void;
+  highlightField?: string | null;
 }
 
 export function DocumentFieldsPanel({
   document: doc,
   fieldMetaList,
   onExtractionUpdated,
+  highlightField = null,
 }: DocumentFieldsPanelProps) {
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [filterNeedsReview, setFilterNeedsReview] = useState(false);
@@ -207,6 +209,8 @@ export function DocumentFieldsPanel({
     return (
       <FieldRow
         key={path}
+        id={`field-${doc.id}-${path}`}
+        highlighted={highlightField === `${doc.id}:${path}`}
         path={path}
         labelBn={meta.label_bn}
         value={val}
@@ -296,6 +300,11 @@ export function DocumentFieldsPanel({
 
       {/* Right: Extracted Fields, Highlighting, and Inline Editing */}
       <div className="lg:col-span-7 space-y-4">
+        {docType === "deed" && latest?.handwritten && (
+          <p className="rounded-lg border border-warn/40 bg-warn-bg px-3 py-2 text-sm font-semibold text-warn">
+            {strings.casePage.handwrittenBadge}
+          </p>
+        )}
         {/* Controls bar */}
         <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-surface border border-line rounded-xl">
           <div className="flex items-center gap-2">

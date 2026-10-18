@@ -34,7 +34,7 @@ def test_coverage_incomplete_does_not_change_risk():
     a = assessed("02_sells_within_share")  # no older khatian: the chain rule is skipped
     assert a.risk_level == "low"
     assert a.coverage.complete is False
-    assert [s.rule_id for s in a.coverage.checks_skipped] == ["ownership_chain"]
+    assert [s.rule_id for s in a.coverage.checks_skipped] == ["seller_identity", "ownership_chain"]
     assert a.coverage.documents_missing == ["older_khatian"]
     assert a.coverage.documents_missing_bn == ["পুরোনো খতিয়ান"]
     assert all(s.reason_bn for s in a.coverage.checks_skipped)
@@ -43,9 +43,10 @@ def test_coverage_incomplete_does_not_change_risk():
 def test_summary_counts_in_bangla_digits():
     a = assessed("01_demo_area_exceeds")
     assert a.summary_bn.startswith("১১টা পরীক্ষার মধ্যে ১টায় বড় অমিল আর ১টায় তথ্য অসম্পূর্ণ")
-    assert "১টা পরীক্ষা চালানো যায়নি" in a.summary_bn
+    assert "২টা পরীক্ষা চালানো যায়নি" in a.summary_bn
     low = assessed("19_full_chain_cs_sa_bs")  # everything could run
-    assert low.coverage.complete and "সবগুলোতে কাগজ মিলেছে" in low.summary_bn
+    assert not low.coverage.complete and "সবগুলোতে কাগজ মিলেছে" in low.summary_bn
+    assert "১টা পরীক্ষা চালানো যায়নি" in low.summary_bn
 
 
 def test_passed_and_findings_lists():

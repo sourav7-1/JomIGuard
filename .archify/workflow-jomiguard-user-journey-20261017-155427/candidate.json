@@ -1,0 +1,375 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "JomiGuard user journey: checking land documents",
+    "output": ".archify/workflow-jomiguard-user-journey-20261017-155427/jomiguard-user-journey.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/sourav7-1/JomIGuard.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "6edcbeb5fcc46be79cda2c2a9aca3b890805d63a"
+    }
+  },
+  "lanes": [
+    {
+      "id": "buyer",
+      "label": "Buyer"
+    },
+    {
+      "id": "web",
+      "label": "Web app (Next.js)"
+    },
+    {
+      "id": "server",
+      "label": "Backend"
+    },
+    {
+      "id": "later",
+      "label": "Not built yet",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "start",
+      "label": "Start a case",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "read",
+      "label": "Upload and read",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "result",
+      "label": "Result and next steps",
+      "fromCol": 4,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "arrive",
+    "create",
+    "upload",
+    "worker",
+    "poll",
+    "assess",
+    "caseview",
+    "review",
+    "next"
+  ],
+  "nodes": [
+    {
+      "id": "arrive",
+      "lane": "buyer",
+      "col": 0,
+      "type": "external",
+      "label": "Opens JomiGuard",
+      "sublabel": "home: start a check",
+      "width": 156,
+      "sources": [
+        {
+          "path": "frontend/src/app/page.tsx",
+          "line": 80,
+          "end_line": 82,
+          "label": "link to /upload"
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "lane": "buyer",
+      "col": 4,
+      "type": "external",
+      "label": "Reads the verdict",
+      "sublabel": "fix misreads → re-assess",
+      "width": 156,
+      "sources": [
+        {
+          "path": "frontend/src/components/case/DocumentFieldsPanel.tsx",
+          "line": 112,
+          "end_line": 141,
+          "label": "save corrections"
+        },
+        {
+          "path": "frontend/src/components/case/CaseHeader.tsx",
+          "line": 21,
+          "end_line": 29,
+          "label": "re-assess button"
+        }
+      ]
+    },
+    {
+      "id": "next",
+      "lane": "buyer",
+      "col": 5,
+      "type": "external",
+      "label": "Follows next steps",
+      "sublabel": "ask seller, amin, lawyer",
+      "width": 156,
+      "sources": [
+        {
+          "path": "backend/app/services/actions.py",
+          "line": 75,
+          "label": "next_actions"
+        }
+      ]
+    },
+    {
+      "id": "create",
+      "lane": "web",
+      "col": 1,
+      "type": "frontend",
+      "label": "Enter the plot",
+      "sublabel": "mouza, dag → POST /lands",
+      "width": 156,
+      "sources": [
+        {
+          "path": "frontend/src/app/upload/page.tsx",
+          "line": 26,
+          "label": "mouza required"
+        },
+        {
+          "path": "frontend/src/app/upload/page.tsx",
+          "line": 32,
+          "end_line": 38,
+          "label": "createLand"
+        }
+      ]
+    },
+    {
+      "id": "upload",
+      "lane": "web",
+      "col": 2,
+      "type": "frontend",
+      "label": "Add document photos",
+      "sublabel": "no type needed, upload bar",
+      "width": 156,
+      "sources": [
+        {
+          "path": "frontend/src/components/upload/DocumentDropZone.tsx",
+          "line": 129,
+          "end_line": 134,
+          "label": "drop zone"
+        },
+        {
+          "path": "frontend/src/lib/upload.ts",
+          "line": 135,
+          "end_line": 151,
+          "label": "XHR upload"
+        }
+      ]
+    },
+    {
+      "id": "poll",
+      "lane": "web",
+      "col": 3,
+      "type": "frontend",
+      "label": "Status per document",
+      "sublabel": "polls every ~2 s",
+      "width": 156,
+      "sources": [
+        {
+          "path": "frontend/src/components/upload/DocumentProgressCard.tsx",
+          "line": 92,
+          "end_line": 111,
+          "label": "poll"
+        }
+      ],
+      "tag": "failed: retry button"
+    },
+    {
+      "id": "caseview",
+      "lane": "web",
+      "col": 4,
+      "type": "frontend",
+      "label": "Case page",
+      "sublabel": "risk, headline, fields",
+      "width": 156,
+      "sources": [
+        {
+          "path": "frontend/src/app/cases/[id]/CaseDetailClient.tsx",
+          "line": 132,
+          "end_line": 136,
+          "label": "VerdictBox"
+        }
+      ]
+    },
+    {
+      "id": "worker",
+      "lane": "server",
+      "col": 2,
+      "type": "backend",
+      "label": "Read the document",
+      "sublabel": "classify, extract, normalize",
+      "width": 156,
+      "sources": [
+        {
+          "path": "backend/app/services/pipeline.py",
+          "line": 96,
+          "end_line": 150,
+          "label": "process_document"
+        }
+      ]
+    },
+    {
+      "id": "assess",
+      "lane": "server",
+      "col": 3,
+      "type": "backend",
+      "label": "Check the case",
+      "sublabel": "rules, risk, actions",
+      "width": 156,
+      "sources": [
+        {
+          "path": "backend/app/api/lands.py",
+          "line": 261,
+          "end_line": 269,
+          "label": "POST /assess"
+        }
+      ]
+    },
+    {
+      "id": "timeline",
+      "lane": "later",
+      "col": 4,
+      "type": "security",
+      "label": "Ownership timeline",
+      "sublabel": "page shows sample data",
+      "width": 156,
+      "sources": [
+        {
+          "path": "frontend/src/app/cases/[id]/timeline/page.tsx",
+          "line": 7,
+          "end_line": 30,
+          "label": "fixed events"
+        }
+      ]
+    },
+    {
+      "id": "escrow",
+      "lane": "later",
+      "col": 5,
+      "type": "security",
+      "label": "Bayna escrow",
+      "sublabel": "placeholder page",
+      "width": 156,
+      "sources": [
+        {
+          "path": "frontend/src/app/escrow/page.tsx",
+          "line": 1,
+          "end_line": 38,
+          "label": "static page"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "arrive-create",
+      "from": "arrive",
+      "to": "create",
+      "label": "start a check",
+      "variant": "emphasis"
+    },
+    {
+      "id": "create-upload",
+      "from": "create",
+      "to": "upload",
+      "variant": "emphasis"
+    },
+    {
+      "id": "upload-worker",
+      "from": "upload",
+      "to": "worker",
+      "label": "queued",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "drop"
+    },
+    {
+      "id": "worker-poll",
+      "from": "worker",
+      "to": "poll",
+      "label": "status",
+      "variant": "emphasis"
+    },
+    {
+      "id": "poll-assess",
+      "from": "poll",
+      "to": "assess",
+      "label": "all done: Assess",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "drop"
+    },
+    {
+      "id": "assess-caseview",
+      "from": "assess",
+      "to": "caseview",
+      "label": "result",
+      "variant": "emphasis"
+    },
+    {
+      "id": "caseview-review",
+      "from": "caseview",
+      "to": "review",
+      "variant": "emphasis"
+    },
+    {
+      "id": "review-next",
+      "from": "review",
+      "to": "next",
+      "variant": "emphasis"
+    },
+    {
+      "id": "caseview-timeline",
+      "from": "caseview",
+      "to": "timeline",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "next-escrow",
+      "from": "next",
+      "to": "escrow",
+      "label": "later",
+      "variant": "dashed",
+      "role": "branch"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "What the buyer gets",
+      "items": [
+        "Risk high / medium / low with a Bangla headline",
+        "What matched, what did not, and who should act next",
+        "Never a promise about the land itself",
+        "Wrong value read? Fix the field on the case page, then re-assess"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Gaps in the UI today",
+      "items": [
+        "No PDF button yet (the API serves the report)",
+        "Case list and timeline use sample data"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Data rule",
+      "items": [
+        "Gemini free tier: synthetic documents only"
+      ]
+    }
+  ]
+}

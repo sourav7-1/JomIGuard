@@ -66,6 +66,7 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
 
   const handleUploadProgress = useCallback((tempId: string, percent: number) => {
     setUploadPercents((prev) => ({ ...prev, [tempId]: percent }));
+    setPendingUploads((prev) => prev[tempId] ? { ...prev, [tempId]: { ...prev[tempId], status: "uploading", progress: percent } } : prev);
   }, []);
 
   const handleUploadError = useCallback((tempId: string, error: string) => {
@@ -78,7 +79,7 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
     });
   }, []);
 
-  const handleUploadSuccess = useCallback((newDoc: DocumentStatusOut) => {
+  const handleUploadSuccess = useCallback((newDoc: DocumentStatusOut, uploadId: string) => {
     // Add to documents list or update if exists
     setDocuments((prev) => {
       const existingIdx = prev.findIndex((d) => d.id === newDoc.id);
@@ -93,14 +94,10 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
     // Remove from pending uploads
     setPendingUploads((prev) => {
       const copy = { ...prev };
-      // delete any temp entry matching original_filename
-      for (const [k, v] of Object.entries(copy)) {
-        if (v.name === newDoc.original_filename) {
-          delete copy[k];
-        }
-      }
+      delete copy[uploadId];
       return copy;
     });
+    setUploadPercents((prev) => { const copy = { ...prev }; delete copy[uploadId]; return copy; });
   }, []);
 
   // Handler for document status updates during polling
@@ -112,12 +109,11 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
 
   // Handler for removing a document from list
   const handleDocumentRemove = useCallback(async (docId: string) => {
-    // Optimistically remove from state
-    setDocuments((prev) => prev.filter((d) => d.id !== docId));
     try {
       await api.detachDocument(docId);
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
     } catch {
-      // Ignore error on detach
+      setAssessError(strings.error.defaultMessage);
     }
   }, []);
 
@@ -200,6 +196,7 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
               </Card>
             ) : (
               <div className="space-y-3">
+                {Object.values(pendingUploads).map((upload) => <Card key={upload.id} className="p-4"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-ink">{upload.name}</p><p className="text-xs text-muted">{upload.status === "error" ? upload.error : upload.status === "optimizing" ? "ফাইল প্রস্তুত হচ্ছে" : "আপলোড হচ্ছে"}</p></div><button type="button" onClick={() => { setPendingUploads((prev) => { const copy = { ...prev }; delete copy[upload.id]; return copy; }); setUploadPercents((prev) => { const copy = { ...prev }; delete copy[upload.id]; return copy; }); }} className="min-h-11 min-w-11 rounded-lg text-sm text-muted hover:bg-bg" aria-label={`${upload.name} তালিকা থেকে সরান`}>×</button></div>{upload.status !== "error" && <div className="mt-3 h-2 overflow-hidden rounded-full bg-line" role="progressbar" aria-label={`${upload.name} আপলোডের অগ্রগতি`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={upload.progress}><div className="h-full bg-accent transition-[width]" style={{ width: `${upload.progress}%` }} /></div>}</Card>)}
                 {/* Uploaded Documents */}
                 {documents.map((doc) => (
                   <DocumentProgressCard

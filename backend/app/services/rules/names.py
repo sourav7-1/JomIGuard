@@ -24,7 +24,7 @@ _FOLD = str.maketrans({"ী": "ি", "ূ": "ু"})
 
 def match_key(name: str | None) -> str:
     """name_normalized -> comparison key: NFC, no zero-width characters, ী→ি, ূ→ু, single spaces."""
-    return " ".join(clean(name or "").translate(_FOLD).split())
+    return " ".join(clean(name or "").translate(_FOLD).replace("য়", "য").replace("য়", "য").split())
 
 
 def _ratio(a: str, b: str) -> float:

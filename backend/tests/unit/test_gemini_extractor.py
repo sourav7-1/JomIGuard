@@ -66,6 +66,8 @@ def test_converter_details():
     marker = seller["properties"]["relation_marker"]
     assert marker["enum"] == ["father", "husband", "unknown"] and marker["nullable"] is True
     assert "sellers" in schema["required"] and "price_taka" not in schema["required"]
+    assert schema["properties"]["handwritten"] == {"type": "boolean"}
+    assert "handwritten" in schema["required"]
 
 
 def test_converter_on_a_small_handmade_schema():
@@ -148,9 +150,10 @@ def make(tmp_path, client, **kw):
 
 
 def test_valid_answer_becomes_the_document(tmp_path, image):
-    client = FakeClient(response(answer()))
+    client = FakeClient(response({**answer(), "handwritten": True}))
     result = make(tmp_path, client).extract(image, "khatian")
     assert result.error is None and isinstance(result.document, KhatianData)
+    assert result.handwritten is True and "handwritten" not in result.document.model_dump()
     assert result.document.khatian_no == "882"
     call = client.calls[0]
     assert call["model"] == "gemini-test"

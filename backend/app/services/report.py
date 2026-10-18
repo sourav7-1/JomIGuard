@@ -70,6 +70,7 @@ def _doc_row(doc: CaseDocument, surveys: dict[str, str]) -> dict:
         names = f"মৃত: {d.deceased_name}; ওয়ারিশ: {names}"
     return {
         "label": doc.label_bn,
+        "handwritten": doc.doc_type == "deed" and doc.handwritten,
         "names": names,
         "dags": _bn(", ".join(p.dag_no for p in plots)),
         "khatian": _bn(khatian),

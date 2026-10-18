@@ -18,7 +18,7 @@ from google import genai
 from google.genai import errors, types
 
 from app.core.config import settings
-from app.services.extraction.llm import LLMExtractor, ProviderError, extractor_schema
+from app.services.extraction.llm import LLMExtractor, ProviderError, extractor_response_schema
 from app.services.extraction.prompts import DOC_NOTES, SYSTEM
 
 RETRY_STATUS = {429, 503}
@@ -72,7 +72,7 @@ def to_gemini_schema(schema: dict) -> dict:
 
 @cache
 def gemini_schema(doc_type: str) -> dict:
-    return to_gemini_schema(extractor_schema(doc_type))
+    return to_gemini_schema(extractor_response_schema(doc_type))
 
 
 class GeminiExtractor(LLMExtractor):

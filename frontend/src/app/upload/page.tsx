@@ -43,9 +43,9 @@ export default function NewCheckPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto py-6 space-y-6">
+    <div className="mx-auto grid max-w-5xl gap-7 py-2 md:grid-cols-[0.8fr_1.2fr] md:items-start md:gap-14">
       {/* Step Header */}
-      <div className="space-y-1 text-center sm:text-left">
+      <div className="space-y-3 md:pt-5">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-soft text-accent text-xs font-semibold mb-1">
           <span>ধাপ ১</span> • {strings.uploadFlow.step1Title}
         </div>
@@ -57,7 +57,7 @@ export default function NewCheckPage() {
         </p>
       </div>
 
-      <Card className="p-6 md:p-8 shadow-xs border border-line bg-surface">
+      <Card className="p-5 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Mouza (Required) */}
           <div className="space-y-1.5">

@@ -72,6 +72,20 @@ def test_pdf_is_a_pdf_with_pages(demo_pdf):
     assert len(pdfium.PdfDocument(demo_pdf)) >= 1
 
 
+def test_handwritten_deed_badge_is_in_html_and_pdf_text():
+    case, assessment, _ = report_for(SCENARIOS / "01_demo_area_exceeds")
+    deed = next(d for d in case.documents if d.doc_type == "deed")
+    deed.handwritten = True
+    html = render_report_html(case, assessment, WHEN)
+    badge = "হাতে লেখা দলিল — তথ্যগুলো নিজে মিলিয়ে নিন"
+    assert badge in html
+    pdf = render_report_pdf(html)
+    import pypdfium2 as pdfium
+
+    text = " ".join(page.get_textpage().get_text_range() for page in pdfium.PdfDocument(pdf))
+    assert badge in " ".join(text.split())
+
+
 def test_bangla_is_shaped_correctly(demo_pdf):
     """Conjuncts only OCR back correctly if HarfBuzz shaped them in the PDF."""
     import pypdfium2 as pdfium
@@ -91,6 +105,8 @@ def test_page_footer_uses_bangla_digits(demo_pdf):
     total = len(pdf)
     digits = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
     assert f"পৃষ্ঠা ১ / {str(total).translate(digits)}" in footer.replace("\r\n", " ")
+
+    assert "JomiGuard" in footer
 
 
 def test_report_endpoint_returns_pdf(client):

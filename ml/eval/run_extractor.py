@@ -47,6 +47,7 @@ def main() -> None:
     ap.add_argument("--split", choices=["test", "train", "all"], default="test")
     ap.add_argument("--doc-type")
     ap.add_argument("--limit", type=int, help="random sample of this many images (seed 0)")
+    ap.add_argument("--sample", type=Path, help="only image IDs listed in a sample JSON file")
     ap.add_argument("--model", help="override LLM_MODEL")
     ap.add_argument("--image", choices=["gray", "original"], default="gray")
     ap.add_argument("--dataset", default="v2")
@@ -56,6 +57,9 @@ def main() -> None:
 
     manifest = json.loads((ML / "datasets" / f"{a.dataset}.json").read_text(encoding="utf-8"))
     items = load_items(manifest, a.data_root, a.split, a.doc_type)
+    if a.sample:
+        wanted = set(json.loads(a.sample.read_text(encoding="utf-8"))["images"])
+        items = [it for it in items if it.image_id in wanted]
     if a.limit and a.limit < len(items):
         items = random.Random(LIMIT_SEED).sample(items, a.limit)
     extractor = make_extractor(a.extractor, a.model, a.image)

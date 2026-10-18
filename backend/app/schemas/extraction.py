@@ -27,4 +27,5 @@ class ExtractionOut(BaseModel):
     data: ExtractedDocument | dict[str, Any] | None = None
     warnings: list[ExtractionWarningOut] = Field(default_factory=list)
     field_flags: dict[str, Any] = Field(default_factory=dict)
+    handwritten: bool = False
     created_at: datetime

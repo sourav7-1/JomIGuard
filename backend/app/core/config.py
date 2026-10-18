@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     minio_root_user: str
     minio_root_password: str
     minio_bucket: str
+    admin_username: str
+    admin_password: SecretStr
+    session_secret: SecretStr
+    cookie_secure: bool = False
+    identity_provider: str = "mock"
+    bank_provider: str = "mock"
 
     # web / frontend CORS
     cors_origins: list[str] = ["http://localhost:3000"]

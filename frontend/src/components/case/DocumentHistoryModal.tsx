@@ -21,6 +21,8 @@ export function DocumentHistoryModal({
 
   useEffect(() => {
     if (isOpen) {
+      // The modal needs an immediate loading state while its request is pending.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(true);
       api
         .getDocumentExtractionHistory(documentId)

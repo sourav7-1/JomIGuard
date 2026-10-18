@@ -65,6 +65,27 @@ def field_flags(warnings) -> dict[str, list[str]]:
     return flags
 
 
+def lower_field_confidence(data: dict, flags: dict[str, list[str]]) -> dict[str, list[str]]:
+    def visit(value, path=""):
+        if isinstance(value, dict):
+            for key, child in value.items():
+                visit(child, f"{path}.{key}" if path else key)
+        elif isinstance(value, list):
+            for i, child in enumerate(value):
+                visit(child, f"{path}[{i}]")
+        else:
+            current = flags.setdefault(path, [])
+            if "high" in current:
+                current[current.index("high")] = "medium"
+            elif "medium" in current:
+                current[current.index("medium")] = "low"
+            elif "low" not in current:
+                current.append("medium")
+
+    visit(data)
+    return flags
+
+
 def _now() -> datetime:
     return datetime.now(UTC)
 
@@ -122,10 +143,12 @@ def process_document(
         row = Extraction(
             document_id=doc.id,
             extractor=getattr(extractor, "name", type(extractor).__name__),
+            created_by="ai",
             model=ex.meta.model,
             prompt_version=ex.meta.prompt_version,
             cost_usd=ex.meta.cost_usd,
             latency_s=ex.meta.latency_s,
+            handwritten=ex.handwritten,
         )
         if ex.document is None:
             row.status, row.warnings, row.field_flags = ExtractionStatus.failed, [], {}
@@ -140,9 +163,11 @@ def process_document(
         row.data = normalized.doc.model_dump(mode="json")
         row.warnings = [asdict(w) for w in normalized.warnings]
         row.field_flags = field_flags(normalized.warnings)
+        if ex.handwritten:
+            row.field_flags = lower_field_confidence(row.data, row.field_flags)
         row.status = (
             ExtractionStatus.needs_review
-            if normalized.warnings or doc.label_warning
+            if normalized.warnings or doc.label_warning or ex.handwritten
             else ExtractionStatus.ok
         )
         db.add(row)

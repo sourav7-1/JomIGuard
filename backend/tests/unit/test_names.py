@@ -53,3 +53,4 @@ def test_match_key_and_person_key():
     assert match_key(" রহীম  উদ্দীন ") == "রহিম উদ্দিন"
     assert match_key("আবু‌ল") == "আবুল"
     assert person_key("মোঃ রহিম উদ্দীন") == "রহিম উদ্দিন"
+    assert match_key("ইউসুফ মিযা") == match_key("ইউসুফ মিয়া")

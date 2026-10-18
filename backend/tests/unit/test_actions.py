@@ -103,9 +103,50 @@ def test_assess_endpoint_stores_and_returns(client):
     assert r.status_code == 201, r.text
     body = r.json()
     assert body["risk_level"] == "high" and body["land_id"] == land_id
-    assert {f["code"] for f in body["findings"]} == {"area_exceeds_share", "heir_consent_missing"}
+    assert {f["code"] for f in body["findings"]} == {
+        "area_exceeds_share",
+        "heir_consent_missing",
+        "seller_identity_unverified",
+    }
     assert body["actions"] and body["disclaimer_bn"]
     latest = client.get(f"/lands/{land_id}/assessments/latest").json()
     assert latest["id"] == body["id"]
     assert client.get(f"/lands/{uuid.uuid4()}/assessments/latest").status_code == 404
     assert client.post(f"/lands/{uuid.uuid4()}/assess").status_code == 404
+
+
+def test_assessment_history_diff_and_action_completion(client):
+    import json
+
+    land_id = client.post("/lands", json={"mouza": "demo", "dag_no": "305"}).json()["id"]
+    demo = SCENARIOS / "01_demo_area_exceeds"
+    with TestSession() as db:
+        for name, doc_type in [("khatian_bs.json", DocType.khatian), ("deed.json", DocType.deed),
+                               ("heir_cert.json", DocType.heir_cert)]:  # fmt: skip
+            add_document(
+                db,
+                uuid.UUID(land_id),
+                json.loads((demo / name).read_text(encoding="utf-8")),
+                doc_type,
+            )
+    first = client.post(f"/lands/{land_id}/assess").json()
+    second = client.post(f"/lands/{land_id}/assess").json()
+    history = client.get(f"/lands/{land_id}/assessments")
+    assert history.status_code == 200 and [x["id"] for x in history.json()] == [
+        second["id"],
+        first["id"],
+    ]
+    diff = client.get(f"/lands/{land_id}/assessments/{second['id']}/diff").json()
+    assert diff["previous"]["id"] == first["id"] and diff["added_findings"] == []
+    action_id = second["actions"][0]["id"]
+    updated = client.put(f"/lands/{land_id}/actions/{action_id}", json={"done": True})
+    assert updated.status_code == 200 and updated.json()["done"] is True
+    saved = next(
+        a
+        for a in client.get(f"/lands/{land_id}/assessments/latest").json()["actions"]
+        if a["id"] == action_id
+    )
+    assert saved["done"] is True
+    assert (
+        client.put(f"/lands/{land_id}/actions/{action_id}", json={"done": "yes"}).status_code == 422
+    )

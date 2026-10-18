@@ -13,10 +13,26 @@ from eval.compare import (
     normalized,
     prepare_prediction,
 )
-from eval.extraction import baseline, evaluate, load_items
+from eval.extraction import baseline, evaluate, load_handwritten_items, load_items
 from synth.deed import generate_cases
 
 SAMPLES = Path(__file__).resolve().parents[2] / "backend/tests/fixtures/samples"
+
+
+def test_handwritten_loader_pairs_synthetic_deed_and_ground_truth(tmp_path):
+    (tmp_path / "demo.png").write_bytes(b"synthetic image")
+    (tmp_path / "demo.json").write_text('{"doc_type":"deed"}', encoding="utf-8")
+    (tmp_path / "orphan.json").write_text('{"doc_type":"deed"}', encoding="utf-8")
+    [item] = load_handwritten_items(tmp_path)
+    assert item.image_id == "demo" and item.doc_type == "deed"
+    assert item.image_path == tmp_path / "demo.png"
+
+
+def test_handwritten_loader_rejects_non_deed_pair(tmp_path):
+    (tmp_path / "demo.png").write_bytes(b"synthetic image")
+    (tmp_path / "demo.json").write_text('{"doc_type":"khatian"}', encoding="utf-8")
+    with pytest.raises(ValueError, match="must be a deed"):
+        load_handwritten_items(tmp_path)
 
 
 def sample(name: str, model):

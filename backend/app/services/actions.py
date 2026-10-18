@@ -6,7 +6,7 @@ priority then severity, always-actions included. Texts never call land safe.
 """
 
 from app.schemas.assessment import Action, Assessment
-from app.schemas.land_case import LandCase
+from app.schemas.land_case import CaseRole, LandCase
 from app.services.rules import RuleResult, RuleRun, Status
 from app.services.rules.messages import render
 
@@ -33,6 +33,10 @@ FINDING_ACTIONS: dict[str, tuple[str, int, str, str]] = {
         "দেখান।"),
     "seller_father_mismatch": ("confirm_seller_identity", 2, "seller",
         "{seller}-এর পরিচয় (পিতা/স্বামীর নাম) কাগজ দিয়ে নিশ্চিত হোন।"),
+    "seller_identity_unverified": ("send_seller_identity_link", 1, "buyer",
+        "বিক্রেতাকে পরিচয় যাচাইয়ের link পাঠান"),
+    "seller_nid_name_mismatch": ("review_seller_identity", 1, "buyer",
+        "বিক্রেতার পরিচয়পত্রের নাম দলিল ও খতিয়ানের সঙ্গে মিলিয়ে দেখুন।"),
     "heir_missing_from_mutation": ("ask_land_office_heir", 2, "land_office",
         "{heir}-এর নাম নামজারিতে কেন নেই, ভূমি অফিসে জেনে নিন।"),
     "document_missing": ("get_missing_document", 2, "seller",
@@ -97,5 +101,23 @@ def next_actions(case: LandCase, run: RuleRun, assessment: Assessment) -> list[A
         if action.text_bn not in seen:
             seen.add(action.text_bn)
             actions.append(action)
+    if any(document.role == CaseRole.prior_deed for document in case.documents):
+        action = Action(
+            id="get_certified_prior_deed_copy",
+            text_bn="সাব-রেজিস্ট্রি অফিস থেকে বায়া দলিলের সার্টিফাইড কপি তুলে মিলিয়ে নিন",
+            priority=2,
+            who="buyer",
+        )
+        if action.text_bn not in seen:
+            actions.append(action)
     always = [_plain(spec) for spec in ALWAYS_ACTIONS]
-    return actions[: MAX_ACTIONS - len(always)] + always
+    prior_action = next(
+        (action for action in actions if action.id == "get_certified_prior_deed_copy"), None
+    )
+    limit = MAX_ACTIONS - len(always)
+    if prior_action:
+        actions = [action for action in actions if action is not prior_action][: limit - 1]
+        actions.append(prior_action)
+    else:
+        actions = actions[:limit]
+    return actions + always

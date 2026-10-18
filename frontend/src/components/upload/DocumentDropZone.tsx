@@ -21,7 +21,7 @@ export interface PendingUpload {
 
 export interface DocumentDropZoneProps {
   landId: string;
-  onUploadSuccess: (doc: DocumentStatusOut) => void;
+  onUploadSuccess: (doc: DocumentStatusOut, uploadId: string) => void;
   onUploadStart?: (upload: PendingUpload) => void;
   onUploadProgress?: (id: string, progress: number) => void;
   onUploadError?: (id: string, error: string) => void;
@@ -86,7 +86,7 @@ export function DocumentDropZone({
           },
         });
 
-        onUploadSuccess(uploadedDoc);
+        onUploadSuccess(uploadedDoc, tempId);
       } catch (err: unknown) {
         const errorMsg =
           err instanceof Error ? err.message : strings.uploadFlow.errGenericUpload;

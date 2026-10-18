@@ -1,0 +1,394 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "JomiGuard runtime: document check",
+    "output": ".archify/architecture-jomiguard-runtime-20261017-154433/jomiguard-runtime.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/sourav7-1/JomIGuard.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "6edcbeb5fcc46be79cda2c2a9aca3b890805d63a"
+    }
+  },
+  "components": [
+    {
+      "id": "buyer",
+      "type": "external",
+      "label": "Buyer",
+      "sublabel": "browser",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        130,
+        64
+      ]
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Next.js app",
+      "sublabel": "upload, case view",
+      "pos": [
+        320,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/lib/api.ts",
+          "line": 4,
+          "end_line": 4,
+          "label": "API base URL"
+        },
+        {
+          "path": "frontend/src/lib/api.ts",
+          "line": 76,
+          "label": "fetch"
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "FastAPI",
+      "sublabel": "documents, lands :8000",
+      "pos": [
+        580,
+        300
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "backend/app/main.py",
+          "line": 20,
+          "end_line": 30,
+          "label": "app + routers"
+        },
+        {
+          "path": "backend/app/api/documents.py",
+          "line": 49,
+          "end_line": 80,
+          "label": "upload"
+        }
+      ]
+    },
+    {
+      "id": "minio",
+      "type": "database",
+      "label": "MinIO",
+      "sublabel": "original files",
+      "pos": [
+        580,
+        100
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "backend/app/services/storage.py",
+          "line": 18,
+          "end_line": 30,
+          "label": "Storage.upload"
+        }
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "messagebus",
+      "label": "Redis",
+      "sublabel": "Celery broker",
+      "pos": [
+        870,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ],
+      "sources": [
+        {
+          "path": "backend/app/workers/celery_app.py",
+          "line": 6,
+          "label": "broker"
+        },
+        {
+          "path": "backend/app/core/config.py",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Celery worker",
+      "sublabel": "preprocess, classify, extract, normalize",
+      "pos": [
+        1140,
+        300
+      ],
+      "size": [
+        220,
+        64
+      ],
+      "tag": "concurrency 1 on Gemini",
+      "sources": [
+        {
+          "path": "backend/app/workers/tasks.py",
+          "line": 10,
+          "end_line": 15,
+          "label": "task"
+        },
+        {
+          "path": "backend/app/services/pipeline.py",
+          "line": 72,
+          "end_line": 150,
+          "label": "process_document"
+        }
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "external",
+      "label": "Vision LLM API",
+      "sublabel": "Gemini or Anthropic",
+      "pos": [
+        1490,
+        300
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "tag": "synthetic docs only",
+      "sources": [
+        {
+          "path": "backend/app/services/extraction/gemini.py",
+          "line": 89,
+          "end_line": 96,
+          "label": "generate_content"
+        },
+        {
+          "path": "backend/app/services/extraction/llm.py",
+          "line": 242,
+          "end_line": 246,
+          "label": "messages.create"
+        }
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "Postgres 16",
+      "sublabel": "lands, documents, extractions",
+      "pos": [
+        920,
+        520
+      ],
+      "size": [
+        190,
+        64
+      ],
+      "sources": [
+        {
+          "path": "backend/app/db/session.py",
+          "line": 8,
+          "label": "engine"
+        },
+        {
+          "path": "backend/app/services/pipeline.py",
+          "line": 121,
+          "end_line": 139,
+          "label": "Extraction row"
+        }
+      ]
+    },
+    {
+      "id": "assess",
+      "type": "backend",
+      "label": "Assessment",
+      "sublabel": "land case, rules, risk, actions, PDF",
+      "pos": [
+        555,
+        520
+      ],
+      "size": [
+        220,
+        64
+      ],
+      "sources": [
+        {
+          "path": "backend/app/api/lands.py",
+          "line": 261,
+          "end_line": 275,
+          "label": "POST /assess"
+        },
+        {
+          "path": "backend/app/services/rules/engine.py",
+          "line": 57,
+          "label": "run_rules"
+        },
+        {
+          "path": "backend/app/services/report.py",
+          "line": 182,
+          "label": "render_report_pdf"
+        }
+      ]
+    },
+    {
+      "id": "cache",
+      "type": "database",
+      "label": "LLM cache",
+      "sublabel": "/data: answers + spend",
+      "pos": [
+        1165,
+        520
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "backend/app/services/extraction/llm.py",
+          "line": 165,
+          "end_line": 212,
+          "label": "cache + budget"
+        },
+        {
+          "path": "docker-compose.yml",
+          "line": 41,
+          "label": "/data volume"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Docker Compose network",
+      "wraps": [
+        "api",
+        "minio",
+        "redis",
+        "worker",
+        "postgres",
+        "assess",
+        "cache"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "buyer-web",
+      "from": "buyer",
+      "to": "web",
+      "label": "upload, read report",
+      "variant": "emphasis"
+    },
+    {
+      "id": "web-api",
+      "from": "web",
+      "to": "api",
+      "label": "REST (CORS)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-minio",
+      "from": "api",
+      "to": "minio",
+      "label": "store file"
+    },
+    {
+      "id": "api-redis",
+      "from": "api",
+      "to": "redis",
+      "label": "enqueue task",
+      "variant": "emphasis"
+    },
+    {
+      "id": "redis-worker",
+      "from": "redis",
+      "to": "worker",
+      "label": "deliver task",
+      "variant": "emphasis"
+    },
+    {
+      "id": "worker-minio",
+      "from": "worker",
+      "to": "minio",
+      "label": "read file",
+      "variant": "dashed"
+    },
+    {
+      "id": "worker-llm",
+      "from": "worker",
+      "to": "llm",
+      "label": "image + schema",
+      "variant": "security"
+    },
+    {
+      "id": "worker-cache",
+      "from": "worker",
+      "to": "cache",
+      "label": "cache hit skips call"
+    },
+    {
+      "id": "worker-postgres",
+      "from": "worker",
+      "to": "postgres",
+      "label": "status, extraction"
+    },
+    {
+      "id": "api-assess",
+      "from": "api",
+      "to": "assess",
+      "label": "POST /assess"
+    },
+    {
+      "id": "assess-postgres",
+      "from": "assess",
+      "to": "postgres",
+      "label": "store assessment"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Main path",
+      "items": [
+        "Upload without doc type; the worker classifies it",
+        "Extractor returns printed text only; normalize does the math",
+        "Rules compare in shatangsho and report what matched and what did not"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Trust boundary",
+      "items": [
+        "Only the worker calls the LLM API, over HTTPS",
+        "Gemini free tier may train on inputs: synthetic documents only",
+        "Daily quota 429: next GEMINI_MODELS model (in stash, not committed)"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Not running yet",
+      "items": [
+        "Bayna escrow, Probashi guardian and the Land AI Agent",
+        "Frontend runs outside Compose (npm)"
+      ]
+    }
+  ]
+}

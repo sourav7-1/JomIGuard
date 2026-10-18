@@ -24,7 +24,7 @@ services:
     build: ./backend
     env_file: .env
     ports: ["8000:8000"]
-    volumes: [./backend:/app, ./docs:/docs:ro]  # docs: specs read by tests
+    volumes: [./backend:/app, ./docs:/docs:ro, ./data:/data:ro]  # docs: specs read by tests; data: synthetic documents and LLM cache
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_started}
@@ -43,6 +43,19 @@ services:
       postgres: {condition: service_healthy}
       redis: {condition: service_started}
       minio: {condition: service_started}
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_INTERNAL_URL: http://backend:8000
+    environment:
+      BACKEND_INTERNAL_URL: http://backend:8000
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+    ports: ["3000:3000"]
+    depends_on:
+      backend: {condition: service_started}
 
 volumes:
   pgdata:

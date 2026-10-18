@@ -93,6 +93,16 @@ def test_extractor_schema_has_no_normalize_fields(doc_type):
     assert "name" in keys and extractor_schema(doc_type)["type"] == "object"
 
 
+def test_handwritten_metadata_is_separate_from_validated_document(tmp_path, image):
+    output = {**extractor_output(), "handwritten": True}
+    client = FakeClient(output)
+    result = make(tmp_path, client).extract(image, "khatian")
+    assert result.handwritten is True
+    assert "handwritten" not in result.document.model_dump()
+    schema = client.calls[0]["tools"][0]["input_schema"]
+    assert schema["properties"]["handwritten"] == {"type": "boolean"}
+
+
 def test_valid_output_comes_back_as_document(tmp_path, image):
     client = FakeClient(extractor_output())
     result = make(tmp_path, client).extract(image, "khatian")

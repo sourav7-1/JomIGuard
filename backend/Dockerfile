@@ -13,6 +13,7 @@ RUN ln -s /usr/share/tesseract-ocr/5/tessdata/eng.traineddata \
 ENV TESSDATA_PREFIX=/usr/share/tessdata_best
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen

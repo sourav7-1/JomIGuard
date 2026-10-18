@@ -70,7 +70,7 @@
   <h2>যে কাগজ পড়া হয়েছে</h2>
   <table class="docs">
     <thead><tr><th>কাগজ</th><th>মালিক / বিক্রেতা</th><th>দাগ</th><th>খতিয়ান</th><th>জমি</th></tr></thead>
-    <tbody>{% for d in documents %}<tr><td>{{ d.label }}</td><td>{{ d.names }}</td><td>{{ d.dags }}</td><td>{{ d.khatian }}</td><td>{{ d.area }}</td></tr>{% endfor %}</tbody>
+    <tbody>{% for d in documents %}<tr><td>{{ d.label }}{% if d.handwritten %}<br><span>হাতে লেখা দলিল — তথ্যগুলো নিজে মিলিয়ে নিন</span>{% endif %}</td><td>{{ d.names }}</td><td>{{ d.dags }}</td><td>{{ d.khatian }}</td><td>{{ d.area }}</td></tr>{% endfor %}</tbody>
   </table>
 </section>
 

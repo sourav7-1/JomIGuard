@@ -5,6 +5,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.identity import IdentityVerificationOut
 from app.schemas.land_case import SourceRef
 from app.services.rules.base import RuleResult
 
@@ -42,6 +43,7 @@ class Action(BaseModel):
     who: str  # buyer | seller | amin | lawyer | land_office
     from_codes: list[str] = Field(default_factory=list)
     sources: list[SourceRef] = Field(default_factory=list)
+    done: bool = False
 
 
 class Assessment(BaseModel):
@@ -52,6 +54,7 @@ class Assessment(BaseModel):
     coverage: Coverage
     review_needed: list[ReviewItem] = Field(default_factory=list)
     findings: list[RuleResult] = Field(default_factory=list)
+    identity_verifications: list[IdentityVerificationOut] = Field(default_factory=list)
     passed: list[RuleResult] = Field(default_factory=list)
     actions: list[Action] = Field(default_factory=list)
     disclaimer_bn: str

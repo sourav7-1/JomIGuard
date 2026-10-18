@@ -1,38 +1,33 @@
-import React from "react";
-import { Card } from "@/components/ui/Card";
+import Link from "next/link";
 import { strings } from "@/lib/strings";
+
+const steps = [
+  { title: "চুক্তির শর্ত ঠিক করুন", detail: "বায়না কোন শর্তে ছাড় হবে বা ফেরত যাবে তা চুক্তিতে নির্ধারিত থাকে।" },
+  { title: "ব্যাংক অংশীদার অর্থ রাখে", detail: "বায়নার টাকা অংশীদার ব্যাংকের কাছে থাকে; JomiGuard টাকা ধরে না।" },
+  { title: "শর্ত অনুযায়ী নিষ্পত্তি", detail: "চুক্তির শর্ত পূরণ হলে অর্থ ছাড় হয়, অন্যথায় ফেরতের ব্যবস্থা হয়।" },
+];
 
 export default function EscrowPage() {
   return (
-    <div className="space-y-6 max-w-3xl mx-auto py-4">
-      <div className="space-y-1">
-        <h1 className="text-xl md:text-2xl font-bold font-heading text-ink">
-          {strings.pages.escrow.title}
-        </h1>
-        <p className="text-sm text-muted leading-relaxed">
-          {strings.pages.escrow.desc}
-        </p>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-10 py-2 sm:space-y-12">
+      <header className="max-w-2xl border-b border-line pb-7">
+        <p className="mb-3 flex items-center gap-3 text-sm font-semibold text-accent"><span className="h-px w-8 bg-gold" />লেনদেনের সময়</p>
+        <h1 className="text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">{strings.pages.escrow.title}</h1>
+        <p className="mt-3 text-base leading-7 text-muted">{strings.pages.escrow.desc}</p>
+      </header>
 
-      <Card className="space-y-4 p-6">
-        <div className="p-4 rounded-lg bg-accent-soft text-accent text-xs md:text-sm font-medium leading-relaxed">
-          {strings.pages.escrow.note}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
-          <div className="p-4 rounded-lg border border-line bg-surface">
-            <div className="text-xs text-muted mb-1">ক্রেতা</div>
-            <div className="font-bold text-base text-ink">রফিক সাহেব</div>
-          </div>
-          <div className="p-4 rounded-lg border-2 border-accent bg-accent-soft flex flex-col justify-center">
-            <div className="text-xs font-bold text-accent mb-0.5">Escrow পার্টনার ব্যাংক</div>
-            <div className="text-xs text-ink">শর্ত সাপেক্ষে বায়না জমা</div>
-          </div>
-          <div className="p-4 rounded-lg border border-line bg-surface">
-            <div className="text-xs text-muted mb-1">বিক্রেতা</div>
-            <div className="font-bold text-base text-ink">রহিম উদ্দিন</div>
-          </div>
-        </div>
-      </Card>
+      <section aria-label="বায়না Escrow-এর ধাপ" className="grid divide-y divide-line border-y border-line md:grid-cols-3 md:divide-x md:divide-y-0">
+        {steps.map((step, index) => (
+          <article key={step.title} className="py-6 md:px-6 md:first:pl-0 md:last:pr-0">
+            <p className="font-mono text-sm text-gold">০{index + 1}</p>
+            <h2 className="mt-4 text-xl font-semibold text-ink">{step.title}</h2>
+            <p className="mt-2 text-sm leading-7 text-muted">{step.detail}</p>
+          </article>
+        ))}
+      </section>
+
+      <p className="max-w-3xl border-l-2 border-gold pl-4 text-sm leading-7 text-muted">{strings.pages.escrow.note}</p>
+      <Link href="/upload" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent underline decoration-gold decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">জমির কাগজ যাচাই করুন</Link>
     </div>
   );
 }

@@ -5,6 +5,7 @@ fields a person should check. Never calls land safe (CLAUDE.md); coverage never 
 from collections import defaultdict
 
 from app.schemas.assessment import Assessment, Coverage, ReviewItem, SkippedCheck
+from app.schemas.identity import IdentityVerificationOut
 from app.schemas.land_case import CaseRole, LandCase
 from app.services.normalize import to_bangla_digits
 from app.services.rules import RULES, RuleResult, RuleRun, Status
@@ -23,11 +24,20 @@ DISCLAIMER_BN = (
 ALLOWED_PHRASES = ("জমি নিরাপদ বলে না",)
 
 
+DEED_DISCLAIMER_BN = (
+    "এই app দলিল আসল না জাল তা প্রমাণ করে না। fingerprint শুধু দেখায় "
+    "আমাদের কাছে রাখা কপি পরে বদলেছে কি না। আসলত্বের জন্য সাব-রেজিস্ট্রি "
+    "অফিসের সার্টিফাইড কপি দেখুন।"
+)
+
+
 def forbidden_words_in(text: str) -> list[str]:
     """Forbidden words in user-facing text, ignoring the disclaimer's "… নিরাপদ বলে না"."""
     for phrase in ALLOWED_PHRASES:
         text = text.replace(phrase, "")
-    return [w for w in FORBIDDEN_WORDS if w.lower() in text.lower()]
+    text = text.replace(DEED_DISCLAIMER_BN, "")
+    words = (*FORBIDDEN_WORDS, "আসল দলিল", "জাল দলিল", "authentic", "genuine", "fake")
+    return [w for w in words if w.lower() in text.lower()]
 
 
 REVIEW_FLAGS = ("low", "medium")  # extraction confidence levels that need a person's check
@@ -208,6 +218,10 @@ def assess(case: LandCase, run: RuleRun) -> Assessment:
         coverage=_coverage(case, run),
         review_needed=_review_needed(case, run),
         findings=run.findings,
+        identity_verifications=[
+            IdentityVerificationOut.model_validate(row)
+            for row in getattr(case, "identity_records", [])
+        ],
         passed=condense_passes(run),
         disclaimer_bn=DISCLAIMER_BN,
     )

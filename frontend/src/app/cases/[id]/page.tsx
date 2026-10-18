@@ -2,15 +2,18 @@ import React, { Suspense } from "react";
 import { CaseDetailClient } from "./CaseDetailClient";
 import { Spinner } from "@/components/ui/Spinner";
 
-async function CasePageContent({ params }: { params: Promise<{ id: string }> }) {
+async function CasePageContent({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ source?: string; field?: string }> }) {
   const { id } = await params;
-  return <CaseDetailClient landId={id} />;
+  const { source, field } = await searchParams;
+  return <CaseDetailClient landId={id} source={source} field={field} />;
 }
 
 export default function CaseDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ source?: string; field?: string }>;
 }) {
   return (
     <Suspense
@@ -20,7 +23,7 @@ export default function CaseDetailPage({
         </div>
       }
     >
-      <CasePageContent params={params} />
+      <CasePageContent params={params} searchParams={searchParams} />
     </Suspense>
   );
 }

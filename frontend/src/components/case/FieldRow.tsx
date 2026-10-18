@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { strings } from "@/lib/strings";
-import { EnumOption } from "@/lib/api";
+import { type EnumOption } from "@/lib/api";
 
 interface FieldRowProps {
+  id?: string;
+  highlighted?: boolean;
   path: string;
   labelBn: string;
   value: unknown;
@@ -21,6 +23,8 @@ interface FieldRowProps {
 }
 
 export function FieldRow({
+  id,
+  highlighted = false,
   path,
   labelBn,
   value,
@@ -76,7 +80,8 @@ export function FieldRow({
 
   return (
     <div
-      className={`p-2.5 rounded-lg border transition-colors ${rowTint} space-y-1`}
+      id={id}
+      className={`p-2.5 rounded-lg border transition-colors ${rowTint} space-y-1 ${highlighted ? "ring-2 ring-accent ring-offset-2" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-0.5 flex-1 min-w-0">

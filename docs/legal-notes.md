@@ -1,5 +1,9 @@
 ## Actions to verify with an expert
 
+- verify: certified copy of prior deed from the sub-registry office and comparison procedure
+
+- verify: bayna-nama registration rules, refund terms, bank partner
+
 These actions are shown to users (`docs/specs/actions.md`) but are **not yet verified** against
 law or office practice. Confirm each with a lawyer or land-office expert before release.
 

@@ -304,6 +304,8 @@ export interface components {
             from_codes?: string[];
             /** Sources */
             sources?: components["schemas"]["SourceRef"][];
+            /** Done */
+            done?: boolean;
         };
         /**
          * Address
@@ -439,6 +441,7 @@ export interface components {
             field_flags?: {
                 [key: string]: unknown;
             };
+            handwritten?: boolean;
             /**
              * Created At
              * Format: date-time
@@ -684,6 +687,7 @@ export interface components {
             field_flags?: {
                 [key: string]: unknown;
             };
+            handwritten?: boolean;
             /**
              * Created At
              * Format: date-time

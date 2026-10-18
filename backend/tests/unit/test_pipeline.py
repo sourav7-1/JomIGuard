@@ -119,6 +119,26 @@ def test_happy_path_stores_normalized_data(db, classified):
     assert row.warnings == [] and row.field_flags == {}
 
 
+def test_handwritten_lowers_every_field_confidence_and_is_stored(db, classified):
+    doc = new_document(db)
+    result = ExtractionResult(document=printed_khatian(), handwritten=True)
+    assert run(db, doc, FakeExtractor(result=result)) == DocStatus.done
+    row = extractions(db, doc)[0]
+    assert row.handwritten is True
+    assert row.field_flags["owners[0].name"] == ["medium"]
+    assert row.field_flags["owners[0].share_shatangsho"] == ["medium"]
+
+
+def test_lower_field_confidence_degrades_each_level_once_and_keeps_other_flags():
+    flags = {"a": ["high"], "b.c": ["medium", "format_warning"], "c": ["low"]}
+    assert pipeline.lower_field_confidence({"a": 1, "b": {"c": 2}, "d": [3]}, flags) == {
+        "a": ["medium"],
+        "b.c": ["low", "format_warning"],
+        "c": ["low"],
+        "d[0]": ["medium"],
+    }
+
+
 def test_label_disagreement_warns_and_uses_the_user_label(db, classified):
     classified("deed")
     doc = new_document(db, DocType.khatian)

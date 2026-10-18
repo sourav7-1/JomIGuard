@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "cc39d566-1e70-43d4-9b68-18ade8ee4600",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "c:\\JomIGuard\\.archify\\workflow-jomiguard-user-journey-20261017-155427\\candidate.json",
+  "output": "C:\\JomIGuard\\.archify\\workflow-jomiguard-user-journey-20261017-155427\\jomiguard-user-journey.html",
+  "specification": {
+    "sha256": "3dec31f4893a87bf093ad6227475061b539820e85c2ae6f25deba35f30342ab5",
+    "bytes": 8277
+  },
+  "artifact": {
+    "sha256": "556f16d11206df82d79a238215a3db451ec6cfe4650f0a360a3f167eec12b315",
+    "bytes": 766983
+  }
+}

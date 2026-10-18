@@ -34,7 +34,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       aria-label={strings.buttons.themeToggle}
-      className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-lg border border-line bg-surface text-ink hover:bg-bg transition-colors flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="min-h-[44px] min-w-[44px] px-2 py-2 rounded-md border border-line bg-surface text-ink hover:bg-bg transition-colors flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-3"
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4">
         {theme === "dark" ? (
@@ -43,7 +43,7 @@ export function ThemeToggle() {
           <path d="M20 15.2A8 8 0 0 1 8.8 4 8 8 0 1 0 20 15.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
         )}
       </svg>
-      <span>
+      <span className="hidden sm:inline">
         {theme === "dark" ? strings.labels.lightTheme : strings.labels.darkTheme}
       </span>
     </button>

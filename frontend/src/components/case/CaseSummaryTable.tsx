@@ -72,15 +72,11 @@ export function CaseSummaryTable({
     let area = "—";
     if (docType === "khatian" || docType === "dcr") {
       if (raw.total_area_shatangsho !== undefined && raw.total_area_shatangsho !== null) {
-        area = `${raw.total_area_shatangsho} শতাংশ`;
-      } else if (raw.total_area_text) {
-        area = String(raw.total_area_text);
+        area = raw.total_area_text ? `${raw.total_area_text} · ${raw.total_area_shatangsho} শতাংশ` : "—";
       }
     } else if (docType === "deed") {
       if (raw.transferred_area_shatangsho !== undefined && raw.transferred_area_shatangsho !== null) {
-        area = `${raw.transferred_area_shatangsho} শতাংশ`;
-      } else if (raw.transferred_area_text) {
-        area = String(raw.transferred_area_text);
+        area = raw.transferred_area_text ? `${raw.transferred_area_text} · ${raw.transferred_area_shatangsho} শতাংশ` : "—";
       }
     }
 
@@ -112,13 +108,12 @@ export function CaseSummaryTable({
               return (
                 <tr
                   key={doc.id}
-                  onClick={() => onSelectDoc?.(doc.id)}
-                  className={`hover:bg-bg/40 cursor-pointer transition-colors ${
+                  className={`transition-colors ${
                     isSelected ? "bg-accent-soft/40 font-semibold" : ""
                   }`}
                 >
                   <td className="py-2.5 px-3">
-                    <span className="font-medium text-ink block">{doc.label_bn}</span>
+                    <button type="button" onClick={() => onSelectDoc?.(doc.id)} aria-pressed={isSelected} className="min-h-11 text-left font-medium text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-accent">{doc.label_bn}</button>
                     <span className="text-[11px] text-muted">{doc.original_filename}</span>
                   </td>
                   <td className="py-2.5 px-3 text-ink max-w-[200px] truncate" title={owners}>

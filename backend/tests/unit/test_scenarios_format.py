@@ -34,7 +34,7 @@ def load(path: Path):
 
 
 def test_vocabulary_parsed():
-    assert len(CODES) == 13
+    assert len(CODES) == 15
     assert len(SCENARIOS) >= 20
 
 

@@ -63,6 +63,13 @@ def extractor_schema(doc_type: str) -> dict:
     return copy.deepcopy(_extractor_schema(doc_type))
 
 
+def extractor_response_schema(doc_type: str) -> dict:
+    schema = extractor_schema(doc_type)
+    schema["properties"]["handwritten"] = {"type": "boolean"}
+    schema["required"] = [*schema.get("required", []), "handwritten"]
+    return schema
+
+
 def prepare_image(image_bytes: bytes, mode: str) -> tuple[bytes, str, tuple[int, int]]:
     """-> (encoded image, media type, (width, height)); long side <= 2000 px."""
     if mode == "gray":
@@ -251,7 +258,7 @@ class AnthropicExtractor(LLMExtractor):
                     {
                         "name": TOOL_NAME,
                         "description": f"Record the printed fields of one {doc_type} document.",
-                        "input_schema": extractor_schema(doc_type),
+                        "input_schema": extractor_response_schema(doc_type),
                     }
                 ],
                 tool_choice={"type": "tool", "name": TOOL_NAME},
@@ -305,11 +312,16 @@ def _tool_input(response) -> tuple[dict | None, str | None]:
 def _result(doc_type, tool_input, error, meta) -> ExtractionResult:
     if error is not None or tool_input is None:
         return ExtractionResult(error=error or "empty answer", meta=meta)
+    handwritten = tool_input.get("handwritten", False)
+    if not isinstance(handwritten, bool):
+        return ExtractionResult(error="invalid output: handwritten must be a boolean", meta=meta)
     try:
-        document = MODELS[doc_type].model_validate({**tool_input, "doc_type": doc_type})
+        document = MODELS[doc_type].model_validate(
+            {**{k: v for k, v in tool_input.items() if k != "handwritten"}, "doc_type": doc_type}
+        )
     except ValidationError as e:
         where = ", ".join(".".join(map(str, err["loc"])) for err in e.errors()[:5])
         return ExtractionResult(
             error=f"invalid output: {e.error_count()} errors ({where})", meta=meta
         )
-    return ExtractionResult(document=document, meta=meta)
+    return ExtractionResult(document=document, meta=meta, handwritten=handwritten)

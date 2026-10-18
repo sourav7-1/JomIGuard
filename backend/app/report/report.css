@@ -16,7 +16,7 @@
     content: "পৃষ্ঠা " counter(page, bengali) " / " counter(pages, bengali);
     font-family: "Hind Siliguri"; font-size: 9pt; color: var(--muted);
   }
-  @bottom-left { content: "JomiGuard"; font-family: "Hind Siliguri"; font-size: 9pt; color: var(--accent); }
+  @bottom-left { content: "JomiGuard"; font-family: sans-serif; font-size: 9pt; color: var(--accent); }
 }
 
 body { font-family: "Hind Siliguri"; font-size: 10.5pt; line-height: 1.55; color: var(--ink); }

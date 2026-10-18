@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { Button } from "./Button";
 import { strings } from "@/lib/strings";
 
@@ -6,6 +7,7 @@ export interface EmptyStateProps {
   title?: string;
   description?: string;
   actionLabel?: string;
+  actionHref?: string;
   onAction?: () => void;
   className?: string;
 }
@@ -14,6 +16,7 @@ export function EmptyState({
   title = strings.empty.noDocumentsTitle,
   description = strings.empty.noDocumentsDesc,
   actionLabel,
+  actionHref,
   onAction,
   className = "",
 }: EmptyStateProps) {
@@ -39,11 +42,7 @@ export function EmptyState({
       </div>
       <h4 className="text-base font-semibold text-ink mb-1">{title}</h4>
       <p className="text-sm text-muted max-w-sm mb-4 leading-relaxed">{description}</p>
-      {actionLabel && (
-        <Button variant="primary" onClick={onAction}>
-          {actionLabel}
-        </Button>
-      )}
+      {actionLabel && actionHref ? <Link href={actionHref} className="inline-flex min-h-11 items-center rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">{actionLabel}</Link> : actionLabel && onAction ? <Button variant="primary" onClick={onAction}>{actionLabel}</Button> : null}
     </div>
   );
 }

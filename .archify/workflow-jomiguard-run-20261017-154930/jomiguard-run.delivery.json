@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "86e3837c-5299-4c4f-a3e3-8bd9a624df0f",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\JomIGuard\\.archify\\workflow-jomiguard-run-20261017-154930\\candidate.json",
+  "output": "C:\\JomIGuard\\.archify\\workflow-jomiguard-run-20261017-154930\\jomiguard-run.html",
+  "specification": {
+    "sha256": "fe6ee0d839d4486c1ee2c05b35a38bd3b72fa78cddb4db6d13c58345b89718a4",
+    "bytes": 5523
+  },
+  "artifact": {
+    "sha256": "0f295235e0962e7097481be9139c3957a70a18330e017faa1cc2c3bbcc0df304",
+    "bytes": 767075
+  }
+}

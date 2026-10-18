@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy.orm import Session
 
-from app.models import Document, Extraction, ExtractionStatus
+from app.models import Document, DocumentAuditEvent, Extraction, ExtractionStatus
 from app.schemas.extracted import (
     DeedData,
     HeirCertData,
@@ -127,6 +127,7 @@ def apply_corrections(
     edits: list[EditItem],
     confirms: list[str],
     db: Session,
+    actor_id: str | None = None,
 ) -> Extraction:
     if latest_extraction.data is None:
         raise HTTPException(400, "আগের তথ্যের কোনো রেকর্ড পাওয়া যায়নি")
@@ -232,8 +233,28 @@ def apply_corrections(
         data=normalized_data,
         warnings=warnings_out,
         field_flags=new_flags,
+        handwritten=latest_extraction.handwritten,
+        created_by=actor_id,
     )
     db.add(new_extraction)
+    if actor_id and edits:
+        db.add(
+            DocumentAuditEvent(
+                document_id=document.id,
+                event="extraction_corrected",
+                actor=actor_id,
+                details={"fields": [edit.field_path for edit in edits]},
+            )
+        )
+    if actor_id and confirms:
+        db.add(
+            DocumentAuditEvent(
+                document_id=document.id,
+                event="confirmed",
+                actor=actor_id,
+                details={"fields": confirms},
+            )
+        )
 
     document.updated_at = datetime.now(UTC)
     db.commit()

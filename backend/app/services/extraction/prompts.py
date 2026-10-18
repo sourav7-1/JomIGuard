@@ -1,7 +1,7 @@
 """Prompts for the vision-LLM extractor. Bump PROMPT_VERSION whenever any text here changes
 (it is part of the cache key)."""
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 TOOL_NAME = "record_document"
 
 SYSTEM = """\
@@ -9,6 +9,8 @@ You read one scanned or photographed Bangladeshi land document and record what i
 by calling the record_document tool exactly once.
 
 Rules:
+- Return handwritten=true when the document's main body is handwritten; ignore signatures,
+  stamps, and isolated handwritten corrections when deciding.
 - Copy text exactly as printed. In every *_text field and in every name, keep Bangla digits,
   spelling, honorifics (মোঃ, মোছাঃ, শেখ ...) and punctuation as they appear.
 - Identifier fields (khatian_no, dag_no, jl_no, deed_no, case_no, holding_no, touzi_no, dcr_no,

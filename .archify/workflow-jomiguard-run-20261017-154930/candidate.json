@@ -1,0 +1,68 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "How to run JomiGuard locally",
+    "output": ".archify/workflow-jomiguard-run-20261017-154930/jomiguard-run.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/sourav7-1/JomIGuard.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "6edcbeb5fcc46be79cda2c2a9aca3b890805d63a"
+    }
+  },
+  "lanes": [
+    { "id": "you", "label": "You (terminal)" },
+    { "id": "compose", "label": "Docker Compose" },
+    { "id": "app", "label": "Running app" },
+    { "id": "checks", "label": "Data and tests" }
+  ],
+  "phases": [
+    { "id": "setup", "label": "Set up", "fromCol": 0, "toCol": 1 },
+    { "id": "start", "label": "Start the stack", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "use", "label": "Use the app", "fromCol": 4, "toCol": 5 }
+  ],
+  "mainPath": ["env", "up", "build", "infra", "migrate", "api", "frontend", "browser"],
+  "nodes": [
+    { "id": "env", "lane": "you", "col": 0, "type": "security", "label": "Create .env", "sublabel": "copy .env.example, add keys", "tag": "never committed", "width": 150,
+      "sources": [{ "path": ".env.example", "line": 1, "end_line": 30, "label": "settings list" }] },
+    { "id": "up", "lane": "you", "col": 1, "type": "external", "label": "docker compose up", "sublabel": "-d --build", "width": 150,
+      "sources": [{ "path": "CLAUDE.md", "line": 27, "label": "start command" }] },
+    { "id": "frontend", "lane": "you", "col": 4, "type": "frontend", "label": "npm run dev", "sublabel": "frontend/, Next.js :3000", "tag": "outside Compose", "width": 150,
+      "sources": [{ "path": "frontend/package.json", "line": 5, "end_line": 9, "label": "scripts" }] },
+    { "id": "browser", "lane": "you", "col": 5, "type": "external", "label": "Open localhost:3000", "sublabel": "upload, assess, PDF", "width": 150,
+      "sources": [{ "path": "frontend/src/lib/api.ts", "line": 4, "label": "talks to :8000" }] },
+    { "id": "build", "lane": "compose", "col": 1, "type": "backend", "label": "Build backend image", "sublabel": "Tesseract, uv sync", "width": 150,
+      "sources": [{ "path": "backend/Dockerfile", "line": 4, "end_line": 21, "label": "image" }] },
+    { "id": "infra", "lane": "compose", "col": 2, "type": "database", "label": "Postgres, Redis, MinIO", "sublabel": "wait: Postgres healthy", "width": 150,
+      "sources": [{ "path": "docker-compose.yml", "line": 2, "end_line": 21, "label": "services" }, { "path": "docker-compose.yml", "line": 28, "end_line": 31, "label": "depends_on" }] },
+    { "id": "migrate", "lane": "compose", "col": 3, "type": "backend", "label": "alembic upgrade head", "sublabel": "backend entrypoint", "width": 150,
+      "sources": [{ "path": "backend/entrypoint.sh", "line": 1, "end_line": 4, "label": "entrypoint" }] },
+    { "id": "api", "lane": "app", "col": 4, "type": "backend", "label": "FastAPI :8000", "sublabel": "uvicorn --reload", "width": 150,
+      "sources": [{ "path": "backend/Dockerfile", "line": 20, "end_line": 21, "label": "CMD" }] },
+    { "id": "worker", "lane": "app", "col": 3, "type": "messagebus", "label": "Celery worker", "sublabel": "reads Redis queue", "tag": "1 task at a time on Gemini", "width": 150,
+      "sources": [{ "path": "docker-compose.yml", "line": 33, "end_line": 46, "label": "worker" }, { "path": "backend/app/workers/celery_app.py", "line": 14, "label": "concurrency" }] },
+    { "id": "data", "lane": "checks", "col": 0, "type": "database", "label": "Synthetic documents", "sublabel": "ml/: synth.khatian, synth.deed", "width": 150,
+      "sources": [{ "path": "CLAUDE.md", "line": 37, "end_line": 47, "label": "ML data commands" }] },
+    { "id": "tests", "lane": "checks", "col": 4, "type": "backend", "label": "pytest in container", "sublabel": "compose exec backend", "width": 150,
+      "sources": [{ "path": "CLAUDE.md", "line": 28, "label": "test command" }] }
+  ],
+  "edges": [
+    { "id": "env-up", "from": "env", "to": "up", "variant": "emphasis" },
+    { "id": "up-build", "from": "up", "to": "build", "label": "build", "variant": "emphasis" },
+    { "id": "build-infra", "from": "build", "to": "infra", "variant": "emphasis" },
+    { "id": "infra-migrate", "from": "infra", "to": "migrate", "label": "DB ready", "variant": "emphasis" },
+    { "id": "infra-worker", "from": "infra", "to": "worker", "label": "same image", "variant": "default", "role": "branch" },
+    { "id": "migrate-api", "from": "migrate", "to": "api", "label": "then serve", "variant": "emphasis" },
+    { "id": "api-frontend", "from": "api", "to": "frontend", "label": "API up", "variant": "emphasis" },
+    { "id": "frontend-browser", "from": "frontend", "to": "browser", "variant": "emphasis" },
+    { "id": "data-browser", "from": "data", "to": "browser", "label": "PNGs to upload", "variant": "dashed", "role": "branch" },
+    { "id": "api-tests", "from": "api", "to": "tests", "label": "run tests", "variant": "dashed", "role": "branch" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Order", "items": ["1. Create .env  2. docker compose up -d --build", "3. cd frontend && npm run dev  4. open http://localhost:3000"] },
+    { "dot": "amber", "title": "Extractor setting", "items": ["EXTRACTOR=llm needs LLM_PROVIDER and its key", "EXTRACTOR=tesseract_regex runs offline"] },
+    { "dot": "rose", "title": "Hard rules", "items": ["Only synthetic documents go to the Gemini free tier", "Keys stay in .env, never in git"] }
+  ]
+}

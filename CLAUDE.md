@@ -86,6 +86,7 @@ docs/legal-notes.md  verified legal facts and their sources
 - Never invent legal facts (inheritance shares, mutation steps, law sections). Use only what is written in `docs/legal-notes.md` or a spec. If it is missing, stop and ask.
 - Every new rule needs tests. A task is not done until its tests pass.
 - Gemini free tier may use inputs to improve Google's models: send only synthetic documents to it, never real user documents.
+- Handwritten support is basic. Never send real handwritten documents to the Gemini free tier.
 - No secrets in committed files. Real values live in `.env`; `.env.example` uses placeholders.
 
 ## How to work

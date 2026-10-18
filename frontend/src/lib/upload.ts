@@ -143,9 +143,9 @@ export function uploadDocumentWithProgress(
   } = {}
 ): Promise<DocumentStatusOut> {
   return new Promise((resolve, reject) => {
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/+$/, "");
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${baseUrl}/documents`);
+    xhr.open("POST", "/api/documents");
+    xhr.withCredentials = true;
 
     if (xhr.upload && options.onProgress) {
       xhr.upload.onprogress = (evt) => {
@@ -165,6 +165,9 @@ export function uploadDocumentWithProgress(
           reject(new Error(strings.error.defaultMessage));
         }
       } else {
+        if (xhr.status === 401 && window.location.pathname !== "/login") {
+          window.dispatchEvent(new Event("jomiguard:unauthorized"));
+        }
         let msg: string = strings.uploadFlow.errGenericUpload;
         if (xhr.status === 413) {
           msg = strings.uploadFlow.errFileSize;
@@ -183,7 +186,8 @@ export function uploadDocumentWithProgress(
     };
 
     xhr.onerror = () => {
-      reject(new Error(strings.error.networkError));
+      window.dispatchEvent(new Event("jomiguard:offline"));
+      reject(new Error(strings.error.offlineMessage));
     };
 
     const formData = new FormData();

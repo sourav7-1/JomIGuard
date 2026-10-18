@@ -30,6 +30,7 @@ class ExtractionResult:
     document: ExtractedDocument | None = None
     error: str | None = None  # set when no valid document came back; never both
     meta: ExtractionMeta = field(default_factory=ExtractionMeta)
+    handwritten: bool = False
 
 
 class Extractor(Protocol):

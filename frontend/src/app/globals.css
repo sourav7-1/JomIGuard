@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #F2F4F1;
+  --bg: #F7F9F6;
   --surface: #FFFFFF;
-  --ink: #16201B;
-  --muted: #5B6862;
-  --line: #D9DFDA;
-  --accent: #1E6A55;
-  --accent-soft: #E1EEE8;
+  --ink: #172821;
+  --muted: #586A61;
+  --line: #D8E1DB;
+  --accent: #0D624D;
+  --accent-soft: #E3EFE8;
+  --gold: #916707;
   --ok: #2E7D4F;
   --ok-bg: #E3F1E8;
   --warn: #A86A00;
@@ -18,13 +19,14 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #101613;
+    --bg: #101713;
     --surface: #18201C;
     --ink: #E6ECE8;
     --muted: #9AA8A1;
     --line: #2A3530;
-    --accent: #5BBF9E;
+    --accent: #66C6A5;
     --accent-soft: #1C3229;
+    --gold: #E2B84F;
     --ok: #6CC08E;
     --ok-bg: #1A2E22;
     --warn: #E2B04A;
@@ -35,13 +37,14 @@
 }
 
 [data-theme="dark"] {
-  --bg: #101613;
+  --bg: #101713;
   --surface: #18201C;
   --ink: #E6ECE8;
   --muted: #9AA8A1;
   --line: #2A3530;
-  --accent: #5BBF9E;
+  --accent: #66C6A5;
   --accent-soft: #1C3229;
+  --gold: #E2B84F;
   --ok: #6CC08E;
   --ok-bg: #1A2E22;
   --warn: #E2B04A;
@@ -51,13 +54,14 @@
 }
 
 [data-theme="light"] {
-  --bg: #F2F4F1;
+  --bg: #F7F9F6;
   --surface: #FFFFFF;
-  --ink: #16201B;
-  --muted: #5B6862;
-  --line: #D9DFDA;
-  --accent: #1E6A55;
-  --accent-soft: #E1EEE8;
+  --ink: #172821;
+  --muted: #586A61;
+  --line: #D8E1DB;
+  --accent: #0D624D;
+  --accent-soft: #E3EFE8;
+  --gold: #916707;
   --ok: #2E7D4F;
   --ok-bg: #E3F1E8;
   --warn: #A86A00;
@@ -74,6 +78,7 @@
   --color-line: var(--line);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-gold: var(--gold);
   --color-ok: var(--ok);
   --color-ok-bg: var(--ok-bg);
   --color-warn: var(--warn);
@@ -92,6 +97,19 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   min-height: 100%;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 h1,

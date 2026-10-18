@@ -21,7 +21,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const base =
       "inline-flex items-center justify-center font-medium transition-colors select-none " +
-      "min-h-[44px] min-w-[44px] rounded-lg " +
+      "min-h-[44px] min-w-[44px] rounded-md " +
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
       "disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
 

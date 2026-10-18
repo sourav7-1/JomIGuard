@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Text, func
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, IdTimestampMixin
@@ -38,8 +38,15 @@ class Document(IdTimestampMixin, Base):
     land_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("lands.id", ondelete="SET NULL"), index=True
     )
+    owner_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     doc_type: Mapped[DocType | None]  # as chosen by the user; None if they did not say
     file_key: Mapped[str]  # MinIO object path
+    content_sha256: Mapped[str | None] = mapped_column(String(64))
+    source_type: Mapped[str] = mapped_column(
+        String(40), default="user_upload", server_default="user_upload"
+    )
     original_filename: Mapped[str]
     status: Mapped[DocStatus] = mapped_column(default=DocStatus.uploaded)
     current_step: Mapped[DocStep] = mapped_column(default=DocStep.queued, server_default="queued")

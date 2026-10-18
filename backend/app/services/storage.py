@@ -20,6 +20,14 @@ class Storage:
             self.bucket, key, io.BytesIO(data), len(data), content_type=content_type
         )
 
+    def download(self, key: str) -> bytes:
+        response = self.client.get_object(self.bucket, key)
+        try:
+            return response.read()
+        finally:
+            response.close()
+            response.release_conn()
+
 
 @lru_cache
 def get_storage() -> Storage:
