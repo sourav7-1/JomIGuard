@@ -2,6 +2,7 @@ import Link from "next/link";
 import { strings } from "@/lib/strings";
 import { officialLinks, services } from "@/lib/services";
 import { ServiceIcon } from "@/components/ServiceIcon";
+import { IconTile } from "@/components/ui/Card";
 
 // Every answer repeats what the app already says elsewhere (disclaimer, satellite note,
 // identity rules, README); nothing here is new legal or service advice.
@@ -26,9 +27,9 @@ export default function HelpPage() {
       <section aria-labelledby="howto-title" className="space-y-3">
         <h2 id="howto-title" className="text-xl font-bold text-ink">সেবা অনুযায়ী ধাপ</h2>
         {services.map((s) => (
-          <details key={s.id} id={s.id} className="group rounded-[var(--radius-card)] border border-line bg-surface shadow-[var(--shadow-card)] open:border-accent/40">
+          <details key={s.id} id={s.id} className="group surface-grad rounded-[var(--radius-card)] border border-edge bg-surface shadow-rest transition-shadow open:border-accent/40 open:shadow-raised">
             <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
-              <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${s.satellite ? "bg-sat-soft text-sat" : "bg-accent-soft text-accent"}`}><ServiceIcon path={s.icon} className="h-5 w-5" /></span>
+              <IconTile satellite={s.satellite} className="!h-10 !w-10"><ServiceIcon path={s.icon} className="h-5 w-5" /></IconTile>
               <span className="flex-1 font-semibold text-ink">{s.title}</span>
               <span aria-hidden="true" className="text-muted transition-transform group-open:rotate-180">▾</span>
             </summary>
@@ -36,7 +37,7 @@ export default function HelpPage() {
               <ol className="list-decimal space-y-1.5 pl-5 text-sm leading-7 text-ink">
                 {s.howTo.map((step) => <li key={step}>{step}</li>)}
               </ol>
-              <Link href={s.start.href} className="mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-control)] bg-accent px-4 text-sm font-semibold text-white">{s.title}: {s.start.label} →</Link>
+              <Link href={s.start.href} className="mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-control)] bg-accent px-4 text-sm font-semibold text-white shadow-rest">{s.title}: {s.start.label} →</Link>
             </div>
           </details>
         ))}
@@ -45,7 +46,7 @@ export default function HelpPage() {
       <section aria-labelledby="faq-title" className="space-y-3">
         <h2 id="faq-title" className="text-xl font-bold text-ink">সচরাচর জিজ্ঞাসা</h2>
         {faq.map((f) => (
-          <details key={f.q} className="group rounded-[var(--radius-card)] border border-line bg-surface">
+          <details key={f.q} className="group surface-grad rounded-[var(--radius-card)] border border-edge bg-surface shadow-rest transition-shadow open:shadow-raised">
             <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-semibold text-ink [&::-webkit-details-marker]:hidden">
               {f.q}<span aria-hidden="true" className="text-muted transition-transform group-open:rotate-180">▾</span>
             </summary>

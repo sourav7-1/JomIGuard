@@ -20,3 +20,7 @@ const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
 /** Compare identifiers and names typed in Bangla or ASCII digits, ignoring case and spaces. */
 export const norm = (s: string | null | undefined): string =>
   (s ?? "").replace(/[০-৯]/g, (d) => String(BN_DIGITS.indexOf(d))).replace(/\s+/g, " ").trim().toLowerCase();
+
+/** Old test cases with no district or a garbled ("??????") mouza are hidden from lists and suggestions (data is kept). */
+export const isListedLand = (l: { district?: string | null; mouza?: string | null; upazila?: string | null }): boolean =>
+  Boolean(l.district?.trim()) && !/\?{2,}/.test(`${l.mouza ?? ""}${l.upazila ?? ""}`);

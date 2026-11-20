@@ -4,6 +4,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { JourneyRail } from "./JourneyRail";
 import { strings } from "@/lib/strings";
 import { AuthControls } from "@/components/AuthControls";
+import { HeaderScroll } from "@/components/HeaderScroll";
 
 function ShieldMark() {
   return (
@@ -19,11 +20,14 @@ function ShieldMark() {
 }
 
 export function Header() {
-  // no backdrop-filter on <header>: it would become the containing block of the fixed mobile
-  // dock (JourneyRail) and pin the dock over this header on phones
+  // The glass blur sits on its own absolutely positioned layer, never on <header>: a
+  // backdrop-filter on <header> would become the containing block of the fixed mobile
+  // dock (JourneyRail) and pin the dock over this header on phones.
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface/95">
-      <p className="border-b border-line bg-accent-soft px-4 py-1 text-center text-xs leading-5 text-ink">
+    <header data-glass className="group/header sticky top-0 z-40 border-b border-edge transition-shadow duration-[var(--dur-base)] data-[scrolled=true]:shadow-raised">
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[var(--glass)] backdrop-blur-xl backdrop-saturate-150" />
+      <HeaderScroll />
+      <p className="border-b border-edge bg-accent-soft/70 px-4 py-1 text-center text-xs leading-5 text-ink">
         <span aria-hidden="true" className="mr-1 font-semibold text-accent">ⓘ</span>{strings.app.independentNote}
       </p>
       <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:min-h-[76px] lg:px-8">
@@ -35,7 +39,7 @@ export function Header() {
           </span>
         </Link>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <Link href="/upload" className="hidden min-h-11 items-center sm:inline-flex justify-center rounded-md bg-accent px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#23317A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-4">
+          <Link href="/upload" className="hidden min-h-11 items-center sm:inline-flex justify-center rounded-[var(--radius-control)] bg-gradient-to-b from-accent to-[#23317A] px-3.5 text-sm font-semibold text-white shadow-rest transition-shadow hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-4">
             <span className="sm:hidden">যাচাই শুরু</span>
             <span className="hidden sm:inline">{strings.buttons.newCheck}</span>
           </Link>

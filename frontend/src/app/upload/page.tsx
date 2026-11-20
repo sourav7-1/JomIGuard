@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { api } from "@/lib/api";
 import { strings } from "@/lib/strings";
+import { divisions } from "@/lib/bd-locations";
 
 export default function NewCheckPage() {
   return <Suspense><NewCheckForm /></Suspense>;
@@ -16,7 +17,7 @@ function NewCheckForm() {
   const router = useRouter();
   // pre-filled from the location picker (/find)
   const params = useSearchParams();
-  const district = params.get("district")?.trim() ?? "";
+  const [district, setDistrict] = useState(params.get("district")?.trim() ?? "");
   const khatianNo = params.get("khatian")?.trim() ?? "";
 
   const [mouza, setMouza] = useState(params.get("mouza") ?? "");
@@ -30,6 +31,10 @@ function NewCheckForm() {
     setError(null);
 
     const trimmedMouza = mouza.trim();
+    if (!district) {
+      setError("জেলা বেছে নিন।");
+      return;
+    }
     if (!trimmedMouza) {
       setError(strings.uploadFlow.mouzaRequired);
       return;
@@ -41,7 +46,7 @@ function NewCheckForm() {
         mouza: trimmedMouza,
         dag_no: dagNo.trim(),
         upazila: upazila.trim(),
-        ...(district && { district }),
+        district,
         ...(khatianNo && { khatian_no: khatianNo }),
       });
 
@@ -69,11 +74,28 @@ function NewCheckForm() {
 
       <Card className="p-5 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-5">
-          {(district || khatianNo) && (
-            <p className="rounded-lg bg-accent-soft px-3 py-2 text-sm text-ink">
-              {district && <>জেলা: <b>{district}</b></>}{district && khatianNo && " · "}{khatianNo && <>খতিয়ান নং: <b>{khatianNo}</b></>}
-            </p>
+          {khatianNo && (
+            <p className="rounded-lg bg-accent-soft px-3 py-2 text-sm text-ink">খতিয়ান নং: <b>{khatianNo}</b></p>
           )}
+          <div className="space-y-1.5">
+            <label htmlFor="district-input" className="block text-sm font-semibold text-ink">
+              জেলা <span className="text-bad">*</span>
+            </label>
+            <select
+              id="district-input"
+              required
+              value={district}
+              onChange={(e) => setDistrict(e.target.value)}
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-line bg-bg text-ink text-sm"
+            >
+              <option value="">জেলা বেছে নিন</option>
+              {divisions.map((d) => (
+                <optgroup key={d.name} label={`${d.name} বিভাগ`}>
+                  {d.districts.map((name) => <option key={name}>{name}</option>)}
+                </optgroup>
+              ))}
+            </select>
+          </div>
           {/* Mouza (Required) */}
           <div className="space-y-1.5">
             <label

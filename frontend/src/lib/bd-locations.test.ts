@@ -1,7 +1,7 @@
 // Run: npm test  (node's built-in runner; Node 24 strips the TypeScript types)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { divisionOf, divisions, norm } from "./bd-locations.ts";
+import { divisionOf, divisions, isListedLand, norm } from "./bd-locations.ts";
 
 test("8 divisions and 64 districts, no duplicates", () => {
   assert.equal(divisions.length, 8);
@@ -28,4 +28,11 @@ test("division lookup and digit-insensitive matching", () => {
   assert.equal(divisionOf("নেই"), undefined);
   assert.equal(norm(" ৪১৭ "), "417");
   assert.equal(norm("305/1"), norm("৩০৫/১"));
+});
+
+test("junk test cases are hidden, real ones listed", () => {
+  assert.equal(isListedLand({ district: "ভোলা", upazila: "ভোলা সদর", mouza: "চর মেঘনা" }), true);
+  assert.equal(isListedLand({ district: "", mouza: "ঢাকাদক্ষিণ" }), false);
+  assert.equal(isListedLand({ district: null, mouza: "south plordi" }), false);
+  assert.equal(isListedLand({ district: "সিলেট", upazila: "??????", mouza: "??????" }), false);
 });

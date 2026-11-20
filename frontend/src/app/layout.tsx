@@ -5,7 +5,8 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { strings } from "@/lib/strings";
 import { AuthGuard } from "@/components/AuthGuard";
-import { Spinner } from "@/components/ui/Spinner";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const tiroBangla = Tiro_Bangla({
   weight: "400",
@@ -45,9 +46,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-bg text-ink selection:bg-accent-soft selection:text-accent">
+        <ToastProvider>
         <Header />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-7 pb-24 sm:px-6 md:py-10 md:pb-10 lg:px-8">
-          <Suspense fallback={<div className="flex min-h-[50vh] items-center justify-center"><Spinner /></div>}>
+          <Suspense fallback={<div role="status" aria-label="লোড হচ্ছে" className="space-y-4"><Skeleton className="h-9 w-72 max-w-full" /><Skeleton className="h-40 w-full !rounded-[var(--radius-card)]" /></div>}>
             <AuthGuard>{children}</AuthGuard>
           </Suspense>
         </main>
@@ -63,6 +65,7 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+        </ToastProvider>
       </body>
     </html>
   );

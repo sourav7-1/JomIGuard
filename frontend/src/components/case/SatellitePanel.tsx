@@ -3,8 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { api, ApiError, PlotGeometry, SatelliteCheckOut, SatelliteTrend } from "@/lib/api";
 import PlotMap from "./PlotMap";
-import { FindingCard, findingTone } from "@/components/ui/FindingCard";
+import { FindingCard, findingTone, TonePill } from "@/components/ui/FindingCard";
 import { Spinner } from "@/components/ui/Spinner";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
+import { RuleResultOut } from "@/lib/api";
 
 const POLL_MS = 5000;
 const BN = "০১২৩৪৫৬৭৮৯";
@@ -32,7 +36,7 @@ function MetricChart({ label, unit, trend, outliers }: { label: string; unit: st
     p.low_confidence ? "কম নির্ভরযোগ্য বছর (ছবি কম বা মান ভালো নয়), প্রবণতায় ধরা হয়নি"
       : outliers.includes(p.year) ? "ব্যতিক্রমী বছর (এক বছরের অস্বাভাবিক ছবি), প্রবণতায় ধরা হয়নি" : "প্রবণতায় ধরা হয়েছে";
   return (
-    <figure className="min-w-0 rounded-[var(--radius-card)] border border-line bg-surface p-3">
+    <figure className="min-w-0 rounded-[var(--radius-card)] border border-edge bg-surface p-3 shadow-rest">
       <figcaption className="px-1 text-sm font-semibold text-ink">{label} ({unit})</figcaption>
       <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-sm text-sat" role="img" aria-label={`${label}, বছর অনুযায়ী`}>
         {[y0, y1 / 2, y1].map((v) => (
@@ -54,9 +58,15 @@ function MetricChart({ label, unit, trend, outliers }: { label: string; unit: st
   );
 }
 
+// Which chart explains a finding: water findings -> water chart, tree findings -> tree chart.
+const metricFor = (f: RuleResultOut) => METRICS.find((m) => f.rule_id.includes(m.key.startsWith("water") ? "water" : "tree"));
+
 function SatelliteResults({ check }: { check: SatelliteCheckOut }) {
   const r = check.result!;
   const findings = check.findings ?? [];
+  const [detail, setDetail] = useState<RuleResultOut | null>(null);
+  const detailMetric = detail ? metricFor(detail) : undefined;
+  const detailTrend = detailMetric ? r.trends[detailMetric.key] : undefined;
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -69,12 +79,31 @@ function SatelliteResults({ check }: { check: SatelliteCheckOut }) {
       <section className="space-y-3">
         <h3 className="font-heading text-lg font-bold text-ink">যা দেখা গেছে</h3>
         {findings.length ? findings.map((f) => (
-          <FindingCard key={f.rule_id} tone={findingTone(f.status)} title={f.title_bn}>
+          <FindingCard key={f.rule_id} tone={findingTone(f.status)} title={f.title_bn}
+            footer={<button type="button" aria-haspopup="dialog" onClick={() => setDetail(f)} className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-sat/30 bg-surface px-3 text-sm font-semibold text-sat shadow-rest hover:shadow-raised">বিস্তারিত ও চার্ট <span aria-hidden="true">→</span></button>}>
             <p className="text-sm leading-relaxed">{f.message_bn}</p>
             {typeof f.values?.next_action_bn === "string" && <p className="text-sm leading-relaxed"><strong>এরপর:</strong> {f.values.next_action_bn}</p>}
           </FindingCard>
         )) : <p className="rounded-xl border border-line bg-bg/40 p-3 text-sm text-muted">স্যাটেলাইট ছবিতে আশেপাশে সতর্ক হওয়ার মতো কোনো পরিবর্তন ধরা পড়েনি। এর মানে এই নয় যে জমিতে কোনো সমস্যা নেই; মাঠে গিয়ে নিজে দেখুন।</p>}
       </section>
+      <Modal
+        open={!!detail}
+        onClose={() => setDetail(null)}
+        title={detail?.title_bn ?? ""}
+        description="স্যাটেলাইট ছবি থেকে পাওয়া ফল; প্লটের চারপাশের প্রায় ২০০ মিটার এলাকার।"
+      >
+        {detail && (
+          <div className="space-y-4">
+            <TonePill tone={findingTone(detail.status)} />
+            {detailMetric && detailTrend && <MetricChart label={detailMetric.label} unit={detailMetric.unit} trend={detailTrend} outliers={detailTrend.outlier_years} />}
+            <p className="text-sm leading-7 text-ink">{detail.message_bn}</p>
+            {typeof detail.values?.next_action_bn === "string" && (
+              <div className="rounded-[var(--radius-control)] border border-accent/20 bg-accent-soft/60 p-3 text-sm leading-7"><strong>এরপর:</strong> {detail.values.next_action_bn}</div>
+            )}
+            <p className="text-xs leading-6 text-muted">ভরাট বিন্দু: প্রবণতায় ধরা বছর। ফাঁপা বিন্দু: ব্যতিক্রমী বা কম নির্ভরযোগ্য বছর। স্যাটেলাইট যাচাই কাগজের পরীক্ষার ঝুঁকির মাত্রা বদলায় না; মাঠে গিয়ে নিজে মিলিয়ে দেখুন।</p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
@@ -85,6 +114,8 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0); // bump to fetch the latest check again
+  const [loaded, setLoaded] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -95,7 +126,7 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
       if (latest.status === "pending") timer = window.setTimeout(() => setTick((t) => t + 1), POLL_MS);
     }).catch((e) => {
       if (!cancelled && !(e instanceof ApiError && e.status === 404)) setError(e instanceof Error ? e.message : "ফল আনা যায়নি।");
-    });
+    }).finally(() => { if (!cancelled) setLoaded(true); });
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [landId, tick]);
 
@@ -105,8 +136,11 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
     try {
       setCheck(await api.startSatelliteCheck(landId));
       setTick((t) => t + 1);
+      toast("info", "স্যাটেলাইট যাচাই শুরু হয়েছে। ফল এলে এখানেই দেখাবে।");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "যাচাই শুরু করা যায়নি।");
+      const msg = e instanceof Error ? e.message : "যাচাই শুরু করা যায়নি।";
+      setError(msg);
+      toast("bad", msg);
     } finally {
       setStarting(false);
     }
@@ -114,7 +148,7 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
 
   const pending = check?.status === "pending";
   return (
-    <section className="space-y-4 rounded-[var(--radius-card)] border border-line border-t-4 border-t-sat bg-surface p-4 shadow-[var(--shadow-card)] sm:p-5" aria-labelledby="satellite-title">
+    <section className="surface-grad relative space-y-4 overflow-hidden rounded-[var(--radius-card)] border border-sat/30 bg-surface p-4 shadow-raised before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-sat before:to-accent sm:p-5" aria-labelledby="satellite-title">
       <div className="space-y-2">
         <p className="inline-flex items-center gap-2 rounded-full bg-sat-soft px-3 py-1 text-xs font-semibold text-sat">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4"><path d="M4 12a8 8 0 0 1 8-8m-5 8a5 5 0 0 1 5-5m-1 8 7-7m-4 0h4v4M10 18l-2 2m6-6 6 6-2 2-6-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -128,7 +162,7 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
         </p>
       </div>
       <div className="-mx-4 sm:mx-0">
-        <PlotMap landId={landId} geometry={geometry} onSaved={setShape} />
+        <PlotMap landId={landId} geometry={geometry} onSaved={(g) => { setShape(g); toast("ok", "সীমানা রাখা হয়েছে।"); }} />
       </div>
       {!shape && (
         <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-bg/60 p-4 text-sm leading-relaxed">
@@ -157,6 +191,12 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
       )}
       {error && <p role="alert" className="rounded-lg border border-bad/40 bg-bad-bg p-3 text-sm">{error}</p>}
       {check?.status === "failed" && <p role="alert" className="rounded-lg border border-bad/40 bg-bad-bg p-3 text-sm">{check.error || "যাচাই করা যায়নি।"}</p>}
+      {!loaded && (
+        <div role="status" aria-label="স্যাটেলাইট ফল লোড হচ্ছে" className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2"><Skeleton className="h-48 w-full !rounded-[var(--radius-card)]" /><Skeleton className="h-48 w-full !rounded-[var(--radius-card)]" /></div>
+          <Skeleton className="h-20 w-full !rounded-[var(--radius-card)]" />
+        </div>
+      )}
       {check?.status === "ok" && check.result && <SatelliteResults check={check} />}
       {check?.status === "ok" && <p className="rounded-lg bg-bg p-3 text-xs leading-relaxed text-muted">{check.area_note_bn} স্যাটেলাইট যাচাই কাগজের পরীক্ষার ঝুঁকির মাত্রা বদলায় না।</p>}
     </section>

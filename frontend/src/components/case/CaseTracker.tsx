@@ -87,19 +87,30 @@ export function CaseTracker({ landId, caseView }: { landId: string; caseView: La
 
   const list = steps(caseView, check, loaded);
   const todo = nextActions(caseView, check);
+  const current = list.findIndex((s) => s.tone !== "done");
+  const doneCount = current === -1 ? list.length : current;
 
   return (
-    <section aria-labelledby="tracker-title" className="space-y-4 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
-      <h2 id="tracker-title" className="font-heading text-xl font-bold text-ink">যাচাইয়ের অবস্থা</h2>
-      <ol className="grid gap-2 md:grid-cols-5 md:gap-0">
+    <section aria-labelledby="tracker-title" className="surface-grad space-y-4 rounded-[var(--radius-card)] border border-edge bg-surface p-4 shadow-raised sm:p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="tracker-title" className="font-heading text-xl font-bold text-ink">যাচাইয়ের অবস্থা</h2>
+        <p className="text-sm text-muted">{bn(doneCount)}/{bn(list.length)} ধাপ শেষ</p>
+      </div>
+      <div className="relative">
+      {/* progress line behind the dots (desktop) */}
+      <div aria-hidden="true" className="absolute left-[10%] right-[10%] top-[1.4rem] hidden h-1 rounded-full bg-line md:block">
+        <div className="animate-grow-x h-full rounded-full bg-gradient-to-r from-ok to-sat" style={{ width: `${(Math.max(0, doneCount - 1) / (list.length - 1)) * 100}%` }} />
+      </div>
+      <ol className="relative grid gap-2 md:grid-cols-5 md:gap-0">
         {list.map((s, i) => {
           const t = toneStyle[s.tone];
           return (
             <li key={s.label} className="relative md:px-1">
-              {i > 0 && <span aria-hidden="true" className={`absolute left-[-50%] right-[50%] top-5 hidden h-0.5 md:block ${list[i - 1].tone === "todo" ? "bg-line" : "bg-ok/50"}`} />}
               <a href={s.href} className="relative flex min-h-12 items-center gap-3 rounded-lg p-1.5 hover:bg-bg md:flex-col md:items-center md:gap-1.5 md:text-center">
-                <span className={`relative z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${t.dot}`}>
-                  {t.mark || bn(i + 1)}
+                <span aria-current={i === current ? "step" : undefined} className={`relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold shadow-rest ${t.dot} ${i === current ? "animate-pulse-ring" : ""}`}>
+                  {s.tone === "done" ? (
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-draw" style={{ animationDelay: `${i * 120}ms` }} /></svg>
+                  ) : t.mark || bn(i + 1)}
                 </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold leading-snug text-ink">{bn(i + 1)}. {s.label}</span>
@@ -110,7 +121,8 @@ export function CaseTracker({ landId, caseView }: { landId: string; caseView: La
           );
         })}
       </ol>
-      <div className="rounded-[var(--radius-card)] border border-accent/25 bg-accent-soft/60 p-4">
+      </div>
+      <div className="rounded-[var(--radius-card)] border border-accent/20 bg-gradient-to-br from-accent-soft/80 to-surface p-4">
         <h3 className="font-semibold text-ink">এখন কী করবেন</h3>
         {todo.length ? (
           <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-7 text-ink">

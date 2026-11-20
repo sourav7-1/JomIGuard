@@ -2,9 +2,12 @@
 
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api, LandOut } from "@/lib/api";
-import { divisionOf, divisions, norm } from "@/lib/bd-locations";
+import { divisionOf, divisions, isListedLand, norm } from "@/lib/bd-locations";
+import { Card } from "@/components/ui/Card";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
 import { services } from "@/lib/services";
 
 const BN = "০১২৩৪৫৬৭৮৯";
@@ -31,10 +34,31 @@ function FindCase() {
   const [mouza, setMouza] = useState("");
   const [khatian, setKhatian] = useState("");
   const [dag, setDag] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const toast = useToast();
 
   useEffect(() => {
-    api.getLands().then(setLands).catch(() => setLoadError(true));
+    api.getLands().then((rows) => setLands(rows.filter(isListedLand))).catch(() => setLoadError(true));
   }, []);
+
+  // "নতুন কেস" step: confirm the picked address in a modal, then create the case and go to upload.
+  const createCase = async () => {
+    setBusy(true);
+    try {
+      const land = await api.createLand({
+        district, mouza: mouza.trim(), dag_no: dag.trim(), upazila: upazila.trim(),
+        ...(khatian.trim() && { khatian_no: khatian.trim() }),
+      });
+      toast("ok", "নতুন কেস তৈরি হয়েছে। এবার কাগজ যোগ করুন।");
+      router.push(`/upload/${land.id}`);
+    } catch (e) {
+      toast("bad", e instanceof Error ? e.message : "কেস তৈরি করা যায়নি।");
+      setBusy(false);
+    }
+  };
+  const picked: [string, string][] = [["বিভাগ", division], ["জেলা", district], ["উপজেলা", upazila], ["মৌজা", mouza], ["খতিয়ান নং", khatian], ["দাগ নং", dag]];
 
   const districts = divisions.find((d) => d.name === division)?.districts ?? [];
   // Suggestions come from existing cases only; anything else can be typed.
@@ -57,7 +81,7 @@ function FindCase() {
         <p className="text-base leading-7 text-muted">বিভাগ থেকে মৌজা পর্যন্ত বেছে নিন। এই মৌজা-দাগে আগের কেস থাকলে সেটি খুলুন, না থাকলে নতুন কেস শুরু করুন।</p>
       </header>
 
-      <form onSubmit={(e) => e.preventDefault()} className="grid gap-4 rounded-[var(--radius-card)] border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:grid-cols-2 sm:p-6">
+      <form onSubmit={(e) => e.preventDefault()} className="surface-grad grid gap-4 rounded-[var(--radius-card)] border border-edge bg-surface p-5 shadow-raised sm:grid-cols-2 sm:p-6">
         <label className="space-y-1.5"><span className="block text-sm font-semibold text-ink">বিভাগ</span>
           <select className={field} value={division} onChange={(e) => { setDivision(e.target.value); setDistrict(""); setUpazila(""); }}>
             <option value="">বিভাগ বেছে নিন</option>
@@ -94,25 +118,39 @@ function FindCase() {
         ) : matches.length ? (
           <>
             <p className="font-semibold text-ok">✓ এই ঠিকানায় {bn(String(matches.length))}টি কেস আছে</p>
-            <ul className="space-y-2">
+            <ul className="grid gap-2">
               {matches.slice(0, 5).map((l) => (
-                <li key={l.id}>
-                  <Link href={`/cases/${l.id}${TARGET[service.id] ?? ""}`} className="flex min-h-12 items-center justify-between gap-3 rounded-[var(--radius-control)] border border-line bg-surface px-4 py-3 hover:border-accent">
-                    <span className="text-sm text-ink"><b>{l.mouza}</b> · দাগ {bn(l.dag_no || "—")}{l.khatian_no && <> · খতিয়ান {bn(l.khatian_no)}</>}<span className="block text-xs text-muted">{[l.upazila, l.district, divisionOf(l.district ?? "")].filter(Boolean).join(", ")}</span></span>
-                    <span className="shrink-0 text-sm font-semibold text-accent">কেস খুলুন →</span>
-                  </Link>
-                </li>
+                <Card key={l.id} as="li" variant="interactive" href={`/cases/${l.id}${TARGET[service.id] ?? ""}`} padded={false} className="px-4 py-3"
+                  title={<span className="font-body text-base">{l.mouza} · দাগ {bn(l.dag_no || "—")}{l.khatian_no && <> · খতিয়ান {bn(l.khatian_no)}</>}</span>}
+                  description={[l.upazila, l.district, divisionOf(l.district ?? "")].filter(Boolean).join(", ")}
+                  meta={<span aria-hidden="true" className="text-sm font-semibold text-accent">কেস খুলুন →</span>} />
               ))}
             </ul>
-            <p className="text-sm text-muted">অথবা <Link href={newCase} className="font-semibold text-accent underline underline-offset-4">নতুন কেস শুরু করুন</Link></p>
+            <p className="text-sm text-muted">অথবা <button type="button" aria-haspopup="dialog" onClick={() => setCreating(true)} className="min-h-11 font-semibold text-accent underline underline-offset-4">নতুন কেস শুরু করুন</button></p>
           </>
         ) : (
           <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-bg p-4">
             <p className="text-sm text-ink">এই ঠিকানায় এখনো কোনো কেস নেই।</p>
-            <Link href={newCase} className="mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-control)] bg-accent px-4 text-sm font-semibold text-white">নতুন কেস শুরু করুন →</Link>
+            <button type="button" aria-haspopup="dialog" onClick={() => setCreating(true)} className="mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-control)] bg-accent px-4 text-sm font-semibold text-white shadow-rest">নতুন কেস শুরু করুন →</button>
           </div>
         )}
       </section>
+
+      <Modal
+        open={creating}
+        onClose={() => setCreating(false)}
+        title="নতুন কেস শুরু করুন"
+        description="বেছে নেওয়া ঠিকানা দেখে নিন। কেস তৈরি হলে কাগজ যোগ করার ধাপে যাবেন।"
+        footer={<>
+          <Link href={newCase} className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-bg">ফর্মে বদলান</Link>
+          <button type="button" onClick={createCase} disabled={busy || !district || !mouza.trim()} className="min-h-11 rounded-[var(--radius-control)] bg-accent px-4 text-sm font-semibold text-white shadow-rest">{busy ? "তৈরি হচ্ছে…" : "কেস তৈরি করুন →"}</button>
+        </>}
+      >
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+          {picked.map(([k, v]) => <React.Fragment key={k}><dt className="text-muted">{k}</dt><dd className="font-semibold text-ink">{v.trim() ? bn(v) : "—"}</dd></React.Fragment>)}
+        </dl>
+        {!district && <p role="alert" className="mt-4 rounded-[var(--radius-control)] bg-warn-bg p-3 text-sm text-warn">কেস তৈরির আগে বিভাগ ও জেলা বেছে নিন।</p>}
+      </Modal>
     </div>
   );
 }

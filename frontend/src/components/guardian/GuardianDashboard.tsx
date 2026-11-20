@@ -3,6 +3,10 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Modal } from "@/components/ui/Modal";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/Toast";
 import { api, ApiError, GuardianAlertOut, GuardianLandOut } from "@/lib/api";
 import { strings, guardianFlow as copy } from "@/lib/strings";
 
@@ -23,6 +27,8 @@ export function GuardianDashboard() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [guide, setGuide] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const toast = useToast();
 
   const refresh = useCallback(async () => {
     try {
@@ -30,6 +36,7 @@ export function GuardianDashboard() {
       setLands(rows);
       if (!selected && rows[0]) setSelected(rows[0].id);
     } catch { setMessage(copy.error); }
+    finally { setLoaded(true); }
   }, [selected]);
 
   useEffect(() => {
@@ -59,6 +66,7 @@ export function GuardianDashboard() {
       else await api.addGuardianLand(doc.id);
       await refresh();
       setMessage("");
+      toast("ok", land ? "নতুন কপি মিলিয়ে দেখা হয়েছে।" : "জমি নজরদারিতে যোগ হয়েছে।");
     } catch (error) {
       setMessage(error instanceof ApiError ? error.message : error instanceof Error ? error.message : copy.error);
     } finally { setBusy(false); }
@@ -71,7 +79,8 @@ export function GuardianDashboard() {
       await refresh();
       const rows = selected ? await api.getGuardianAlerts(selected) : [];
       setAlerts(rows); setActive(rows[0] ?? null);
-    } catch { setMessage(copy.error); }
+      toast("ok", "মাসিক যাচাই শেষ হয়েছে।");
+    } catch { setMessage(copy.error); toast("bad", copy.error); }
     finally { setBusy(false); }
   };
 
@@ -104,12 +113,13 @@ export function GuardianDashboard() {
       </section>
       {message && <p role="status" className="rounded-md border border-warn/40 bg-warn/10 p-3 text-sm text-ink">{message}</p>}
 
-      {!lands.length && <section className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">{copy.noLands}</section>}
+      {!loaded && <ListSkeleton rows={2} />}
+      {loaded && !lands.length && <Card as="section" className="p-6 text-sm text-muted">{copy.noLands}</Card>}
       <div className="grid gap-6 lg:grid-cols-[minmax(270px,0.8fr)_minmax(0,1.4fr)]">
         <section aria-label="নজরদারির জমি" className="space-y-3">
           {lands.map((land) => (
-            <article key={land.id} className={`rounded-xl border p-4 ${selected === land.id ? "border-accent/60 bg-surface" : "border-line bg-surface/60"}`}>
-              <button className="w-full text-left" onClick={() => setSelected(land.id)} aria-pressed={selected === land.id}>
+            <Card as="article" key={land.id} variant="interactive" className={selected === land.id ? "!border-accent/50 ring-1 ring-accent/20" : ""}>
+              <button className="w-full rounded-[var(--radius-control)] text-left" onClick={() => setSelected(land.id)} aria-pressed={selected === land.id}>
                 <div className="flex flex-wrap items-start justify-between gap-2"><h2 className="font-semibold text-ink">{land.label_bn}</h2><Badge className={statusStyle(land.status)}>{statusLabel(land.status)}</Badge></div>
                 <p className="mt-2 text-sm text-muted">{land.district} · {land.upazila} · {land.mouza}</p>
                 <p className="mt-1 text-xs text-muted">শেষ যাচাই: {land.last_checked_at ? new Date(land.last_checked_at).toLocaleDateString("bn-BD") : "এখনও হয়নি"}</p>
@@ -118,12 +128,12 @@ export function GuardianDashboard() {
               <label className="mt-3 inline-flex min-h-10 cursor-pointer items-center rounded-md border border-line px-3 py-2 text-sm text-ink hover:bg-surface">
                 {copy.upload}<input className="sr-only" type="file" accept="image/*,.pdf" disabled={busy} onChange={(event) => void upload(event, land)} />
               </label>
-            </article>
+            </Card>
           ))}
         </section>
 
         <section className="min-w-0 space-y-4">
-          {selectedLand && <div className="rounded-xl border border-line bg-surface p-4 sm:p-5">
+          {selectedLand && <div className="surface-grad rounded-[var(--radius-card)] border border-edge bg-surface p-4 shadow-raised sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-semibold text-ink">{selectedLand.label_bn}</h2><Badge className={statusStyle(selectedLand.status)}>{statusLabel(selectedLand.status)}</Badge></div>
             {!active ? <p className="mt-4 text-sm text-muted">{copy.noChanges}</p> : <>
               <div className={`mt-4 rounded-lg border p-4 ${statusStyle(active.severity === "bad" ? "bad" : active.severity === "info" ? "warn" : "warn")}`}>
@@ -143,7 +153,7 @@ export function GuardianDashboard() {
           </div>}
         </section>
       </div>
-      {guide && <div role="dialog" aria-modal="true" aria-label={copy.guide} className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center"><section className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl bg-surface p-5 shadow-xl sm:p-7"><div className="flex justify-between gap-4"><h2 className="text-xl font-semibold text-ink">{copy.guide}</h2><button className="min-h-11 px-3" onClick={() => setGuide("")}>বন্ধ</button></div><p className="mt-4 rounded bg-warn/10 p-3 text-sm font-semibold text-warn">{copy.verifiedNotice}</p><pre className="mt-4 whitespace-pre-wrap text-sm leading-7 text-ink">{guide}</pre></section></div>}
+      <Modal wide open={!!guide} onClose={() => setGuide("")} title={copy.guide}><p className="rounded-[var(--radius-control)] bg-warn/10 p-3 text-sm font-semibold text-warn">{copy.verifiedNotice}</p><pre className="mt-4 whitespace-pre-wrap font-body text-sm leading-7 text-ink">{guide}</pre></Modal>
     </main>
   );
 }

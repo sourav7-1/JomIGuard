@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: { useTypeScriptCli: true },
+  experimental: {
+    useTypeScriptCli: true,
+    // Every page sits behind the client-side AuthGuard, which holds the page back until the
+    // session is confirmed, so dev-only instant-navigation validation reported every route as
+    // a "dropped segment". Validate only segments that opt in with `export const instant`.
+    instantInsights: { validationLevel: "manual-warning" },
+  },
   cacheComponents: true,
   partialPrefetching: true,
   async rewrites() {
