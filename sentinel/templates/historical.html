@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>February 2025 Dataset Collection</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-mark">S</div>
+            <div class="brand-text">
+                <p class="brand-eyebrow">Sentinel Tree Monitor</p>
+                <h1 class="brand-title">February {{ period.year }} Dataset</h1>
+            </div>
+        </div>
+        <nav class="app-nav">
+            <a href="/">Home</a>
+            <a href="/historical" class="active">Collect Data</a>
+            <a href="/labeling" id="nav-labeling-link">Manual Labeling</a>
+            <a href="/monitor">AI Monitor</a>
+        </nav>
+    </header>
+
+    <main class="collect-layout">
+        <section class="card map-card">
+            <div class="map-card-head">
+                <div>
+                    <h2>Select an area</h2>
+                    <p>Use the polygon or rectangle tool (top right). The whole area is collected at full size.</p>
+                </div>
+            </div>
+            <div id="hist-map" class="collect-map"></div>
+            <div class="map-legend">
+                <span><span class="legend-line"></span>Bangladesh national boundary (BBS 2023 · rivers, islands &amp; chars included)</span>
+                <span><span class="legend-line aoi"></span>Your selected area</span>
+                <span>Basemap: Esri World Imagery</span>
+            </div>
+        </section>
+
+        <aside class="side-stack">
+            <section class="card">
+                <div class="card-section">
+                    <h2 class="section-title"><span class="step-num">1</span>Area</h2>
+                    <div id="aoi-summary" class="aoi-summary">No area drawn yet.</div>
+                </div>
+
+                <div class="card-section">
+                    <h2 class="section-title"><span class="step-num">2</span>Area name</h2>
+                    <label class="field-label" for="area-name-input">Name used for every file</label>
+                    <input id="area-name-input" class="input" type="text" placeholder="e.g. Gazipur_Joydebpur" autocomplete="off">
+                    <div class="suggest-row">Suggested: <strong id="suggested-name">-</strong>
+                        <button type="button" id="use-suggested-btn" class="link-btn" hidden>Use this</button>
+                    </div>
+                </div>
+
+                <div class="card-section">
+                    <h2 class="section-title"><span class="step-num">3</span>Imagery period</h2>
+                    <div class="period-box">
+                        <div>
+                            <strong>{{ period.start_date }} → {{ period.end_date }}</strong>
+                            <span>2025 only. Sentinel-2 + Sentinel-1, 10 bands, 10 m.</span>
+                        </div>
+                    </div>
+                    <p class="hint" style="margin-top:10px">Starts at the strictest cloud filter and only relaxes it when there is no usable imagery.</p>
+                </div>
+
+                <div class="card-section">
+                    <h2 class="section-title"><span class="step-num">4</span>Download</h2>
+                    <p class="hint">Every area gets one GeoTIFF <em>and</em> one validated high-resolution screenshot of exactly the same area. When it is ready, download the ZIP to this computer or save it straight into a Google Drive folder.</p>
+                    <button type="button" id="start-collection-btn" class="btn btn-primary btn-block">Start download</button>
+                    <div id="start-error" class="alert alert-error" hidden></div>
+                </div>
+            </section>
+
+            <section class="card" id="progress-card" hidden>
+                <div class="card-section">
+                    <h2 class="section-title">Progress <span id="job-area-label" style="text-transform:none;letter-spacing:0;color:var(--text)"></span></h2>
+
+                    <div class="output-row">
+                        <div>
+                            <h3>GeoTIFF · 10 bands</h3>
+                            <div id="tif-meta" class="output-meta">Waiting…</div>
+                        </div>
+                        <div class="output-side">
+                            <span id="tif-badge" class="badge">QUEUED</span>
+                            <button type="button" id="tif-retry-btn" class="btn btn-sm btn-danger" hidden>Retry</button>
+                        </div>
+                    </div>
+
+                    <div class="output-row">
+                        <div>
+                            <h3>High-resolution screenshot</h3>
+                            <div id="shot-meta" class="output-meta">Waiting…</div>
+                        </div>
+                        <div class="output-side">
+                            <span id="shot-badge" class="badge">QUEUED</span>
+                            <button type="button" id="shot-retry-btn" class="btn btn-sm btn-danger" hidden>Retry</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-section">
+                    <div class="btn-row">
+                        <button type="button" id="download-zip-btn" class="btn btn-primary" disabled>Download dataset (ZIP)</button>
+                        <a id="download-screenshot-link" class="btn is-disabled" href="#">Screenshot PNG</a>
+                        <a id="open-labeling-link" class="btn is-disabled" href="/labeling">Open labeling →</a>
+                    </div>
+                    <p id="download-status" class="hint" style="margin-top:10px"></p>
+                </div>
+
+                <div class="card-section">
+                    <h2 class="section-title">Save to Google Drive</h2>
+                    <label class="field-label" for="drive-link-input">Drive folder link</label>
+                    <input id="drive-link-input" class="input" type="url" placeholder="https://drive.google.com/drive/folders/…" autocomplete="off">
+                    <button type="button" id="drive-save-btn" class="btn btn-block" style="margin-top:8px" disabled>Save to Google Drive</button>
+                    <div id="drive-status" class="drive-status" hidden></div>
+                    <p class="hint" style="margin-top:8px">Signs in with your Google account in a popup and uploads the dataset into that folder. Saving again after labeling updates the same files.</p>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-section">
+                    <h2 class="section-title">Recent areas</h2>
+                    <div id="job-list" class="job-list"><div class="hint">No areas collected yet.</div></div>
+                </div>
+            </section>
+        </aside>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="{{ url_for('static', filename='js/drive.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/historical.js') }}"></script>
+</body>
+</html>

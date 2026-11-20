@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Labeling</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-mark">S</div>
+            <div class="brand-text">
+                <p class="brand-eyebrow">Sentinel Tree Monitor</p>
+                <h1 class="brand-title">Manual Labeling</h1>
+            </div>
+        </div>
+        <nav class="app-nav">
+            <a href="/">Home</a>
+            <a href="/historical" id="nav-collect-link">Collect Data</a>
+            <a href="/labeling" class="active">Manual Labeling</a>
+            <a href="/monitor">AI Monitor</a>
+        </nav>
+    </header>
+
+    <main class="label-app" id="label-app">
+        <aside class="card label-sidebar">
+            <section class="card-section">
+                <h2 class="section-title"><span class="step-num">1</span>Dataset</h2>
+                <label class="field-label" for="job-select">Area</label>
+                <select id="job-select" class="select"><option value="">Loading areas…</option></select>
+                <div id="year-row" hidden style="margin-top:8px">
+                    <label class="field-label" for="year-select">Year (older multi-year job)</label>
+                    <select id="year-select" class="select"></select>
+                </div>
+                <div id="dataset-info" class="dataset-info" hidden>
+                    <dl class="kv" id="dataset-kv"></dl>
+                </div>
+            </section>
+
+            <section class="card-section">
+                <h2 class="section-title"><span class="step-num">2</span>Draw on</h2>
+                <div class="segmented" id="surface-switch">
+                    <button type="button" data-mode="screenshot" class="active" disabled>Screenshot</button>
+                    <button type="button" data-mode="rgb" disabled>True RGB</button>
+                    <button type="button" data-mode="ndvi" disabled>NDVI</button>
+                    <button type="button" data-mode="false_color" disabled>SAR</button>
+                </div>
+                <p class="hint" id="surface-hint" style="margin-top:8px">The screenshot is the sharpest surface. The other three are rendered from the 10 m GeoTIFF itself. Polygons stay in place when you switch.</p>
+            </section>
+
+            <section class="card-section">
+                <h2 class="section-title"><span class="step-num">3</span>Class</h2>
+                <div id="class-grid" class="class-grid"></div>
+            </section>
+
+            <section class="card-section">
+                <h2 class="section-title" style="justify-content:space-between">
+                    <span style="display:flex;align-items:center;gap:10px"><span class="step-num">4</span>Polygons</span>
+                    <span id="polygon-total" class="class-count">0</span>
+                </h2>
+                <div id="polygon-list" class="polygon-list"><div class="empty-note">No polygons yet.</div></div>
+            </section>
+
+            <section class="card-section">
+                <h2 class="section-title"><span class="step-num">5</span>Save &amp; export</h2>
+                <p class="hint">Saving writes masks for <strong>both</strong> models: one on the GeoTIFF grid and one on the screenshot grid, plus the polygons as GeoJSON (lon/lat).</p>
+                <div class="save-options">
+                    <label class="check-row">
+                        <input type="checkbox" id="fill-other-input" checked>
+                        <span>Unlabeled area = <strong>Other</strong> (buildings, roads, water, soil…)</span>
+                    </label>
+                    <label class="inline-field">
+                        <span>Border tolerance</span>
+                        <input id="border-band-input" class="input input-sm" type="number" min="0" max="20" step="0.5" value="2">
+                        <span>m</span>
+                    </label>
+                    <p class="hint">Draw only where you are sure. A strip this wide around your labels is checked against the image to estimate the real area, and is left as “ignore” in the masks.</p>
+                </div>
+                <button type="button" id="save-mask-btn" class="btn btn-primary btn-block" disabled>Save labels</button>
+                <div id="save-warning-panel" class="alert alert-warning" hidden>
+                    <div id="save-warning-text"></div>
+                    <div class="btn-row" style="margin-top:8px">
+                        <button type="button" id="save-anyway-btn" class="btn btn-sm">Save anyway</button>
+                        <button type="button" id="save-cancel-btn" class="btn btn-sm btn-ghost">Cancel</button>
+                    </div>
+                </div>
+                <div id="save-result" class="alert alert-success save-result" hidden></div>
+                <a id="download-dataset-link" class="btn btn-block is-disabled" href="#" style="margin-top:8px">Download dataset (ZIP)</a>
+                <label class="field-label" for="drive-link-input" style="margin-top:12px">Or save to a Google Drive folder</label>
+                <input id="drive-link-input" class="input" type="url" placeholder="https://drive.google.com/drive/folders/…" autocomplete="off">
+                <button type="button" id="drive-save-btn" class="btn btn-block" style="margin-top:8px" disabled>Save to Google Drive</button>
+                <div id="drive-status" class="drive-status" hidden></div>
+            </section>
+
+            <section class="card-section" id="stats-section" hidden>
+                <h2 class="section-title"><span class="step-num">6</span>Area statistics</h2>
+                <div id="stats-panel"></div>
+            </section>
+
+            <section class="card-section">
+                <details>
+                    <summary class="section-title" style="cursor:pointer;margin:0">Shortcuts</summary>
+                    <ul class="shortcut-list" style="margin-top:10px">
+                        <li><span class="kbd">Click</span> add point · click the first point or <span class="kbd">Enter</span> to close</li>
+                        <li><span class="kbd">⌫</span> remove the last point · <span class="kbd">Esc</span> cancel the unfinished drawing</li>
+                        <li><span class="kbd">1</span>–<span class="kbd">0</span> pick the class for new polygons</li>
+                        <li><span class="kbd">D</span> points · <span class="kbd">B</span> freehand (press, hold, draw, release) · <span class="kbd">S</span> select/move points · <span class="kbd">E</span> erase (hover = red, click = delete)</li>
+                        <li>Tablet: draw with pen or finger · <strong>two fingers</strong> to pinch-zoom and move</li>
+                        <li><span class="kbd">Del</span> delete the selected polygon · <span class="kbd">Esc</span> deselect</li>
+                        <li><span class="kbd">Ctrl+Z</span> undo · <span class="kbd">Ctrl+Y</span> redo</li>
+                        <li><span class="kbd">Wheel</span> zoom at cursor · <span class="kbd">Space</span>+drag or right-drag to pan</li>
+                    </ul>
+                </details>
+            </section>
+        </aside>
+
+        <section class="card workspace">
+            <div class="toolbar">
+                <div class="toolbar-group" id="tool-modes">
+                    <button type="button" class="btn btn-sm active" data-tool="draw" title="Click to place points (D)">• Points</button>
+                    <button type="button" class="btn btn-sm" data-tool="freehand" title="Press, hold and draw -- mouse, finger or pen (B)">✍ Freehand</button>
+                    <button type="button" class="btn btn-sm" data-tool="select" title="Select / move points (S)">⬚ Select</button>
+                    <button type="button" class="btn btn-sm" data-tool="erase" title="Click a polygon to delete it (E)">⌫ Erase</button>
+                </div>
+                <div class="toolbar-group">
+                    <button type="button" id="undo-btn" class="btn btn-sm btn-ghost" title="Undo (Ctrl+Z)">↶ Undo</button>
+                    <button type="button" id="redo-btn" class="btn btn-sm btn-ghost" title="Redo (Ctrl+Y)">↷ Redo</button>
+                    <button type="button" id="clear-btn" class="btn btn-sm btn-ghost" title="Delete all polygons">Clear</button>
+                </div>
+                <div class="toolbar-group">
+                    <button type="button" id="zoom-out-btn" class="btn btn-sm btn-ghost" title="Zoom out">−</button>
+                    <span id="zoom-readout" class="zoom-readout">100%</span>
+                    <button type="button" id="zoom-in-btn" class="btn btn-sm btn-ghost" title="Zoom in">+</button>
+                    <button type="button" id="fit-screen-btn" class="btn btn-sm btn-ghost">Fit</button>
+                    <button type="button" id="reset-view-btn" class="btn btn-sm btn-ghost">1:1</button>
+                </div>
+                <div class="toolbar-group">
+                    <label class="opacity-control">Fill <input type="range" id="fill-opacity" min="0" max="0.8" step="0.05" value="0.35"></label>
+                    <button type="button" id="toggle-polygons-btn" class="btn btn-sm btn-ghost">Hide labels</button>
+                    <button type="button" id="toggle-aoi-btn" class="btn btn-sm btn-ghost active">Area outline</button>
+                </div>
+                <span class="spacer"></span>
+                <button type="button" id="label-fullscreen-btn" class="btn btn-sm btn-ghost" title="Fullscreen" aria-label="Fullscreen">⛶</button>
+            </div>
+
+            <div id="context-bar" class="context-bar"></div>
+            <div id="canvas-viewport" class="canvas-viewport">
+                <div class="canvas-stage"><canvas id="label-canvas" width="1" height="1"></canvas></div>
+                <div id="canvas-empty" class="canvas-empty">
+                    <div><strong>No image loaded</strong>Pick an area in the sidebar to start labeling.</div>
+                </div>
+            </div>
+
+            <div class="statusbar">
+                <span id="label-status" class="status-message">Ready.</span>
+                <span id="status-coords" class="status-coords"></span>
+                <span id="status-image" class="status-coords"></span>
+            </div>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/drive.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/labeling.js') }}"></script>
+</body>
+</html>

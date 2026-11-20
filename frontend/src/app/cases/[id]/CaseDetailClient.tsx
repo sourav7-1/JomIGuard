@@ -11,7 +11,9 @@ import {
   FieldsMetaResponse,
   FingerprintVerificationOut,
   LandCaseViewOut,
+  PlotGeometry,
 } from "@/lib/api";
+import { SatellitePanel } from "@/components/case/SatellitePanel";
 import { strings } from "@/lib/strings";
 import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -271,6 +273,8 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
         </section>;
       })() : <section className="space-y-3 rounded-xl border border-line bg-surface p-5"><h2 className="text-lg font-bold">{strings.casePage.findingsHeading}</h2><p className="text-sm text-muted">{assessmentCount ? strings.casePage.assessmentError : strings.casePage.noAssessment}</p><button type="button" onClick={runAssessment} disabled={assessing} className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{assessing ? strings.casePage.loadingAssessment : strings.casePage.verify}</button></section>}
       <p className="rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed text-muted"><strong className="block text-ink">{strings.casePage.disclaimerTitle}</strong>{caseView.latest_assessment?.disclaimer_bn || strings.app.disclaimer}</p>
+
+      <SatellitePanel landId={landId} geometry={(caseView.land as { geometry?: PlotGeometry | null }).geometry ?? null} />
 
       <section className="space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-5" aria-labelledby="deed-archive-title">
         <div className="space-y-1">

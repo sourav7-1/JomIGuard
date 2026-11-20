@@ -1,0 +1,60 @@
+{
+  "squares": 300,
+  "folds": 5,
+  "targets": {
+    "total_trees": {
+      "cv": {
+        "R2": 0.72,
+        "MAE": 97.85
+      },
+      "cv_count_per_square": {
+        "R2": 0.72,
+        "MAE": 99.16
+      },
+      "baseline_mean": {
+        "R2": 0.0,
+        "MAE": 237.73
+      },
+      "alpha": 300,
+      "unit": "trees/ha"
+    },
+    "big_tree_share": {
+      "cv": {
+        "R2": 0.695,
+        "MAE": 0.13
+      },
+      "cv_count_per_square": null,
+      "baseline_mean": {
+        "R2": 0.0,
+        "MAE": 0.27
+      },
+      "alpha": 0.1,
+      "unit": "%"
+    },
+    "big_trees_derived": {
+      "cv_count_per_square": {
+        "R2": 0.671,
+        "MAE": 101.24
+      }
+    },
+    "small_trees_derived": {
+      "cv_count_per_square": {
+        "R2": 0.381,
+        "MAE": 34.82
+      }
+    },
+    "tree_cover_pct": {
+      "cv": {
+        "R2": 0.937,
+        "MAE": 5.43
+      },
+      "cv_count_per_square": null,
+      "baseline_mean": {
+        "R2": 0.0,
+        "MAE": 25.75
+      },
+      "alpha": 3,
+      "unit": "%"
+    }
+  }
+}

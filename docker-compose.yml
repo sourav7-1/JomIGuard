@@ -57,6 +57,15 @@ services:
     depends_on:
       backend: {condition: service_started}
 
+  sentinel:
+    build: ./sentinel
+    env_file: ./sentinel/.env
+    ports: ["5060:5060"]
+    volumes:
+      - ./sentinel/collected:/app/collected
+      # Earth Engine login from `earthengine authenticate` on this PC
+      - ${USERPROFILE:-~}/.config/earthengine:/root/.config/earthengine:ro
+
 volumes:
   pgdata:
   miniodata:

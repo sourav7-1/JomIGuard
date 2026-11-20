@@ -1,6 +1,7 @@
 import uuid
 
 from sqlalchemy import ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, IdTimestampMixin
@@ -17,3 +18,5 @@ class Land(IdTimestampMixin, Base):
     owner_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
+    # plot outline drawn by the user: GeoJSON Polygon, [lon, lat] (schemas/satellite.py)
+    geometry: Mapped[dict | None] = mapped_column(JSONB)

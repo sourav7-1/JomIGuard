@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     extractor: str = "llm"
     stale_after_minutes: int = 10
 
+    # satellite check (services/satellite.py): the sentinel service in docker compose
+    sentinel_url: str = "http://sentinel:5060"
+    sentinel_timeout_s: float = 600.0  # a 7-year run takes a few minutes
+
     # vision-LLM extraction (services/extraction); unset = the LLM extractor refuses to run
     llm_provider: str = "anthropic"  # anthropic | gemini
     anthropic_api_key: SecretStr | None = None

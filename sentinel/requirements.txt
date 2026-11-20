@@ -1,0 +1,8 @@
+Flask
+earthengine-api
+python-dotenv
+requests
+numpy
+Pillow
+rasterio
+torch

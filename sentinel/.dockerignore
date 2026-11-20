@@ -1,0 +1,4 @@
+data/
+collected/
+.env
+__pycache__/

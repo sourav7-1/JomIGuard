@@ -24,3 +24,8 @@ out/
 .DS_Store
 Thumbs.db
 *.log
+
+# Sentinel service (satellite data stays local; trained model .pt is kept)
+sentinel/data/
+sentinel/collected/
+sentinel/.env

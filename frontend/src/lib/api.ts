@@ -218,6 +218,15 @@ export const api = {
   getFieldsMeta: () =>
     apiFetch<FieldsMetaResponse>("/meta/fields", { method: "GET" }),
 
+  saveLandGeometry: (landId: string, geometry: PlotGeometry) =>
+    apiFetch<LandOut & { geometry: PlotGeometry | null }>(`/lands/${landId}/geometry`, { method: "PUT", body: geometry }),
+
+  startSatelliteCheck: (landId: string) =>
+    apiFetch<SatelliteCheckOut>(`/lands/${landId}/satellite-check`, { method: "POST" }),
+
+  getLatestSatelliteCheck: (landId: string) =>
+    apiFetch<SatelliteCheckOut>(`/lands/${landId}/satellite-check/latest`, { method: "GET" }),
+
   getLandCaseView: (landId: string) =>
     apiFetch<LandCaseViewOut>(`/lands/${landId}/case-view`, { method: "GET" }),
 
@@ -302,5 +311,30 @@ export type GuardianLandOut = { id: string; label_bn: string; district: string; 
 export type GuardianCheckOut = { alert_id: string | null; severity: string; changes: Array<{ field: string; old: unknown; new: unknown; severity: string; message_bn: string }> };
 export type GuardianAlertOut = { id: string; severity: string; message_bn: string; changes: GuardianCheckOut["changes"]; created_at: string; read_at: string | null; old: Record<string, unknown>; new: Record<string, unknown> };
 export type EscrowOut = { id: string; land_id: string; state: string; price_paisa: number; bayna_paisa: number; deadline: string; buyer_agreed: boolean; seller_agreed: boolean; conditions: { id: string; label_bn: string; met: boolean; detail_bn: string }[]; balances: { buyer_paisa: number; escrow_paisa: number; seller_paisa: number }; events: { event: string; from_state: string; to_state: string; actor: string; message_bn: string; created_at: string }[] };
+
+// Satellite check (backend/app/schemas/satellite.py); hand-written until api-types is regenerated
+export type RuleResultOut = components["schemas"]["RuleResult"];
+export type PlotGeometry = { type: "Polygon"; coordinates: number[][][] };
+export type SatelliteYear = {
+  year: number; status: "ok" | "no_data" | "failed"; low_confidence?: boolean; reason?: string;
+  quality_flag?: string; sentinel2_unique_dates?: number;
+  metrics?: { tree_cover_pct?: number | null; water_pct?: number; ndvi_mean?: number; dense_green_pct?: number };
+};
+export type SatelliteTrend = {
+  from: number | null; to: number | null; change: number | null; slope_per_year: number | null;
+  outlier_years: number[]; low_confidence_years: number[]; persistent_change: boolean;
+  series: { year: number; value: number; low_confidence: boolean }[];
+};
+export type SatelliteResult = {
+  buffer_m: number; analysed_area_km2: number; years: SatelliteYear[];
+  trends: Record<string, SatelliteTrend | null>;
+  signals: { water_heavy_years: number[]; water_spike_years: number[]; outlier_years: number[]; low_confidence_years: number[]; years_checked: number };
+  notes: string[];
+};
+export type SatelliteCheckOut = {
+  id: string; land_id: string; created_at: string; status: "pending" | "ok" | "failed";
+  buffer_m: number; years: number[] | null; result: SatelliteResult | null; error: string | null;
+  findings?: RuleResultOut[]; group_title_bn?: string; area_note_bn?: string | null;
+};
 
 export type { paths };

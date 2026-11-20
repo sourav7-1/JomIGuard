@@ -57,6 +57,9 @@ class Assessment(BaseModel):
     identity_verifications: list[IdentityVerificationOut] = Field(default_factory=list)
     passed: list[RuleResult] = Field(default_factory=list)
     actions: list[Action] = Field(default_factory=list)
+    # separate group (services/satellite_findings.py): never changes risk_level or rule findings
+    satellite_findings: list[RuleResult] = Field(default_factory=list)
+    satellite_check_id: uuid.UUID | None = None
     disclaimer_bn: str
 
 

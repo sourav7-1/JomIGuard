@@ -6,6 +6,7 @@ from app.models.extraction import Extraction, ExtractionStatus
 from app.models.guardian import GuardedLand, GuardianAlert, GuardianSnapshot
 from app.models.identity import IdentityVerification, SellerLink
 from app.models.land import Land
+from app.models.satellite import SatelliteCheck, SatelliteCheckStatus
 from app.models.user import User
 
 __all__ = [
@@ -22,6 +23,8 @@ __all__ = [
     "GuardedLand",
     "GuardianAlert",
     "GuardianSnapshot",
+    "SatelliteCheck",
+    "SatelliteCheckStatus",
     "User",
     "EscrowDeal",
     "EscrowEvent",
