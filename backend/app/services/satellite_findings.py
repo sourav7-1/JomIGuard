@@ -96,6 +96,8 @@ def satellite_findings(result: dict, case: LandCase | None = None) -> list[RuleR
     good = _good_years(result)
     enough = len(good) >= MIN_GOOD_YEARS
     tree_drop = enough and bool(tree.get("persistent_change")) and (tree.get("change") or 0) < 0
+    water = (result.get("trends") or {}).get("water_pct") or {}
+    water_rise = enough and bool(water.get("persistent_change")) and (water.get("change") or 0) > 0
     classes = land_classes(case) if case else []
     out: list[RuleResult] = []
 
@@ -126,6 +128,31 @@ def satellite_findings(result: dict, case: LandCase | None = None) -> list[RuleR
                 "স্থানীয়দের কাছে জেনে নিন।",
                 buffer_m,
                 {"years": spikes},
+            )
+        )
+    if water_rise:
+        out.append(
+            _finding(
+                "water_rising",
+                Status.warn,
+                "আশেপাশে পানি বছর বছর বাড়ছে",
+                f"প্লটের আশেপাশে পানিতে ঢাকা জায়গা {to_bangla_digits(str(water['from_year']))} "
+                f"সালের দিকে প্রায় {_num_bn(water['from'])}% ছিল, "
+                f"{to_bangla_digits(str(water['to_year']))} সালের দিকে প্রায় "
+                f"{_num_bn(water['to'])}% হয়েছে; প্রতি বছর গড়ে প্রায় "
+                f"{_num_bn(water['slope_per_year'])} শতাংশ-বিন্দু বেড়েছে। এটি কাছের নদীভাঙন বা "
+                "বাড়তে থাকা জলাবদ্ধতার চিহ্ন হতে পারে।",
+                "স্থানীয় লোকজন ও ইউনিয়ন পরিষদে খোঁজ নিন এখানে নদীভাঙন হচ্ছে কি না, ভূমি অফিস থেকে "
+                "সর্বশেষ মৌজা ম্যাপ দেখে নিন, এবং আমিন দিয়ে জমি মেপে দেখুন খতিয়ানের পরিমাণ মাঠে "
+                "আছে কি না।",
+                buffer_m,
+                {
+                    "from": water["from"],
+                    "to": water["to"],
+                    "from_year": water["from_year"],
+                    "to_year": water["to_year"],
+                    "slope_per_year": water["slope_per_year"],
+                },
             )
         )
     if tree_drop:

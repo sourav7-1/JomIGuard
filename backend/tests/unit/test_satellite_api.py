@@ -251,3 +251,13 @@ def test_failed_check_is_not_used_by_assessment(client):
     assert client.post(f"/lands/{land_id}/assess").json()["satellite_findings"] == []
     latest = client.get(f"/lands/{land_id}/satellite-check/latest").json()
     assert latest["status"] == "failed" and latest["findings"] == []
+
+
+def test_satellite_task_has_its_own_queue_and_documents_keep_the_default():
+    from app.workers.celery_app import celery_app
+
+    def queue(task):
+        return celery_app.amqp.router.route({}, f"app.workers.tasks.{task}")["queue"].name
+
+    assert queue("run_satellite_check_task") == "satellite"
+    assert queue("process_document_task") == celery_app.conf.task_default_queue == "celery"

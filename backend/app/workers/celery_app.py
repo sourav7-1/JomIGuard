@@ -12,4 +12,7 @@ celery_app.conf.update(
     task_ignore_result=True,
     # Gemini's free tier rate-limits: one task at a time
     worker_concurrency=1 if settings.llm_provider == "gemini" else 2,
+    # satellite checks take minutes: own queue and worker (satellite-worker in docker compose),
+    # so they never hold a document-extraction slot on the default queue
+    task_routes={"app.workers.tasks.run_satellite_check_task": {"queue": "satellite"}},
 )

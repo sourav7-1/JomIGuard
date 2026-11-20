@@ -59,9 +59,13 @@ export default function PlotMap({ landId, geometry, onSaved }: PlotMapProps) {
       await import("leaflet-draw"); // adds L.Control.Draw to the global L that leaflet sets
       if (cancelled || !el.current) return;
       bnLabels(L);
-      map = L.map(el.current, { center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM, maxZoom: 19, zoomControl: false });
+      // wheel zoom only after a click on the map, so scrolling the page never zooms it by accident
+      map = L.map(el.current, { center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM, maxZoom: 19, zoomControl: false, scrollWheelZoom: false });
+      map.on("click", () => map?.scrollWheelZoom.enable());
+      map.on("mouseout", () => map?.scrollWheelZoom.disable());
       L.control.zoom({ zoomInTitle: "কাছে আনুন", zoomOutTitle: "দূরে নিন" }).addTo(map);
-      L.tileLayer(ESRI_URL, { attribution: ESRI_ATTRIBUTION, maxZoom: 19 }).addTo(map);
+      // Esri has no zoom-19 imagery in much of rural Bangladesh: stretch zoom-18 tiles instead
+      L.tileLayer(ESRI_URL, { attribution: ESRI_ATTRIBUTION, maxZoom: 19, maxNativeZoom: 18 }).addTo(map);
       const group = new L.FeatureGroup().addTo(map);
       drawn.current = group;
       const style = { color: "#f59e0b", weight: 3, fillOpacity: 0.15 };
@@ -116,6 +120,7 @@ export default function PlotMap({ landId, geometry, onSaved }: PlotMapProps) {
           {saving ? "রাখা হচ্ছে…" : "সীমানা রাখুন"}
         </button>
         {!hasShape && <span className="text-sm text-muted">ডান দিকের বোতাম দিয়ে প্লটের কোণগুলোতে ক্লিক করে সীমানা আঁকুন।</span>}
+        <span className="text-xs text-muted">মাউসের চাকা দিয়ে জুম করতে আগে মানচিত্রে একবার ক্লিক করুন।</span>
         {message && <span role="status" className={`text-sm ${message.ok ? "text-muted" : "text-bad"}`}>{message.text}</span>}
       </div>
     </div>

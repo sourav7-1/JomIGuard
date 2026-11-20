@@ -1,4 +1,8 @@
-"""Seed the three synthetic demo cases without calling an extraction provider."""
+"""Seed the synthetic demo cases without calling an extraction provider.
+
+The Bhola satellite demo (seed_satellite_demo) replays a recorded sentinel result, so it
+needs no Earth Engine call either.
+"""
 
 import hashlib
 import json
@@ -21,6 +25,8 @@ from app.models import (
     IdentityVerification,
     Land,
     LandAssessment,
+    SatelliteCheck,
+    SatelliteCheckStatus,
     SellerLink,
     User,
 )
@@ -31,6 +37,8 @@ from app.services.extraction.prompts import PROMPT_VERSION
 from app.services.normalize import normalize_document
 from app.services.risk import assess
 from app.services.rules import run_rules
+from app.services.satellite import latest_check
+from app.services.satellite_findings import satellite_findings
 from app.services.storage import get_storage
 
 ROOT = Path(__file__).resolve().parents[3] / "data/synthetic/cases"
@@ -66,6 +74,35 @@ def _cache_result(image: bytes, doc_type: str, cache_dir: Path):
                 model,
             )
     return None, None
+
+
+def _store_assessment(db: Session, land_id: uuid.UUID):
+    """Assess the land as POST /lands/{id}/assess does and update its latest assessment row."""
+    db.flush()
+    from app.services.land_case import load_land_case
+
+    case = load_land_case(db, land_id)
+    rules = run_rules(case)
+    result = assess(case, rules)
+    result.actions = next_actions(case, rules, result)
+    sat = latest_check(db, land_id, status="ok")
+    if sat is not None and sat.result:  # separate group: never changes risk or rule findings
+        result.satellite_findings = satellite_findings(sat.result, case)
+        result.satellite_check_id = sat.id
+    assessment = db.scalars(
+        select(LandAssessment)
+        .where(LandAssessment.land_id == land_id)
+        .order_by(LandAssessment.created_at.desc())
+        .limit(1)
+    ).first()
+    if assessment is None:
+        assessment = LandAssessment(land_id=land_id)
+        db.add(assessment)
+    assessment.engine_version = result.engine_version
+    assessment.risk_level = result.risk_level
+    assessment.result = result.model_dump(mode="json")
+    db.commit()
+    return result
 
 
 def seed_case(
@@ -180,26 +217,7 @@ def seed_case(
             khatian.plots[0].dag_no if khatian.plots else "",
         )
         land.khatian_no = khatian.khatian_no
-    db.flush()
-    from app.services.land_case import load_land_case
-
-    case = load_land_case(db, land_id)
-    rules = run_rules(case)
-    result = assess(case, rules)
-    result.actions = next_actions(case, rules, result)
-    assessment = db.scalars(
-        select(LandAssessment)
-        .where(LandAssessment.land_id == land_id)
-        .order_by(LandAssessment.created_at.desc())
-        .limit(1)
-    ).first()
-    if assessment is None:
-        assessment = LandAssessment(land_id=land_id)
-        db.add(assessment)
-    assessment.engine_version = result.engine_version
-    assessment.risk_level = result.risk_level
-    assessment.result = result.model_dump(mode="json")
-    db.commit()
+    result = _store_assessment(db, land_id)
     return land_id, result.risk_level, seeded
 
 
@@ -283,26 +301,155 @@ def seed_historical_deeds(
                 latency_s=0,
             )
         )
-    db.flush()
-    from app.services.land_case import load_land_case
+    _store_assessment(db, land_id)
 
-    case = load_land_case(db, land_id)
-    rules = run_rules(case)
-    result = assess(case, rules)
-    result.actions = next_actions(case, rules, result)
-    assessment = db.scalars(
-        select(LandAssessment)
-        .where(LandAssessment.land_id == land_id)
-        .order_by(LandAssessment.created_at.desc())
-        .limit(1)
-    ).first()
-    if assessment is None:
-        assessment = LandAssessment(land_id=land_id)
-        db.add(assessment)
-    assessment.engine_version = result.engine_version
-    assessment.risk_level = result.risk_level
-    assessment.result = result.model_dump(mode="json")
-    db.commit()
+
+# --- satellite demo: a synthetic Bhola case whose plot sits on an eroding Meghna bank ---
+# demo_data/satellite_bhola.json holds a RECORDED sentinel /api/analyze-area response (a real
+# Sentinel-1/2 run, 2019-2025) for the saved polygon; it is replayed as the latest satellite check
+# so the demo shows findings instantly. All names and numbers in the documents are synthetic.
+SATELLITE_DEMO_FILE = Path(__file__).with_name("demo_data") / "satellite_bhola.json"
+SATELLITE_DEMO_ID = "bhola-satellite"
+_BHOLA_LOCATION = {"district": "ভোলা", "upazila": "ভোলা সদর", "mouza": "চর মেঘনা", "jl_no": "27"}
+_BHOLA_SELLER = {
+    "name": "মোঃ হারুন মিয়া",
+    "father_or_husband_name": "আব্দুল জব্বার",
+    "relation_marker": "father",
+    "address_text": "সাং- চর মেঘনা, উপজেলা- ভোলা সদর, জেলা- ভোলা",
+}
+_BHOLA_BUYER = {
+    "name": "নাসরিন আক্তার",
+    "father_or_husband_name": "মোঃ সেলিম উদ্দিন",
+    "relation_marker": "father",
+    "address_text": "সাং- বাপ্তা, উপজেলা- ভোলা সদর, জেলা- ভোলা",
+}
+BHOLA_DOCUMENTS: dict[str, dict] = {
+    "khatian": {
+        "doc_type": "khatian",
+        "survey_type": "BS",
+        "location": _BHOLA_LOCATION,
+        "khatian_no": "352",
+        "owners": [{**_BHOLA_SELLER, "share_text": "১.০০০"}],
+        "plots": [
+            {
+                "dag_no": "417",
+                "land_class": "নাল",
+                "plot_total_area_text": ".৩৩০০",
+                "khatian_share_text": "১.০০০",
+                "area_text": ".৩৩০০",
+            }
+        ],
+        "area_unit_text": "একর",
+        "total_area_text": ".৩৩০০",
+    },
+    "deed": {
+        "doc_type": "deed",
+        "deed_type": "saf_kabala",
+        "is_draft": True,
+        "sub_registry_office": "ভোলা সদর",
+        "sellers": [_BHOLA_SELLER],
+        "buyers": [_BHOLA_BUYER],
+        "schedule_location": _BHOLA_LOCATION,
+        "schedule_khatians": [{"survey_type": "BS", "khatian_no": "352"}],
+        "schedule_plots": [{"dag_no": "417", "land_class": "নাল", "area_text": "২০ শতাংশ"}],
+        "transferred_area_text": "২০ শতাংশ",
+        "title_source_text": "খতিয়ান সূত্রে মালিক",
+    },
+}
+
+
+def _page_svg(title: str, lines: list[str]) -> bytes:
+    rows = "".join(f'<text x="70" y="{190 + 60 * i}">{line}</text>' for i, line in enumerate(lines))
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">'
+        '<rect width="100%" height="100%" fill="#fff"/>'
+        '<g fill="#18201c" font-family="sans-serif" font-size="32">'
+        f'<text x="70" y="100">{title}</text>{rows}'
+        '<text x="70" y="1100">সব নাম ও সংখ্যা নমুনা</text></g></svg>'
+    ).encode()
+
+
+def seed_satellite_demo(db: Session, storage) -> uuid.UUID:
+    """Seed the Bhola case: khatian (নাল), draft deed, plot polygon and the recorded check."""
+    admin_id = db.scalar(select(User.id).where(User.username == settings.admin_username))
+    if admin_id is None:
+        raise RuntimeError("Configured admin user is missing; start the backend first")
+    recorded = json.loads(SATELLITE_DEMO_FILE.read_text(encoding="utf-8"))
+    land_id = uuid.uuid5(uuid.NAMESPACE_URL, f"jomiguard-demo-{SATELLITE_DEMO_ID}")
+    land = db.get(Land, land_id)
+    if land is None:
+        land = Land(id=land_id, district="", upazila="", mouza="", dag_no="", khatian_no="")
+        db.add(land)
+    loc = _BHOLA_LOCATION
+    land.owner_id = admin_id
+    land.district, land.upazila, land.mouza = loc["district"], loc["upazila"], loc["mouza"]
+    land.dag_no, land.khatian_no = "417", "352"
+    land.geometry = recorded["geometry"]
+
+    pages = {
+        "khatian": (
+            "নমুনা খতিয়ান (BS ৩৫২)",
+            [
+                "মৌজা: চর মেঘনা, ভোলা সদর, ভোলা",
+                "মালিক: মোঃ হারুন মিয়া",
+                "দাগ: ৪১৭, শ্রেণী: নাল",
+                "জমি: .৩৩০০ একর",
+            ],
+        ),
+        "deed": (
+            "নমুনা প্রস্তাবিত সাফ কবলা দলিল (খসড়া)",
+            ["দাতা: মোঃ হারুন মিয়া", "গ্রহীতা: নাসরিন আক্তার", "দাগ: ৪১৭, শ্রেণী: নাল", "জমি: ২০ শতাংশ"],
+        ),
+    }
+    for kind, raw in BHOLA_DOCUMENTS.items():
+        normalized = normalize_document(MODELS[kind].model_validate(raw))
+        svg = _page_svg(*pages[kind])
+        key = f"demo/{SATELLITE_DEMO_ID}/{kind}.svg"
+        storage.upload(key, svg, "image/svg+xml")
+        doc_id = uuid.uuid5(land_id, kind)
+        doc = db.get(Document, doc_id)
+        if doc is None:
+            doc = Document(id=doc_id, file_key=key, original_filename=f"synthetic-{kind}.svg")
+            db.add(doc)
+            db.add(
+                DocumentAuditEvent(
+                    document_id=doc_id,
+                    event="uploaded",
+                    actor="seed",
+                    details={"source_type": "user_upload"},
+                )
+            )
+        doc.land_id, doc.owner_id, doc.file_key = land_id, admin_id, key
+        doc.doc_type = doc.detected_doc_type = DocType(kind)
+        doc.classify_confidence = 1.0
+        doc.content_sha256 = hashlib.sha256(svg).hexdigest()
+        doc.status, doc.current_step, doc.finished_at = (
+            DocStatus.done,
+            DocStep.finished,
+            datetime.now(UTC),
+        )
+        ex = db.scalars(select(Extraction).where(Extraction.document_id == doc_id).limit(1)).first()
+        if ex is None:
+            ex = Extraction(document_id=doc_id)
+            db.add(ex)
+        ex.extractor = ex.created_by = "seed"
+        ex.status = ExtractionStatus.needs_review if normalized.warnings else ExtractionStatus.ok
+        ex.data = normalized.doc.model_dump(mode="json")
+        ex.warnings = [w.__dict__ for w in normalized.warnings]
+        ex.field_flags = {}
+        ex.cost_usd = ex.latency_s = 0
+
+    check_id = uuid.uuid5(land_id, "satellite-recorded")
+    check = db.get(SatelliteCheck, check_id)
+    if check is None:
+        check = SatelliteCheck(id=check_id, land_id=land_id)
+        db.add(check)
+    check.status, check.error = SatelliteCheckStatus.ok, None
+    check.buffer_m, check.years = float(recorded["result"]["buffer_m"]), None
+    check.result = recorded["result"]
+    check.created_at = datetime.now(UTC)  # newest, so it is the case's latest check
+    _store_assessment(db, land_id)
+    return land_id
 
 
 def reset(
@@ -333,6 +480,8 @@ def reset(
             from app.scripts.guardian_seed import seed_guardian
 
             seed_guardian(db)
+            satellite_land = seed_satellite_demo(db, storage)
+            print(f"{SATELLITE_DEMO_ID}: {satellite_land} | /cases/{satellite_land}")
             from app.scripts.escrow_seed import seed_escrow
 
             deal_id = seed_escrow(db)

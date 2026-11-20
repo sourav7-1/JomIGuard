@@ -79,3 +79,23 @@ def test_duplicate_dates_counted_once():
     assert info["sentinel2_unique_dates"] == 2
     assert info["sentinel1_dates"] == ["2023-02-07"]
     assert info["sentinel2_tile_count"] == 4 and info["sentinel1_tile_count"] == 2
+
+
+def test_steady_water_rise_is_trend_not_spike():
+    # Bhola-like erosion: about +6 points a year, no single jump
+    per_year = _years([28.1, 32.1, 36.2, 35.7, 43.9, 52.5, 65.0], "water_pct")
+    trends = {"water_pct": _trend(per_year, "water_pct")}
+    assert _signals(per_year, trends)["water_spike_years"] == []
+    assert trends["water_pct"]["persistent_change"] is True
+
+
+def test_spike_on_top_of_a_rising_trend_is_still_a_spike():
+    per_year = _years([10, 12, 14, 40, 18, 20, 22], "water_pct")
+    sig = _signals(per_year, {"water_pct": _trend(per_year, "water_pct")})
+    assert sig["water_spike_years"] == [2022]
+
+
+def test_flood_in_the_last_year_of_a_flat_series_is_a_spike():
+    per_year = _years([0.3, 0.2, 0.1, 0.2, 0.2, 0.3, 25.0], "water_pct")
+    sig = _signals(per_year, {"water_pct": _trend(per_year, "water_pct")})
+    assert sig["water_spike_years"] == [2025] and sig["water_heavy_years"] == [2025]

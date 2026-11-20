@@ -1,0 +1,552 @@
+{
+ "_note": "Recorded sentinel /api/analyze-area response for the synthetic Bhola demo plot (real Sentinel-1/2 run on 2026-11-20 after the spike-vs-trend change, default years 2019-2025, buffer 200 m). Replayed by demo_reset.py so the demo needs no Earth Engine call.",
+ "geometry": {
+  "type": "Polygon",
+  "coordinates": [
+   [
+    [
+     90.7592,
+     22.8283
+    ],
+    [
+     90.7604,
+     22.8283
+    ],
+    [
+     90.7604,
+     22.8295
+    ],
+    [
+     90.7592,
+     22.8295
+    ],
+    [
+     90.7592,
+     22.8283
+    ]
+   ]
+  ]
+ },
+ "result": {
+  "analysed_area_km2": 0.244,
+  "buffer_m": 200.0,
+  "model": {
+   "segmentation_val_pixel_accuracy": 0.739,
+   "tree_cover_r2": 0.94
+  },
+  "notes": [
+   "10 m pixels: results describe the area around the plot, not the plot boundary.",
+   "Trends use NDVI, a water index (NDVI + Sentinel-1 VV) and the tree-cover model, not the land-cover map.",
+   "map_classes_pct is a single-year land-cover map (74% pixel accuracy); do not compare it across years.",
+   "February is the dry season: standing water in February is a stronger signal (waterlogging, erosion, a pond or low land) than a monsoon flood would be. This check does not see monsoon flooding.",
+   "Low-confidence years (fewer than 2 Sentinel-2 dates or quality not GOOD) stay in series but are left out of slope, from/to/change and persistent_change."
+  ],
+  "scope": "surroundings",
+  "season": "February (dry season) composite each year",
+  "signals": {
+   "low_confidence_years": [],
+   "outlier_years": [
+    2019
+   ],
+   "water_heavy_years": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "water_spike_years": [],
+   "years_checked": 7
+  },
+  "trends": {
+   "dense_green_pct": {
+    "change": -0.235,
+    "from": 1.035,
+    "from_year": 2020,
+    "low_confidence_years": [],
+    "outlier_years": [
+     2019
+    ],
+    "persistent_change": false,
+    "series": [
+     {
+      "low_confidence": false,
+      "value": 5.29,
+      "year": 2019
+     },
+     {
+      "low_confidence": false,
+      "value": 1.71,
+      "year": 2020
+     },
+     {
+      "low_confidence": false,
+      "value": 0.36,
+      "year": 2021
+     },
+     {
+      "low_confidence": false,
+      "value": 1.35,
+      "year": 2022
+     },
+     {
+      "low_confidence": false,
+      "value": 0.04,
+      "year": 2023
+     },
+     {
+      "low_confidence": false,
+      "value": 0.36,
+      "year": 2024
+     },
+     {
+      "low_confidence": false,
+      "value": 1.24,
+      "year": 2025
+     }
+    ],
+    "slope_per_year": -0.3375,
+    "to": 0.8,
+    "to_year": 2025
+   },
+   "ndvi_mean": {
+    "change": -0.233,
+    "from": 0.155,
+    "from_year": 2019,
+    "low_confidence_years": [],
+    "outlier_years": [],
+    "persistent_change": true,
+    "series": [
+     {
+      "low_confidence": false,
+      "value": 0.19,
+      "year": 2019
+     },
+     {
+      "low_confidence": false,
+      "value": 0.121,
+      "year": 2020
+     },
+     {
+      "low_confidence": false,
+      "value": 0.062,
+      "year": 2021
+     },
+     {
+      "low_confidence": false,
+      "value": 0.059,
+      "year": 2022
+     },
+     {
+      "low_confidence": false,
+      "value": 0.041,
+      "year": 2023
+     },
+     {
+      "low_confidence": false,
+      "value": -0.04,
+      "year": 2024
+     },
+     {
+      "low_confidence": false,
+      "value": -0.116,
+      "year": 2025
+     }
+    ],
+    "slope_per_year": -0.046,
+    "to": -0.078,
+    "to_year": 2025
+   },
+   "tree_cover_pct": {
+    "change": -3.1,
+    "from": 3.1,
+    "from_year": 2019,
+    "low_confidence_years": [],
+    "outlier_years": [],
+    "persistent_change": false,
+    "series": [
+     {
+      "low_confidence": false,
+      "value": 5.8,
+      "year": 2019
+     },
+     {
+      "low_confidence": false,
+      "value": 0.4,
+      "year": 2020
+     },
+     {
+      "low_confidence": false,
+      "value": 0.0,
+      "year": 2021
+     },
+     {
+      "low_confidence": false,
+      "value": 0.0,
+      "year": 2022
+     },
+     {
+      "low_confidence": false,
+      "value": 0.0,
+      "year": 2023
+     },
+     {
+      "low_confidence": false,
+      "value": 0.0,
+      "year": 2024
+     },
+     {
+      "low_confidence": false,
+      "value": 0.0,
+      "year": 2025
+     }
+    ],
+    "slope_per_year": -0.08,
+    "to": 0.0,
+    "to_year": 2025
+   },
+   "water_pct": {
+    "change": 28.62,
+    "from": 30.115,
+    "from_year": 2019,
+    "low_confidence_years": [],
+    "outlier_years": [],
+    "persistent_change": true,
+    "series": [
+     {
+      "low_confidence": false,
+      "value": 28.09,
+      "year": 2019
+     },
+     {
+      "low_confidence": false,
+      "value": 32.14,
+      "year": 2020
+     },
+     {
+      "low_confidence": false,
+      "value": 36.23,
+      "year": 2021
+     },
+     {
+      "low_confidence": false,
+      "value": 35.68,
+      "year": 2022
+     },
+     {
+      "low_confidence": false,
+      "value": 43.89,
+      "year": 2023
+     },
+     {
+      "low_confidence": false,
+      "value": 52.46,
+      "year": 2024
+     },
+     {
+      "low_confidence": false,
+      "value": 65.01,
+      "year": 2025
+     }
+    ],
+    "slope_per_year": 5.08,
+    "to": 58.735,
+    "to_year": 2025
+   }
+  },
+  "years": [
+   {
+    "area_ha": 25.094,
+    "low_confidence": false,
+    "map_classes_pct": {
+     "building": 0.26,
+     "grass_crop": 9.92,
+     "other": 67.93,
+     "tree": 0.0,
+     "water": 21.89
+    },
+    "metrics": {
+     "dense_green_pct": 5.29,
+     "ndvi_mean": 0.19,
+     "ndvi_median": 0.287,
+     "tree_cover_pct": 5.8,
+     "valid_pixels": 2741,
+     "water_pct": 28.09
+    },
+    "quality_flag": "GOOD",
+    "sentinel1_dates": [
+     "2019-02-01",
+     "2019-02-03",
+     "2019-02-13",
+     "2019-02-15",
+     "2019-02-25",
+     "2019-02-27"
+    ],
+    "sentinel1_tile_count": 6,
+    "sentinel2_dates": [
+     "2019-02-01",
+     "2019-02-06",
+     "2019-02-11"
+    ],
+    "sentinel2_tile_count": 6,
+    "sentinel2_unique_dates": 3,
+    "status": "ok",
+    "tree_estimate": 515,
+    "usable_pixel_pct": 98.91,
+    "year": 2019
+   },
+   {
+    "area_ha": 25.094,
+    "low_confidence": false,
+    "map_classes_pct": {
+     "building": 1.64,
+     "grass_crop": 2.41,
+     "other": 65.16,
+     "tree": 0.0,
+     "water": 30.79
+    },
+    "metrics": {
+     "dense_green_pct": 1.71,
+     "ndvi_mean": 0.121,
+     "ndvi_median": 0.179,
+     "tree_cover_pct": 0.4,
+     "valid_pixels": 2741,
+     "water_pct": 32.14
+    },
+    "quality_flag": "GOOD",
+    "sentinel1_dates": [
+     "2020-02-05",
+     "2020-02-08",
+     "2020-02-10",
+     "2020-02-17",
+     "2020-02-20",
+     "2020-02-22"
+    ],
+    "sentinel1_tile_count": 6,
+    "sentinel2_dates": [
+     "2020-02-01",
+     "2020-02-06",
+     "2020-02-11",
+     "2020-02-21"
+    ],
+    "sentinel2_tile_count": 8,
+    "sentinel2_unique_dates": 4,
+    "status": "ok",
+    "tree_estimate": 382,
+    "usable_pixel_pct": 98.91,
+    "year": 2020
+   },
+   {
+    "area_ha": 25.094,
+    "low_confidence": false,
+    "map_classes_pct": {
+     "building": 4.41,
+     "grass_crop": 0.36,
+     "other": 65.42,
+     "tree": 0.0,
+     "water": 29.81
+    },
+    "metrics": {
+     "dense_green_pct": 0.36,
+     "ndvi_mean": 0.062,
+     "ndvi_median": 0.161,
+     "tree_cover_pct": 0.0,
+     "valid_pixels": 2741,
+     "water_pct": 36.23
+    },
+    "quality_flag": "GOOD",
+    "sentinel1_dates": [
+     "2021-02-02",
+     "2021-02-04",
+     "2021-02-11",
+     "2021-02-14",
+     "2021-02-16",
+     "2021-02-23",
+     "2021-02-26",
+     "2021-02-28"
+    ],
+    "sentinel1_tile_count": 8,
+    "sentinel2_dates": [
+     "2021-02-05",
+     "2021-02-10",
+     "2021-02-15",
+     "2021-02-25"
+    ],
+    "sentinel2_tile_count": 8,
+    "sentinel2_unique_dates": 4,
+    "status": "ok",
+    "tree_estimate": 239,
+    "usable_pixel_pct": 98.91,
+    "year": 2021
+   },
+   {
+    "area_ha": 25.094,
+    "low_confidence": false,
+    "map_classes_pct": {
+     "building": 3.5,
+     "grass_crop": 1.24,
+     "other": 63.01,
+     "tree": 0.0,
+     "water": 32.25
+    },
+    "metrics": {
+     "dense_green_pct": 1.35,
+     "ndvi_mean": 0.059,
+     "ndvi_median": 0.182,
+     "tree_cover_pct": 0.0,
+     "valid_pixels": 2741,
+     "water_pct": 35.68
+    },
+    "quality_flag": "GOOD",
+    "sentinel1_dates": [
+     "2022-02-06",
+     "2022-02-09",
+     "2022-02-11",
+     "2022-02-18",
+     "2022-02-21",
+     "2022-02-23"
+    ],
+    "sentinel1_tile_count": 6,
+    "sentinel2_dates": [
+     "2022-02-15",
+     "2022-02-20"
+    ],
+    "sentinel2_tile_count": 4,
+    "sentinel2_unique_dates": 2,
+    "status": "ok",
+    "tree_estimate": 235,
+    "usable_pixel_pct": 98.91,
+    "year": 2022
+   },
+   {
+    "area_ha": 25.094,
+    "low_confidence": false,
+    "map_classes_pct": {
+     "building": 2.74,
+     "grass_crop": 0.51,
+     "other": 95.8,
+     "tree": 0.0,
+     "water": 0.95
+    },
+    "metrics": {
+     "dense_green_pct": 0.04,
+     "ndvi_mean": 0.041,
+     "ndvi_median": 0.182,
+     "tree_cover_pct": 0.0,
+     "valid_pixels": 2741,
+     "water_pct": 43.89
+    },
+    "quality_flag": "GOOD",
+    "sentinel1_dates": [
+     "2023-02-01",
+     "2023-02-04",
+     "2023-02-06",
+     "2023-02-13",
+     "2023-02-16",
+     "2023-02-18",
+     "2023-02-25",
+     "2023-02-28"
+    ],
+    "sentinel1_tile_count": 8,
+    "sentinel2_dates": [
+     "2023-02-05",
+     "2023-02-10",
+     "2023-02-15",
+     "2023-02-20",
+     "2023-02-25"
+    ],
+    "sentinel2_tile_count": 9,
+    "sentinel2_unique_dates": 5,
+    "status": "ok",
+    "tree_estimate": 243,
+    "usable_pixel_pct": 98.91,
+    "year": 2023
+   },
+   {
+    "area_ha": 25.094,
+    "low_confidence": false,
+    "map_classes_pct": {
+     "building": 1.68,
+     "grass_crop": 0.18,
+     "other": 95.99,
+     "tree": 0.0,
+     "water": 2.15
+    },
+    "metrics": {
+     "dense_green_pct": 0.36,
+     "ndvi_mean": -0.04,
+     "ndvi_median": -0.099,
+     "tree_cover_pct": 0.0,
+     "valid_pixels": 2741,
+     "water_pct": 52.46
+    },
+    "quality_flag": "GOOD",
+    "sentinel1_dates": [
+     "2024-02-01",
+     "2024-02-08",
+     "2024-02-11",
+     "2024-02-13",
+     "2024-02-20",
+     "2024-02-23",
+     "2024-02-25"
+    ],
+    "sentinel1_tile_count": 7,
+    "sentinel2_dates": [
+     "2024-02-05",
+     "2024-02-10"
+    ],
+    "sentinel2_tile_count": 4,
+    "sentinel2_unique_dates": 2,
+    "status": "ok",
+    "tree_estimate": 146,
+    "usable_pixel_pct": 98.91,
+    "year": 2024
+   },
+   {
+    "area_ha": 25.094,
+    "low_confidence": false,
+    "map_classes_pct": {
+     "building": 3.25,
+     "grass_crop": 1.68,
+     "other": 93.5,
+     "tree": 0.0,
+     "water": 1.57
+    },
+    "metrics": {
+     "dense_green_pct": 1.24,
+     "ndvi_mean": -0.116,
+     "ndvi_median": -0.261,
+     "tree_cover_pct": 0.0,
+     "valid_pixels": 2741,
+     "water_pct": 65.01
+    },
+    "quality_flag": "GOOD",
+    "sentinel1_dates": [
+     "2025-02-02",
+     "2025-02-05",
+     "2025-02-07",
+     "2025-02-14",
+     "2025-02-17",
+     "2025-02-19",
+     "2025-02-26"
+    ],
+    "sentinel1_tile_count": 7,
+    "sentinel2_dates": [
+     "2025-02-04",
+     "2025-02-09",
+     "2025-02-14",
+     "2025-02-19",
+     "2025-02-24"
+    ],
+    "sentinel2_tile_count": 9,
+    "sentinel2_unique_dates": 5,
+    "status": "ok",
+    "tree_estimate": 96,
+    "usable_pixel_pct": 98.91,
+    "year": 2025
+   }
+  ]
+ }
+}

@@ -189,10 +189,21 @@ def _signals(per_year: list[dict], trends: dict) -> dict[str, Any]:
     water = np.array([float(y["metrics"]["water_pct"]) for y in ok])
     spikes = []
     if len(ok) >= 3:
-        dev = water - np.median(water)
-        mad = float(np.median(np.abs(dev)))
-        spikes = [y["year"] for y, d in zip(ok, dev)
-                  if d > OUTLIER_MADS * mad and d >= WATER_SPIKE_MIN_POINTS]
+        # a spike is a jump above the Theil-Sen trend line, so a year that just continues a
+        # steady rise (river erosion) is not a spike; that rise is the water_pct trend instead
+        years = np.array([y["year"] for y in ok], float)
+        slope = _theil_sen(years, water)
+        resid = water - (float(np.median(water - slope * years)) + slope * years)
+        mad = float(np.median(np.abs(resid - np.median(resid))))
+        # ... and above what its neighbours predict (mean of both sides; at the ends, the line
+        # through the two nearest years), so an accelerating rise is not a spike in its last year
+        n = len(water)
+        local = [(water[k - 1] + water[k + 1]) / 2 if 0 < k < n - 1
+                 else 2 * water[1] - water[2] if k == 0 else 2 * water[-2] - water[-3]
+                 for k in range(n)]
+        spikes = [y["year"] for y, r, w, e in zip(ok, resid, water, local)
+                  if r > OUTLIER_MADS * mad and r >= WATER_SPIKE_MIN_POINTS
+                  and w - e >= WATER_SPIKE_MIN_POINTS]
     return {
         "water_heavy_years": [y["year"] for y in ok if y["metrics"]["water_pct"] >= WATER_HEAVY_PCT],
         "water_spike_years": spikes,

@@ -21,7 +21,15 @@ YEARS = list(range(2019, 2026))
 
 
 def result(
-    water=None, heavy=(), spikes=(), outliers=(), low=(), tree_persistent=False, tree_change=0.0
+    water=None,
+    heavy=(),
+    spikes=(),
+    outliers=(),
+    low=(),
+    tree_persistent=False,
+    tree_change=0.0,
+    water_persistent=False,
+    water_change=0.0,
 ):
     water = water or [0.2] * 7
     years = [
@@ -39,7 +47,16 @@ def result(
                 "from_year": 2019,
                 "to_year": 2025,
                 "persistent_change": tree_persistent,
-            }
+            },
+            "water_pct": {
+                "from": 30.1,
+                "to": 30.1 + water_change,
+                "change": water_change,
+                "from_year": 2019,
+                "to_year": 2025,
+                "slope_per_year": water_change / 6,
+                "persistent_change": water_persistent,
+            },
         },
         "signals": {
             "water_heavy_years": list(heavy),
@@ -164,7 +181,15 @@ def test_land_classes_from_current_khatian(nal_case):
 def test_every_finding_says_surroundings_has_next_action_and_no_forbidden_words(nal_case):
     case = with_land_class(nal_case, "নাল")
     everything = satellite_findings(
-        result(heavy=[2022], spikes=[2022], tree_persistent=True, tree_change=-15.0), case
+        result(
+            heavy=[2022],
+            spikes=[2022],
+            tree_persistent=True,
+            tree_change=-15.0,
+            water_persistent=True,
+            water_change=28.6,
+        ),
+        case,
     ) + satellite_findings(result(low=[2019, 2020, 2021, 2022]), case)
     orchard = satellite_findings(
         result(tree_persistent=True, tree_change=-15.0), with_land_class(nal_case, "বাগান")
@@ -173,6 +198,7 @@ def test_every_finding_says_surroundings_has_next_action_and_no_forbidden_words(
     assert {f.rule_id for f in everything} >= {
         "satellite_water_dry_season",
         "satellite_water_spike",
+        "satellite_water_rising",
         "satellite_tree_loss",
         "satellite_class_water_mismatch",
         "satellite_class_tree_mismatch",
@@ -215,3 +241,31 @@ def test_report_has_satellite_section_without_forbidden_words(nal_case):
     assert "স্যাটেলাইট যাচাই" in html and "শুকনো মৌসুমেও আশেপাশে পানি" in html
     assert "এরপর:" in html
     assert forbidden_words_in(html) == []
+
+
+def test_persistent_water_rise_shows_values_slope_and_erosion_action(nal_case):
+    r = result(heavy=YEARS, water_persistent=True, water_change=28.65)
+    r["trends"]["water_pct"].update(to=58.75, slope_per_year=5.1)
+    findings = satellite_findings(r, nal_case)
+    assert ids(findings) == [
+        "satellite_water_dry_season",
+        "satellite_water_rising",
+        "satellite_class_water_mismatch",
+    ]
+    f = findings[1]
+    assert f.status == Status.warn and f.title_bn == "আশেপাশে পানি বছর বছর বাড়ছে"
+    assert "৩০.১%" in f.message_bn and "৫৮.৮%" in f.message_bn and "৫.১" in f.message_bn
+    assert "২০১৯" in f.message_bn and "২০২৫" in f.message_bn
+    assert "নদীভাঙন" in f.message_bn and "২০০ মিটার" in f.message_bn
+    action = f.values["next_action_bn"]
+    assert "ইউনিয়ন পরিষদ" in action and "মৌজা ম্যাপ" in action and "আমিন" in action
+
+
+def test_water_fall_or_non_persistent_rise_is_not_rising(nal_case):
+    assert satellite_findings(result(water_persistent=True, water_change=-12.0), nal_case) == []
+    assert satellite_findings(result(water_change=20.0), nal_case) == []
+
+
+def test_water_rise_needs_enough_good_years(nal_case):
+    r = result(low=[2019, 2020, 2021, 2022], water_persistent=True, water_change=20.0)
+    assert ids(satellite_findings(r, nal_case)) == ["satellite_insufficient_evidence"]
