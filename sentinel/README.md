@@ -9,6 +9,25 @@ It uses exactly two datasets:
 | 50 human-labelled areas (Bangladesh, Feb 2025) | `data/labelled/` | training the 10-band land-cover U-Net |
 | 300 hand-counted squares (Reyad's Gazipur count) | `data/gazipur/` | calibrating tree counts (small / big / total, cover %) |
 
+## Get the trained model
+
+The trained model `models/segmentation_10band.pt` is not in git: pre-commit blocks large files. Download it from the GitHub release `model-v1` into `models/`.
+
+From the repository root (PowerShell):
+
+```powershell
+Invoke-WebRequest https://github.com/sourav7-1/JomIGuard/releases/download/model-v1/segmentation_10band.pt -OutFile sentinel\models\segmentation_10band.pt
+Get-FileHash sentinel\models\segmentation_10band.pt
+```
+
+The SHA-256 must be:
+
+```
+3bacb3eb3f5bbaa96d195c71520a1784f96b8cf57b599416b65d0ba85a026855
+```
+
+Without the file, the monitor and `/api/analyze-area` cannot run (the API answers HTTP 409). You can also train your own with `ai/train_segmentation.py` (see below), but that needs the labelled data, which is not in git either.
+
 ## Run
 
 ```

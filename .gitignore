@@ -25,7 +25,9 @@ out/
 Thumbs.db
 *.log
 
-# Sentinel service (satellite data stays local; trained model .pt is kept)
+# Sentinel service (satellite data stays local)
 sentinel/data/
 sentinel/collected/
 sentinel/.env
+# trained model: too large for git (pre-commit blocks it); download from the model-v1 release
+sentinel/models/*.pt
