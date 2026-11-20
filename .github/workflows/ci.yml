@@ -31,13 +31,54 @@ jobs:
       TEST_DATABASE_URL: postgresql+psycopg://ci:ci_only_pass@localhost:5432/jomiguard_test
       DATABASE_URL: postgresql+psycopg://ci:ci_only_pass@localhost:5432/unused
       MINIO_ENDPOINT: localhost:9000
-      MINIO_ROOT_USER: ci
+      MINIO_ROOT_USER: ci_user
       MINIO_ROOT_PASSWORD: ci_only_pass
       MINIO_BUCKET: documents
+      ADMIN_USERNAME: ci_admin
+      ADMIN_PASSWORD: ci_only_password
+      SESSION_SECRET: ci_only_session_secret_at_least_32_characters
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
+      - name: Install Tesseract and OCR language packs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-ben tesseract-ocr-eng
+          sudo mkdir -p /usr/share/tessdata_best
+          sudo curl -fL --retry 3 -o /usr/share/tessdata_best/ben.traineddata \
+            https://github.com/tesseract-ocr/tessdata_best/raw/4.1.0/ben.traineddata
+          echo "1cd0129288d1f74f6661c35e638e487bd146a66bb732ecd9e011e48dcb0df623  /usr/share/tessdata_best/ben.traineddata" | sha256sum --check -
+          sudo ln -sf /usr/share/tesseract-ocr/5/tessdata/eng.traineddata /usr/share/tessdata_best/eng.traineddata
+          sudo ln -sf /usr/share/tesseract-ocr/5/tessdata/osd.traineddata /usr/share/tessdata_best/osd.traineddata
+          echo "TESSDATA_PREFIX=/usr/share/tessdata_best" >> "$GITHUB_ENV"
       - run: uv sync --locked
+      - name: Generate synthetic test data
+        working-directory: ml
+        run: |
+          uv run python -m playwright install --with-deps chromium
+          PYTHONPATH=../backend uv run python -m synth.khatian --n 50 --seed 42 --out ../data/synthetic/khatian
+          PYTHONPATH=../backend uv run python -m synth.deed --n 50 --seed 43 --mismatch-rate 0.4 --out ../data/synthetic/cases
+      - name: Start MinIO
+        run: |
+          docker run --detach --name minio \
+            --publish 9000:9000 \
+            --volume minio-data:/data \
+            --user 0:0 \
+            --env MINIO_ROOT_USER=ci_user \
+            --env MINIO_ROOT_PASSWORD=ci_only_pass \
+            alpine/minio:RELEASE.2025-10-15T17-29-55Z server /data --console-address ':9001' \
+            >/tmp/minio.log 2>&1
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:9000/minio/health/live >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/minio.log
+          exit 1
+      - name: Create MinIO test bucket
+        run: |
+          uv run python -c "from minio import Minio; c=Minio('localhost:9000', access_key='ci_user', secret_key='ci_only_pass', secure=False); c.make_bucket('documents') if not c.bucket_exists('documents') else None"
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -v
