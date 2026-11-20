@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/monitor.css') }}">
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-mark">S</div>
+            <div class="brand-text">
+                <p class="brand-eyebrow">10-band U-Net · Gazipur-calibrated counts</p>
+                <h1 class="brand-title">AI Monitor</h1>
+            </div>
+        </div>
+        <nav class="app-nav">
+            <a href="/">Home</a>
+            <a href="/historical">Collect Data</a>
+            <a href="/labeling">Manual Labeling</a>
+            <a href="/monitor" class="active">AI Monitor</a>
+        </nav>
+    </header>
+
+    <main class="monitor-layout">
+        <aside class="card monitor-side">
+            <h2>Choose an area</h2>
+
+            <label class="field-label" for="src-job">Collected area</label>
+            <select id="src-job" class="input"><option value="">No collected areas yet</option></select>
+            <button class="btn btn-primary btn-block" data-src="job">Analyse collected area</button>
+
+            <label class="field-label" for="src-gaz">Gazipur counted square (shows the real count)</label>
+            <select id="src-gaz" class="input"></select>
+            <button class="btn btn-block" data-src="gaz">Analyse Gazipur square</button>
+
+            <label class="field-label" for="src-lab">Labelled area</label>
+            <select id="src-lab" class="input"></select>
+            <button class="btn btn-block" data-src="lab">Analyse labelled area</button>
+
+            <label class="field-label" for="src-file">Or upload a 10-band GeoTIFF</label>
+            <input id="src-file" type="file" accept=".tif,.tiff" class="input">
+            <button class="btn btn-block" data-src="file">Analyse upload</button>
+
+            <div id="model-info" class="model-info"></div>
+        </aside>
+
+        <section class="monitor-main">
+            <div id="status" class="alert alert-info">Pick an area on the left.</div>
+            <div id="result" hidden>
+                <h2 id="r-name"></h2>
+                <div class="kpis">
+                    <div class="kpi"><span>Estimated trees</span><b id="k-total">–</b><small id="k-split"></small></div>
+                    <div class="kpi"><span>Tree cover</span><b id="k-cover">–</b><small id="k-cover-seg"></small></div>
+                    <div class="kpi"><span>Trees / hectare</span><b id="k-density">–</b><small></small></div>
+                    <div class="kpi"><span>Area</span><b id="k-area">–</b><small id="k-px"></small></div>
+                </div>
+                <div id="truth" class="alert alert-success" hidden></div>
+                <div class="images">
+                    <figure class="card"><img id="img-rgb" alt="Sentinel-2 true colour"><figcaption>Sentinel-2 true colour (B4, B3, B2)</figcaption></figure>
+                    <figure class="card"><img id="img-cls" alt="AI land-cover map"><figcaption>AI land-cover map</figcaption></figure>
+                </div>
+                <div class="card">
+                    <h3>Land cover</h3>
+                    <table class="stats-table" id="cls-table">
+                        <thead><tr><th>Class</th><th>%</th><th>Area (m²)</th><th></th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/monitor.js') }}"></script>
+</body>
+</html>

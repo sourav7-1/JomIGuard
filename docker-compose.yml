@@ -44,6 +44,17 @@ services:
       redis: {condition: service_started}
       minio: {condition: service_started}
 
+  satellite-worker:  # only the "satellite" queue (celery_app.py task_routes): one check at a time
+    build: ./backend
+    entrypoint: ["uv", "run"]
+    command: celery -A app.workers.celery_app worker -l info -Q satellite --concurrency 1 -n satellite@%h
+    env_file: .env
+    volumes: [./backend:/app]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_started}
+      sentinel: {condition: service_started}
+
   frontend:
     build:
       context: ./frontend
@@ -56,6 +67,15 @@ services:
     ports: ["3000:3000"]
     depends_on:
       backend: {condition: service_started}
+
+  sentinel:
+    build: ./sentinel
+    env_file: ./sentinel/.env
+    ports: ["5060:5060"]
+    volumes:
+      - ./sentinel/collected:/app/collected
+      # Earth Engine login from `earthengine authenticate` on this PC
+      - ${USERPROFILE:-~}/.config/earthengine:/root/.config/earthengine:ro
 
 volumes:
   pgdata:

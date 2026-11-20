@@ -103,3 +103,33 @@ def test_reset_seeds_a_tiny_synthetic_case_idempotently(tmp_path, storage):
             == "seed"
         )
         assert len(storage.objects) == 2
+
+
+def test_satellite_demo_seeds_recorded_check_with_findings_idempotently(storage):
+    from app.models import SatelliteCheck
+    from app.scripts.demo_reset import seed_satellite_demo
+    from app.services.risk import forbidden_words_in
+
+    with TestSession() as db:
+        land_id = seed_satellite_demo(db, storage)
+        assert seed_satellite_demo(db, storage) == land_id  # second run updates, never duplicates
+
+    with TestSession() as db:
+        land = db.get(Land, land_id)
+        assert land.district == "ভোলা" and land.dag_no == "417"
+        assert land.geometry["type"] == "Polygon"
+        checks = db.scalars(select(SatelliteCheck).where(SatelliteCheck.land_id == land_id)).all()
+        assert len(checks) == 1 and checks[0].status == "ok"
+        assert len(checks[0].result["signals"]["water_heavy_years"]) >= 2
+        docs = db.scalar(
+            select(func.count()).select_from(Document).where(Document.land_id == land_id)
+        )
+        assert docs == 2
+        rows = db.scalars(select(LandAssessment).where(LandAssessment.land_id == land_id)).all()
+        assert len(rows) == 1
+        result = rows[0].result
+        ids = [f["rule_id"] for f in result["satellite_findings"]]
+        assert "satellite_water_dry_season" in ids and "satellite_class_water_mismatch" in ids
+        assert "satellite_water_rising" in ids and "satellite_water_spike" not in ids
+        assert result["satellite_check_id"] == str(checks[0].id)
+        assert forbidden_words_in(json.dumps(result, ensure_ascii=False)) == []

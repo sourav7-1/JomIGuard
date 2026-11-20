@@ -45,6 +45,19 @@
 </section>
 {% endif %}
 
+{% if a.satellite_findings %}
+<section>
+  <h2>স্যাটেলাইট যাচাই</h2>
+  {% for f in a.satellite_findings %}
+  <div class="finding {{ f.status.value }}">
+    <div class="finding-title"><span class="mark">{{ "?" if f.status.value == "warn" else "i" }}</span> {{ f.title_bn }}</div>
+    <p>{{ f.message_bn }}</p>
+    {% if f.values.next_action_bn %}<p>এরপর: {{ f.values.next_action_bn }}</p>{% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
 {% if not a.coverage.complete %}
 <section class="partial">
   <h2>আংশিক যাচাই</h2>

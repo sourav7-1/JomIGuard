@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel Tree Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/monitor.css') }}">
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-mark">S</div>
+            <div class="brand-text">
+                <p class="brand-eyebrow">Sentinel-1 / Sentinel-2 · 10 bands</p>
+                <h1 class="brand-title">Sentinel Tree Monitor</h1>
+            </div>
+        </div>
+        <nav class="app-nav">
+            <a href="/" class="active">Home</a>
+            <a href="/historical">Collect Data</a>
+            <a href="/labeling">Manual Labeling</a>
+            <a href="/monitor">AI Monitor</a>
+        </nav>
+    </header>
+
+    <main class="home-wrap">
+        {% if not ee_ready %}
+        <div class="alert alert-warning">
+            Earth Engine is not connected, so <b>new</b> collections won't run. The AI monitor still works.
+            Set <code>EARTH_ENGINE_PROJECT_ID</code> in <code>.env</code> and run <code>earthengine authenticate</code> once.
+            <div class="hint">{{ ee_error }}</div>
+        </div>
+        {% endif %}
+
+        <section class="home-grid">
+            <a class="card home-card" href="/historical">
+                <span class="step-pill">1</span>
+                <h2>Collect</h2>
+                <p>Draw an area on the map. The app downloads a 10-band Sentinel-1/2 GeoTIFF for February 2025 and takes a high-resolution screenshot of the same area.</p>
+            </a>
+            <a class="card home-card" href="/labeling">
+                <span class="step-pill">2</span>
+                <h2>Label</h2>
+                <p>Draw water, tree, crop, building and other polygons on the screenshot. You get masks lined up with the GeoTIFF, ready for training.</p>
+            </a>
+            <a class="card home-card" href="/monitor">
+                <span class="step-pill">3</span>
+                <h2>Monitor</h2>
+                <p>Run the 10-band U-Net on any area to get a land-cover map, tree cover % and an estimated tree count (big and small) calibrated on the Gazipur hand counts.</p>
+            </a>
+        </section>
+
+        <section class="card home-data">
+            <h2>Data in this project</h2>
+            <ul>
+                <li><b>50 human-labelled areas</b> in <code>data/labelled/</code>: each has a 10-band GeoTIFF, a label mask and a screenshot. These train the land-cover model.</li>
+                <li><b>300 hand-counted Gazipur squares</b> in <code>data/gazipur/</code>: small, big and total trees and tree cover % per 100 m square. These calibrate the tree counter.</li>
+            </ul>
+            <p class="hint">Retrain after adding areas: <code>python ai/train_segmentation.py</code> then <code>python ai/train_counter.py</code>.</p>
+        </section>
+    </main>
+</body>
+</html>

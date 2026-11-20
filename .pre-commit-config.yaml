@@ -37,6 +37,7 @@ repos:
         name: check for added large files
         entry: uv run --project backend python -m pre_commit_hooks.check_added_large_files
         language: system
+        args: [--maxkb=1024]  # the 700 KB Bangladesh boundary geojson; model weights stay gitignored
       - id: detect-private-key
         name: detect private key
         entry: uv run --project backend python -m pre_commit_hooks.detect_private_key

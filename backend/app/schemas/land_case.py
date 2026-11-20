@@ -275,3 +275,4 @@ class LandOut(BaseModel):
     mouza: str
     dag_no: str
     khatian_no: str
+    geometry: dict | None = None  # GeoJSON Polygon (schemas/satellite.PlotGeometry)

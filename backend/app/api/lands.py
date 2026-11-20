@@ -3,7 +3,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field, StrictBool
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -33,6 +33,12 @@ from app.schemas.extracted import DeedData, ExtractedDocument
 from app.schemas.extraction import ExtractionWarningOut
 from app.schemas.identity import IdentityVerificationOut
 from app.schemas.land_case import CaseRole, LandCase, LandIn, LandOut
+from app.schemas.satellite import (
+    PlotGeometry,
+    SatelliteCheckIn,
+    SatelliteCheckOut,
+    SatelliteCheckView,
+)
 from app.services.actions import next_actions
 from app.services.deed_archive import compare_deeds, integrity_status
 from app.services.land_case import load_land_case
@@ -40,8 +46,11 @@ from app.services.report import render_report_html, render_report_pdf
 from app.services.risk import assess
 from app.services.rules import run_rules
 from app.services.rules.names import names_match, person_key
+from app.services.satellite import NO_GEOMETRY_BN, latest_check, start_check
+from app.services.satellite_findings import area_note_bn, satellite_findings
 from app.services.storage import Storage, get_storage
 from app.services.timeline import build_timeline
+from app.workers.tasks import run_satellite_check_task
 
 router = APIRouter(prefix="/lands", tags=["lands"])
 
@@ -483,6 +492,10 @@ def assess_land(land_id: uuid.UUID, db: Db, user: CurrentUser):
     run = run_rules(case)
     assessment = assess(case, run)
     assessment.actions = next_actions(case, run, assessment)
+    sat = latest_check(db, land_id, status="ok")
+    if sat is not None and sat.result:  # added after risk/actions: never changes them
+        assessment.satellite_findings = satellite_findings(sat.result, case)
+        assessment.satellite_check_id = sat.id
     row = LandAssessment(
         land_id=land_id,
         engine_version=assessment.engine_version,
@@ -598,3 +611,47 @@ def assessment_report(land_id: uuid.UUID, assessment_id: uuid.UUID, db: Db, user
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{_report_filename(land)}"'},
     )
+
+
+# --- satellite check of the plot's surroundings (services/satellite.py) ---
+
+
+@router.put("/{land_id}/geometry", response_model=LandOut)
+def set_land_geometry(land_id: uuid.UUID, body: PlotGeometry, db: Db, user: CurrentUser):
+    """Save the plot outline drawn on the map (Polygon, inside Bangladesh, <= 50 acres)."""
+    land = _owned_land(db, land_id, user)
+    land.geometry = body.model_dump()
+    db.commit()
+    return land
+
+
+@router.post("/{land_id}/satellite-check", response_model=SatelliteCheckOut, status_code=202)
+def start_satellite_check(
+    land_id: uuid.UUID,
+    db: Db,
+    user: CurrentUser,
+    body: Annotated[SatelliteCheckIn | None, Body()] = None,
+):
+    """Queue a satellite check; poll GET .../satellite-check/latest for the result."""
+    land = _owned_land(db, land_id, user)
+    if not land.geometry:
+        raise HTTPException(409, NO_GEOMETRY_BN)
+    body = body or SatelliteCheckIn()
+    check = start_check(db, land, body.buffer_m, body.years)
+    db.commit()
+    run_satellite_check_task.delay(str(check.id))  # only after the commit: the worker must find it
+    return check
+
+
+@router.get("/{land_id}/satellite-check/latest", response_model=SatelliteCheckView)
+def latest_satellite_check(land_id: uuid.UUID, db: Db, user: CurrentUser):
+    """Latest check (any status); for an ok one, also its findings against the khatian."""
+    _owned_land(db, land_id, user)
+    check = latest_check(db, land_id)
+    if check is None:
+        raise HTTPException(404, "এই জমির কোনো স্যাটেলাইট যাচাই এখনো হয়নি।")
+    view = SatelliteCheckView.model_validate(check)
+    if check.status == "ok" and check.result:
+        view.findings = satellite_findings(check.result, load_land_case(db, land_id))
+        view.area_note_bn = area_note_bn(float(check.result.get("buffer_m") or check.buffer_m))
+    return view
