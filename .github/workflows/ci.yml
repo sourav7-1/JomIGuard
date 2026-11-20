@@ -34,6 +34,9 @@ jobs:
       MINIO_ROOT_USER: ci
       MINIO_ROOT_PASSWORD: ci_only_pass
       MINIO_BUCKET: documents
+      ADMIN_USERNAME: ci_admin
+      ADMIN_PASSWORD: ci_only_password
+      SESSION_SECRET: ci_only_session_secret_at_least_32_characters
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
