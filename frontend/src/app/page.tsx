@@ -50,7 +50,7 @@ export default function HomePage() {
             খতিয়ান, দলিল ও নামজারির তথ্য মিলিয়ে দেখুন, স্যাটেলাইট ছবিতে জমির আশেপাশে পানি ও গাছের বদল দেখুন, আর জেনে নিন এরপর কী যাচাই করবেন।
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
-            <Link href="/upload" className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-control)] bg-accent px-5 text-base font-semibold text-white transition-colors hover:bg-[#23317A]">
+            <Link href="/find" className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-control)] bg-accent px-5 text-base font-semibold text-white transition-colors hover:bg-[#23317A]">
               কেস খুঁজুন বা নতুন কেস
             </Link>
             <Link href={BHOLA_CASE} className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-control)] border border-sat/40 bg-sat-soft px-5 text-base font-semibold text-sat transition-colors hover:border-sat">

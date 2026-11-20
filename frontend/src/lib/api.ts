@@ -161,7 +161,7 @@ export const api = {
     apiFetch<T>(endpoint, { ...options, method: "DELETE" }),
 
   // Specific domain helpers
-  createLand: (data: { mouza: string; dag_no?: string; upazila?: string; district?: string }) =>
+  createLand: (data: { mouza: string; dag_no?: string; upazila?: string; district?: string; khatian_no?: string }) =>
     apiFetch<LandOut>("/lands", {
       method: "POST",
       body: {

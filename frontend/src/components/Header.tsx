@@ -26,11 +26,11 @@ export function Header() {
       <p className="border-b border-line bg-accent-soft px-4 py-1 text-center text-xs leading-5 text-ink">
         <span aria-hidden="true" className="mr-1 font-semibold text-accent">ⓘ</span>{strings.app.independentNote}
       </p>
-      <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:min-h-[76px] lg:px-8">
+      <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:min-h-[76px] lg:px-8">
         <Link href="/" aria-label="JomiGuard মূল পাতা" className="flex min-h-11 min-w-0 items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
           <ShieldMark />
           <span className="min-w-0">
-            <span className="block truncate font-heading text-xl font-bold leading-6 tracking-tight text-accent">{strings.app.name}</span>
+            <span className="block truncate font-heading text-base font-bold sm:text-xl leading-6 tracking-tight text-accent">{strings.app.name}</span>
             <span className="hidden text-xs leading-4 text-muted sm:block">কাগজের তথ্য মিলিয়ে দেখুন</span>
           </span>
         </Link>

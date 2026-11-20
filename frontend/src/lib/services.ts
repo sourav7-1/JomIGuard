@@ -19,7 +19,7 @@ export const services: Service[] = [
     id: "documents",
     title: "কাগজ যাচাই",
     line: "খতিয়ান, দলিল ও নামজারির তথ্য মিলিয়ে কোথায় অমিল, তা উৎসসহ দেখায়।",
-    start: { label: "শুরু করুন", href: "/upload" },
+    start: { label: "শুরু করুন", href: "/find?service=documents" },
     icon: "M6 3.75h8l4 4v12.5H6z M14 3.75v4h4 M9 12h6 M9 15.5h6",
     howTo: [
       "বিভাগ, জেলা, উপজেলা ও মৌজা বেছে জমির কেস খুঁজুন বা নতুন কেস শুরু করুন।",
@@ -44,7 +44,7 @@ export const services: Service[] = [
     id: "satellite",
     title: "স্যাটেলাইট যাচাই",
     line: "শুকনো মৌসুমের ছবিতে প্লটের আশেপাশে পানি ও গাছের বদল, খতিয়ানের সঙ্গে মিলিয়ে।",
-    start: { label: "শুরু করুন", href: BHOLA_CASE },
+    start: { label: "শুরু করুন", href: "/find?service=satellite" },
     icon: "M4 12a8 8 0 0 1 8-8 M7 12a5 5 0 0 1 5-5 M11 15l7-7 M14 8h4v4 M10 18l-2 2 M14 14l6 6-2 2-6-6",
     satellite: true,
     howTo: [
@@ -81,7 +81,7 @@ export const services: Service[] = [
     id: "seller",
     title: "বিক্রেতা যাচাই",
     line: "বিক্রেতাকে পরিচয় যাচাইয়ের link পাঠান; শুধু যাচাইয়ের ফল রাখা হয়।",
-    start: { label: "শুরু করুন", href: "/cases" },
+    start: { label: "শুরু করুন", href: "/find?service=seller" },
     icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M4 21a8 8 0 0 1 16 0 M16 15l2 2 3-3",
     howTo: [
       "জমির কেস খুলুন; দলিলের খসড়ায় থাকা বিক্রেতার নাম “বিক্রেতার পরিচয়” অংশে দেখাবে।",

@@ -32,7 +32,7 @@ export function SellerIdentityPanel({
     else { await navigator.clipboard.writeText(url); setMessage(strings.identity.copy); }
   };
 
-  return <section className="space-y-3 rounded-xl border border-line bg-surface p-4">
+  return <section id="seller-identity" className="scroll-mt-40 space-y-3 rounded-xl border border-line bg-surface p-4">
     <h2 className="font-heading text-lg font-bold">{strings.identity.sellerHeading}</h2>
     {sellers.map(({ name }) => {
       const result = [...verifications].reverse().find((v) => v.party === "seller" && v.seller_name_on_deed === name);

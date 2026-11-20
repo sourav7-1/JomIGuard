@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
@@ -9,11 +9,19 @@ import { api } from "@/lib/api";
 import { strings } from "@/lib/strings";
 
 export default function NewCheckPage() {
-  const router = useRouter();
+  return <Suspense><NewCheckForm /></Suspense>;
+}
 
-  const [mouza, setMouza] = useState("");
-  const [dagNo, setDagNo] = useState("");
-  const [upazila, setUpazila] = useState("");
+function NewCheckForm() {
+  const router = useRouter();
+  // pre-filled from the location picker (/find)
+  const params = useSearchParams();
+  const district = params.get("district")?.trim() ?? "";
+  const khatianNo = params.get("khatian")?.trim() ?? "";
+
+  const [mouza, setMouza] = useState(params.get("mouza") ?? "");
+  const [dagNo, setDagNo] = useState(params.get("dag") ?? "");
+  const [upazila, setUpazila] = useState(params.get("upazila") ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,6 +41,8 @@ export default function NewCheckPage() {
         mouza: trimmedMouza,
         dag_no: dagNo.trim(),
         upazila: upazila.trim(),
+        ...(district && { district }),
+        ...(khatianNo && { khatian_no: khatianNo }),
       });
 
       router.push(`/upload/${land.id}`);
@@ -59,6 +69,11 @@ export default function NewCheckPage() {
 
       <Card className="p-5 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-5">
+          {(district || khatianNo) && (
+            <p className="rounded-lg bg-accent-soft px-3 py-2 text-sm text-ink">
+              {district && <>জেলা: <b>{district}</b></>}{district && khatianNo && " · "}{khatianNo && <>খতিয়ান নং: <b>{khatianNo}</b></>}
+            </p>
+          )}
           {/* Mouza (Required) */}
           <div className="space-y-1.5">
             <label

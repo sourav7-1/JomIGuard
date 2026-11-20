@@ -14,6 +14,7 @@ import {
   PlotGeometry,
 } from "@/lib/api";
 import { SatellitePanel } from "@/components/case/SatellitePanel";
+import { CaseTracker } from "@/components/case/CaseTracker";
 import { strings } from "@/lib/strings";
 import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -233,6 +234,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
     <div className="max-w-6xl mx-auto py-4 space-y-6">
       {/* 1. Header: title, stale banner & re-assess button */}
       <CaseHeader caseView={caseView} onAssessmentTriggered={fetchData} />
+      <CaseTracker landId={landId} caseView={caseView} />
       {error && <div role="alert" className="rounded-xl border border-bad/40 bg-bad-bg p-3 text-sm">{error}</div>}
       {caseView.latest_assessment ? (() => {
         const assessment = caseView.latest_assessment;
@@ -242,7 +244,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
         const reviewNeeded = assessment.review_needed ?? [];
         const missingDocs = assessment.coverage.documents_missing_bn ?? [];
         const skippedChecks = assessment.coverage.checks_skipped ?? [];
-        return <section className="space-y-4">
+        return <section id="risk-summary" className="scroll-mt-40 space-y-4">
           <VerdictBox riskLevel={assessment.risk_level as "low" | "medium" | "high"} title={assessment.headline_bn} summary={assessment.summary_bn} />
           <p className="rounded-lg border border-line bg-surface p-3 text-sm text-muted">
             {assessmentDiff?.previous ? <>{riskName(assessmentDiff.previous.risk_level)} → {riskName(assessmentDiff.risk_level)}। {assessmentDiff.added_findings.length ? `${strings.casePage.diffAdded}: ${assessmentDiff.added_findings.join(", ")}. ` : ""}{assessmentDiff.removed_findings.length ? `${strings.casePage.diffRemoved}: ${assessmentDiff.removed_findings.join(", ")}.` : ""}{!assessmentDiff.added_findings.length && !assessmentDiff.removed_findings.length ? strings.casePage.diffSame : ""}</> : strings.casePage.diffFirst}
@@ -267,7 +269,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
           <section className="space-y-3"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.reviewHeading}</h2>
             {reviewNeeded.length ? reviewNeeded.map((item, i) => <button key={`${item.source_id}-${item.field_path}-${i}`} type="button" onClick={() => focusSource(item.source_id, item.field_path)} className="block min-h-11 w-full rounded-xl border border-warn/30 bg-warn-bg/30 p-3 text-left text-sm">{item.document_label_bn} → {item.label_bn}: {item.printed_text || "—"}</button>) : <p className="text-sm text-muted">{strings.casePage.noReview}</p>}
           </section>
-          <section className="space-y-3"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.actionsHeading}</h2>
+          <section className="space-y-3"><h2 id="actions-title" className="scroll-mt-40 font-heading text-xl font-bold text-ink">{strings.casePage.actionsHeading}</h2>
             {actions.length ? actions.map((action, i) => <label key={`${action.id}-${i}`} className="flex min-h-11 items-start gap-3 rounded-xl border border-line bg-surface p-3 text-sm"><input type="checkbox" checked={Boolean(action.done)} disabled={actionBusy === action.id} onChange={(e) => updateAction(action.id, e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-accent"/><span className={`min-w-0 flex-1 leading-relaxed ${action.done ? "line-through text-muted" : "text-ink"}`}>{action.text_bn}<span className="ml-2 inline-flex rounded-full bg-bg px-2 py-0.5 text-xs text-muted">{strings.casePage.who[action.who as keyof typeof strings.casePage.who] || action.who}</span></span></label>) : <p className="text-sm text-muted">{strings.casePage.noActions}</p>}
           </section>
           <SellerIdentityPanel landId={landId} sellers={sellerRows} verifications={caseView.identity_verifications || []} />
@@ -327,7 +329,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
       />
 
       {/* 4. Document selector tabs */}
-      <div id="source-document-panel" className="space-y-3 scroll-mt-4">
+      <div id="source-document-panel" className="space-y-3 scroll-mt-40">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {caseView.documents.map((d: CaseViewDocOut) => {
             const isSelected = d.id === selectedDoc.id;

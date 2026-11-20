@@ -120,7 +120,7 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4"><path d="M4 12a8 8 0 0 1 8-8m-5 8a5 5 0 0 1 5-5m-1 8 7-7m-4 0h4v4M10 18l-2 2m6-6 6 6-2 2-6-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
           মাঠের ছবি
         </p>
-        <h2 id="satellite-title" className="font-heading text-xl font-bold text-ink">স্যাটেলাইট যাচাই</h2>
+        <h2 id="satellite-title" className="scroll-mt-40 font-heading text-xl font-bold text-ink">স্যাটেলাইট যাচাই</h2>
         <p className="text-sm leading-relaxed text-muted">মানচিত্রে প্লটের সীমানা আঁকুন। ২০১৯ থেকে প্রতি বছরের ফেব্রুয়ারির (শুকনো মৌসুম) স্যাটেলাইট ছবিতে প্লটের আশেপাশে গাছ ও পানি কেমন বদলেছে তা দেখা হবে।</p>
         <p className="flex items-start gap-2 text-xs leading-relaxed text-muted">
           <span aria-hidden="true" className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-muted text-[10px] font-bold">i</span>
