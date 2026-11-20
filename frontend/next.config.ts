@@ -6,7 +6,13 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   async rewrites() {
     const backend = process.env.BACKEND_INTERNAL_URL || "http://localhost:8000";
-    return [{ source: "/api/:path*", destination: `${backend}/:path*` }];
+    // FastAPI's docs/schema stay on the backend port only; the public proxy never forwards them
+    return [
+      {
+        source: "/api/:path((?!(?:docs|redoc|openapi\\.json)(?:/|$)).*)",
+        destination: `${backend}/:path`,
+      },
+    ];
   },
   turbopack: {
     rules: {

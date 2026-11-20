@@ -20,6 +20,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { VerdictBox } from "@/components/ui/VerdictBox";
 import { CheckItem } from "@/components/ui/CheckItem";
 import { Card } from "@/components/ui/Card";
+import { FindingCard, findingTone } from "@/components/ui/FindingCard";
 import {
   CaseHeader,
   CaseSummaryTable,
@@ -42,6 +43,9 @@ function archiveValue(value: unknown): string {
   if (typeof value === "object") return Object.values(value as Record<string, unknown>).filter(Boolean).join(" · ") || "—";
   return String(value);
 }
+
+const RISK_BN: Record<string, string> = { low: "কম ঝুঁকি", medium: "মাঝারি ঝুঁকি", high: "উচ্চ ঝুঁকি" };
+const riskName = (level: string) => RISK_BN[level] ?? level;
 
 export function CaseDetailClient({ landId, source, field }: CaseDetailClientProps) {
   const router = useRouter();
@@ -229,10 +233,6 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
     <div className="max-w-6xl mx-auto py-4 space-y-6">
       {/* 1. Header: title, stale banner & re-assess button */}
       <CaseHeader caseView={caseView} onAssessmentTriggered={fetchData} />
-      <SellerIdentityPanel landId={landId} sellers={sellerRows} verifications={caseView.identity_verifications || []} />
-      <button type="button" onClick={startEscrow} disabled={escrowBusy} className="min-h-11 rounded-lg border border-line bg-surface px-4 text-sm font-semibold text-accent disabled:opacity-60">{escrowBusy ? strings.labels.loading : escrowFlow.start}</button>
-
-      {caseView.assessment_stale && <div role="status" className="rounded-xl border border-warn/40 bg-warn-bg p-3 text-sm">{strings.casePage.staleMessage}</div>}
       {error && <div role="alert" className="rounded-xl border border-bad/40 bg-bad-bg p-3 text-sm">{error}</div>}
       {caseView.latest_assessment ? (() => {
         const assessment = caseView.latest_assessment;
@@ -245,40 +245,42 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
         return <section className="space-y-4">
           <VerdictBox riskLevel={assessment.risk_level as "low" | "medium" | "high"} title={assessment.headline_bn} summary={assessment.summary_bn} />
           <p className="rounded-lg border border-line bg-surface p-3 text-sm text-muted">
-            {assessmentDiff?.previous ? <>{assessmentDiff.previous.risk_level} ? {assessmentDiff.risk_level}. {assessmentDiff.added_findings.length ? `${strings.casePage.diffAdded}: ${assessmentDiff.added_findings.join(", ")}. ` : ""}{assessmentDiff.removed_findings.length ? `${strings.casePage.diffRemoved}: ${assessmentDiff.removed_findings.join(", ")}.` : ""}{!assessmentDiff.added_findings.length && !assessmentDiff.removed_findings.length ? strings.casePage.diffSame : ""}</> : strings.casePage.diffFirst}
+            {assessmentDiff?.previous ? <>{riskName(assessmentDiff.previous.risk_level)} → {riskName(assessmentDiff.risk_level)}। {assessmentDiff.added_findings.length ? `${strings.casePage.diffAdded}: ${assessmentDiff.added_findings.join(", ")}. ` : ""}{assessmentDiff.removed_findings.length ? `${strings.casePage.diffRemoved}: ${assessmentDiff.removed_findings.join(", ")}.` : ""}{!assessmentDiff.added_findings.length && !assessmentDiff.removed_findings.length ? strings.casePage.diffSame : ""}</> : strings.casePage.diffFirst}
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <button type="button" onClick={runAssessment} disabled={assessing} className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{assessing ? strings.casePage.loadingAssessment : strings.casePage.retryAssessment}</button>
             <button type="button" onClick={() => api.downloadReport(landId, assessment.id).catch((e) => setError(e.message))} className="min-h-11 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-semibold">{strings.casePage.pdfReport}</button>
           </div>
-          <section className="space-y-2"><h2 className="font-heading text-lg font-bold">{strings.casePage.findingsHeading}</h2>
-            {findings.length ? findings.map((finding, i) => <article key={`${finding.rule_id}-${i}`} className="space-y-2 rounded-xl border border-bad/30 bg-bad-bg/30 p-4"><h3 className="font-semibold">{finding.title_bn}</h3><p className="text-sm leading-relaxed">{finding.message_bn}</p><div className="flex flex-wrap gap-2">{(finding.sources ?? []).map((source, j) => <button key={`${source.source_id}-${source.field_path}-${j}`} type="button" onClick={() => focusSource(source.source_id, source.field_path)} className="min-h-11 max-w-full break-words rounded-lg border border-line bg-surface px-3 py-2 text-left text-xs text-accent underline">{strings.casePage.sourcePrefix}: {source.label_bn} ? {source.value_bn || source.printed_text || source.field_path}</button>)}</div></article>) : <p className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">{strings.casePage.noFindings}</p>}
+          <section className="space-y-3"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.findingsHeading}</h2>
+            {findings.length ? findings.map((finding, i) => <FindingCard key={`${finding.rule_id}-${i}`} tone={findingTone(finding.status)} title={finding.title_bn}><p className="text-sm leading-relaxed">{finding.message_bn}</p><div className="flex flex-wrap gap-2">{(finding.sources ?? []).map((source, j) => <button key={`${source.source_id}-${source.field_path}-${j}`} type="button" onClick={() => focusSource(source.source_id, source.field_path)} className="min-h-11 max-w-full break-words rounded-lg border border-line bg-surface px-3 py-2 text-left text-xs text-accent underline">{strings.casePage.sourcePrefix}: {source.label_bn} → {source.value_bn || source.printed_text || source.field_path}</button>)}</div></FindingCard>) : <p className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">{strings.casePage.noFindings}</p>}
           </section>
-          <section className="space-y-2"><h2 className="font-heading text-lg font-bold">{strings.casePage.passedHeading}</h2>
+          <section className="space-y-3"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.passedHeading}</h2>
             {(expandedPassed ? passed : passed.slice(0, 3)).map((item, i) => <CheckItem key={`${item.rule_id}-${i}`} status="ok" title={item.title_bn} description={item.message_bn} />)}
             {!passed.length && <p className="text-sm text-muted">{strings.casePage.noPassed}</p>}
             {passed.length > 3 && <button type="button" onClick={() => setExpandedPassed((x) => !x)} className="min-h-11 px-2 text-sm text-accent underline">{expandedPassed ? strings.casePage.showLess : strings.casePage.showAll}</button>}
           </section>
-          <section className="space-y-2 rounded-xl border border-line bg-surface p-4"><h2 className="font-heading text-lg font-bold">{strings.casePage.coverageHeading}</h2>
-            {missingDocs.map((doc, i) => <p key={`${doc}-${i}`} className="text-sm text-muted">? {doc}</p>)}
-            {skippedChecks.map((check, i) => <p key={`${check.rule_id}-${i}`} className="text-sm text-muted">? {check.reason_bn}</p>)}
+          <section className="space-y-2 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.coverageHeading}</h2>
+            {missingDocs.map((doc, i) => <p key={`${doc}-${i}`} className="text-sm text-muted">• {doc}</p>)}
+            {skippedChecks.map((check, i) => <p key={`${check.rule_id}-${i}`} className="text-sm text-muted">• {check.reason_bn}</p>)}
             <Link href={`/upload/${landId}`} className="inline-flex min-h-11 items-center rounded-lg border border-line px-3 py-2 text-sm font-semibold text-accent">{strings.casePage.uploadMissing}</Link>
           </section>
-          <section className="space-y-2"><h2 className="font-heading text-lg font-bold">{strings.casePage.reviewHeading}</h2>
-            {reviewNeeded.length ? reviewNeeded.map((item, i) => <button key={`${item.source_id}-${item.field_path}-${i}`} type="button" onClick={() => focusSource(item.source_id, item.field_path)} className="block min-h-11 w-full rounded-xl border border-warn/30 bg-warn-bg/30 p-3 text-left text-sm">{item.document_label_bn} ? {item.label_bn}: {item.printed_text || "?"}</button>) : <p className="text-sm text-muted">{strings.casePage.noReview}</p>}
+          <section className="space-y-3"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.reviewHeading}</h2>
+            {reviewNeeded.length ? reviewNeeded.map((item, i) => <button key={`${item.source_id}-${item.field_path}-${i}`} type="button" onClick={() => focusSource(item.source_id, item.field_path)} className="block min-h-11 w-full rounded-xl border border-warn/30 bg-warn-bg/30 p-3 text-left text-sm">{item.document_label_bn} → {item.label_bn}: {item.printed_text || "—"}</button>) : <p className="text-sm text-muted">{strings.casePage.noReview}</p>}
           </section>
-          <section className="space-y-2"><h2 className="font-heading text-lg font-bold">{strings.casePage.actionsHeading}</h2>
+          <section className="space-y-3"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.actionsHeading}</h2>
             {actions.length ? actions.map((action, i) => <label key={`${action.id}-${i}`} className="flex min-h-11 items-start gap-3 rounded-xl border border-line bg-surface p-3 text-sm"><input type="checkbox" checked={Boolean(action.done)} disabled={actionBusy === action.id} onChange={(e) => updateAction(action.id, e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-accent"/><span className={`min-w-0 flex-1 leading-relaxed ${action.done ? "line-through text-muted" : "text-ink"}`}>{action.text_bn}<span className="ml-2 inline-flex rounded-full bg-bg px-2 py-0.5 text-xs text-muted">{strings.casePage.who[action.who as keyof typeof strings.casePage.who] || action.who}</span></span></label>) : <p className="text-sm text-muted">{strings.casePage.noActions}</p>}
           </section>
+          <SellerIdentityPanel landId={landId} sellers={sellerRows} verifications={caseView.identity_verifications || []} />
+          <button type="button" onClick={startEscrow} disabled={escrowBusy} className="min-h-11 rounded-lg border border-line bg-surface px-4 text-sm font-semibold text-accent">{escrowBusy ? strings.labels.loading : escrowFlow.start}</button>
         </section>;
-      })() : <section className="space-y-3 rounded-xl border border-line bg-surface p-5"><h2 className="text-lg font-bold">{strings.casePage.findingsHeading}</h2><p className="text-sm text-muted">{assessmentCount ? strings.casePage.assessmentError : strings.casePage.noAssessment}</p><button type="button" onClick={runAssessment} disabled={assessing} className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{assessing ? strings.casePage.loadingAssessment : strings.casePage.verify}</button></section>}
+      })() : <><SellerIdentityPanel landId={landId} sellers={sellerRows} verifications={caseView.identity_verifications || []} /><section className="space-y-3 rounded-xl border border-line bg-surface p-5"><h2 className="text-lg font-bold">{strings.casePage.findingsHeading}</h2><p className="text-sm text-muted">{assessmentCount ? strings.casePage.assessmentError : strings.casePage.noAssessment}</p><button type="button" onClick={runAssessment} disabled={assessing} className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{assessing ? strings.casePage.loadingAssessment : strings.casePage.verify}</button></section></>}
       <p className="rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed text-muted"><strong className="block text-ink">{strings.casePage.disclaimerTitle}</strong>{caseView.latest_assessment?.disclaimer_bn || strings.app.disclaimer}</p>
 
       <SatellitePanel landId={landId} geometry={(caseView.land as { geometry?: PlotGeometry | null }).geometry ?? null} />
 
       <section className="space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-5" aria-labelledby="deed-archive-title">
         <div className="space-y-1">
-          <h2 id="deed-archive-title" className="font-heading text-lg font-bold">{strings.deedArchive.title}</h2>
+          <h2 id="deed-archive-title" className="font-heading text-xl font-bold text-ink">{strings.deedArchive.title}</h2>
           <Link href={`/cases/${landId}/deeds`} className="inline-flex min-h-11 items-center rounded-lg border border-line px-3 py-2 text-sm font-semibold text-accent">আগের দলিল ও প্রমাণ বিস্তারিত দেখুন</Link>
           <p className="text-sm leading-relaxed text-muted">{strings.deedArchive.description}</p>
           <p className="text-sm font-semibold text-warn">{strings.deedArchive.officialNotice}</p>

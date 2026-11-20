@@ -114,12 +114,11 @@ export default function PlotMap({ landId, geometry, onSaved }: PlotMapProps) {
   return (
     <div className="space-y-2">
       {/* relative z-0 isolate: Leaflet's panes use z-index up to 1000; keep them under the sticky header */}
-      <div ref={el} className="relative z-0 isolate h-80 w-full overflow-hidden rounded-xl border border-line sm:h-96" role="application" aria-label="প্লটের সীমানা আঁকার মানচিত্র" />
-      <div className="flex flex-wrap items-center gap-2">
-        <button type="button" onClick={save} disabled={!dirty || !hasShape || saving} className="min-h-11 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-semibold text-accent disabled:opacity-50">
+      <div ref={el} className="relative z-0 isolate h-80 w-full overflow-hidden border-y border-line sm:h-96 sm:rounded-[var(--radius-card)] sm:border-x" role="application" aria-label="প্লটের সীমানা আঁকার মানচিত্র" />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 sm:px-0">
+        <button type="button" onClick={save} disabled={!dirty || !hasShape || saving} className="min-h-11 rounded-lg border border-accent bg-surface px-4 py-2 text-sm font-semibold text-accent">
           {saving ? "রাখা হচ্ছে…" : "সীমানা রাখুন"}
         </button>
-        {!hasShape && <span className="text-sm text-muted">ডান দিকের বোতাম দিয়ে প্লটের কোণগুলোতে ক্লিক করে সীমানা আঁকুন।</span>}
         <span className="text-xs text-muted">মাউসের চাকা দিয়ে জুম করতে আগে মানচিত্রে একবার ক্লিক করুন।</span>
         {message && <span role="status" className={`text-sm ${message.ok ? "text-muted" : "text-bad"}`}>{message.text}</span>}
       </div>

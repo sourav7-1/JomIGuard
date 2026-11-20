@@ -52,13 +52,14 @@ export default function RootLayout({
           </Suspense>
         </main>
         <footer className="w-full border-t border-line bg-surface/50 mt-auto py-6">
-          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pb-20 text-xs text-muted sm:px-6 md:flex-row md:items-start md:justify-between md:pb-6 lg:px-8">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pb-24 text-sm text-muted sm:px-6 md:flex-row md:items-start md:justify-between md:pb-6 lg:px-8">
             <p className="max-w-3xl leading-relaxed">
               {strings.app.disclaimer}
             </p>
-            <div className="shrink-0 text-right">
+            <div className="shrink-0 md:text-right">
               <p className="font-medium text-ink">{strings.app.footerText}</p>
-              <p className="mt-1">Developed by Team TerraByte</p>
+              <p className="mt-1">{strings.app.independentNote}</p>
+              <p className="mt-1">Developed by Team 2:29 AM Error</p>
             </div>
           </div>
         </footer>

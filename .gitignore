@@ -31,3 +31,6 @@ sentinel/collected/
 sentinel/.env
 # trained model: too large for git (pre-commit blocks it); download from the model-v1 release
 sentinel/models/*.pt
+
+# local backup of .env made before the public demo
+.env.backup-before-live

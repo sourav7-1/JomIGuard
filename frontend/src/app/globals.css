@@ -1,73 +1,81 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #F7F9F6;
+  --bg: #F7F7FA;
   --surface: #FFFFFF;
-  --ink: #172821;
-  --muted: #586A61;
-  --line: #D8E1DB;
-  --accent: #0D624D;
-  --accent-soft: #E3EFE8;
-  --gold: #916707;
+  --ink: #1A1F33;
+  --muted: #555C72;
+  --line: #DADDE8;
+  --accent: #2D3E8F;
+  --accent-soft: #E7EAF6;
+  --gold: #A4502A;
   --ok: #2E7D4F;
   --ok-bg: #E3F1E8;
-  --warn: #A86A00;
+  --warn: #8A5700;
   --warn-bg: #FBF0D9;
   --bad: #B3261E;
   --bad-bg: #F9E3E1;
+  --sat: #0F766E;
+  --sat-soft: #DFF2EE;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #101713;
-    --surface: #18201C;
-    --ink: #E6ECE8;
-    --muted: #9AA8A1;
-    --line: #2A3530;
-    --accent: #66C6A5;
-    --accent-soft: #1C3229;
-    --gold: #E2B84F;
+    --bg: #11131C;
+    --surface: #191C28;
+    --ink: #E7E9F2;
+    --muted: #A0A6BC;
+    --line: #2C3144;
+    --accent: #A9B6F0;
+    --accent-soft: #1F2542;
+    --gold: #E3A07E;
     --ok: #6CC08E;
     --ok-bg: #1A2E22;
     --warn: #E2B04A;
     --warn-bg: #33291A;
     --bad: #F08A82;
     --bad-bg: #3A1F1D;
+    --sat: #5CC7B6;
+    --sat-soft: #12302C;
   }
 }
 
 [data-theme="dark"] {
-  --bg: #101713;
-  --surface: #18201C;
-  --ink: #E6ECE8;
-  --muted: #9AA8A1;
-  --line: #2A3530;
-  --accent: #66C6A5;
-  --accent-soft: #1C3229;
-  --gold: #E2B84F;
+  --bg: #11131C;
+  --surface: #191C28;
+  --ink: #E7E9F2;
+  --muted: #A0A6BC;
+  --line: #2C3144;
+  --accent: #A9B6F0;
+  --accent-soft: #1F2542;
+  --gold: #E3A07E;
   --ok: #6CC08E;
   --ok-bg: #1A2E22;
   --warn: #E2B04A;
   --warn-bg: #33291A;
   --bad: #F08A82;
   --bad-bg: #3A1F1D;
+  --sat: #5CC7B6;
+  --sat-soft: #12302C;
 }
 
 [data-theme="light"] {
-  --bg: #F7F9F6;
+  --bg: #F7F7FA;
   --surface: #FFFFFF;
-  --ink: #172821;
-  --muted: #586A61;
-  --line: #D8E1DB;
-  --accent: #0D624D;
-  --accent-soft: #E3EFE8;
-  --gold: #916707;
+  --ink: #1A1F33;
+  --muted: #555C72;
+  --line: #DADDE8;
+  --accent: #2D3E8F;
+  --accent-soft: #E7EAF6;
+  --gold: #A4502A;
   --ok: #2E7D4F;
   --ok-bg: #E3F1E8;
-  --warn: #A86A00;
+  --warn: #8A5700;
   --warn-bg: #FBF0D9;
   --bad: #B3261E;
   --bad-bg: #F9E3E1;
+  --sat: #0F766E;
+  --sat-soft: #DFF2EE;
 }
 
 @theme inline {
@@ -85,6 +93,13 @@
   --color-warn-bg: var(--warn-bg);
   --color-bad: var(--bad);
   --color-bad-bg: var(--bad-bg);
+  --color-sat: var(--sat);
+  --color-sat-soft: var(--sat-soft);
+
+  /* one radius + shadow scale for cards and controls */
+  --radius-card: 0.875rem;
+  --radius-control: 0.5rem;
+  --shadow-card: 0 1px 2px rgb(26 31 51 / 0.05), 0 2px 8px rgb(26 31 51 / 0.05);
 
   --font-heading: var(--font-tiro-bangla), serif;
   --font-body: var(--font-hind-siliguri), sans-serif;
@@ -97,6 +112,23 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   min-height: 100%;
+  /* Bangla conjuncts and vowel signs need more room than Latin text */
+  line-height: 1.65;
+}
+
+/* one visible focus ring for every keyboard-focusable control */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* disabled controls stay readable: opacity alone drops their text below AA contrast */
+:where(button, input, select, textarea):disabled {
+  opacity: 1 !important;
+  background-color: var(--bg) !important;
+  color: var(--muted) !important;
+  border-color: var(--line) !important;
+  cursor: not-allowed;
 }
 
 ::selection {

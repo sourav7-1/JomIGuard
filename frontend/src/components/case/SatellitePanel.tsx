@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { api, ApiError, PlotGeometry, SatelliteCheckOut, SatelliteTrend } from "@/lib/api";
 import PlotMap from "./PlotMap";
+import { FindingCard, findingTone } from "@/components/ui/FindingCard";
+import { Spinner } from "@/components/ui/Spinner";
 
 const POLL_MS = 5000;
 const BN = "০১২৩৪৫৬৭৮৯";
@@ -17,7 +19,7 @@ const METRICS: { key: string; label: string; unit: string }[] = [
 function MetricChart({ label, unit, trend, outliers }: { label: string; unit: string; trend: SatelliteTrend; outliers: number[] }) {
   const pts = trend.series;
   if (pts.length < 2) return null;
-  const W = 320, H = 140, L = 34, R = 10, T = 12, B = 26;
+  const W = 340, H = 175, L = 36, R = 12, T = 14, B = 30;
   const years = pts.map((p) => p.year);
   const values = pts.map((p) => p.value);
   const y0 = 0, y1 = Math.max(5, Math.ceil(Math.max(...values) / 5) * 5);
@@ -30,16 +32,16 @@ function MetricChart({ label, unit, trend, outliers }: { label: string; unit: st
     p.low_confidence ? "কম নির্ভরযোগ্য বছর (ছবি কম বা মান ভালো নয়), প্রবণতায় ধরা হয়নি"
       : outliers.includes(p.year) ? "ব্যতিক্রমী বছর (এক বছরের অস্বাভাবিক ছবি), প্রবণতায় ধরা হয়নি" : "প্রবণতায় ধরা হয়েছে";
   return (
-    <figure className="min-w-0 rounded-lg border border-line bg-bg/40 p-2">
-      <figcaption className="px-1 text-sm font-semibold">{label} ({unit})</figcaption>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full text-accent" role="img" aria-label={`${label}, বছর অনুযায়ী`}>
+    <figure className="min-w-0 rounded-[var(--radius-card)] border border-line bg-surface p-3">
+      <figcaption className="px-1 text-sm font-semibold text-ink">{label} ({unit})</figcaption>
+      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-sm text-sat" role="img" aria-label={`${label}, বছর অনুযায়ী`}>
         {[y0, y1 / 2, y1].map((v) => (
           <g key={v}>
             <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} className="stroke-line" strokeWidth={1} />
-            <text x={L - 4} y={y(v) + 4} textAnchor="end" fontSize={10} className="fill-muted">{fmt(v)}</text>
+            <text x={L - 5} y={y(v) + 4} textAnchor="end" fontSize={14} className="fill-muted">{fmt(v)}</text>
           </g>
         ))}
-        {years.map((yr) => <text key={yr} x={x(yr)} y={H - 8} textAnchor="middle" fontSize={10} className="fill-muted">{bn(String(yr).slice(2))}</text>)}
+        {years.map((yr) => <text key={yr} x={x(yr)} y={H - 8} textAnchor="middle" fontSize={14} className="fill-muted">{bn(String(yr).slice(2))}</text>)}
         <path d={path} fill="none" stroke="currentColor" strokeWidth={2} />
         {pts.map((p) => (
           <circle key={p.year} cx={x(p.year)} cy={y(p.value)} r={flagged(p) ? 4.5 : 3.5} strokeWidth={2}
@@ -64,14 +66,13 @@ function SatelliteResults({ check }: { check: SatelliteCheckOut }) {
         })}
       </div>
       <p className="text-xs text-muted">ভরাট বিন্দু: প্রবণতায় ধরা বছর। ফাঁপা বিন্দু: ব্যতিক্রমী বা কম নির্ভরযোগ্য বছর (বিন্দুর ওপর মাউস রাখলে কারণ দেখাবে)।</p>
-      <section className="space-y-2">
-        <h3 className="font-semibold">যা দেখা গেছে</h3>
+      <section className="space-y-3">
+        <h3 className="font-heading text-lg font-bold text-ink">যা দেখা গেছে</h3>
         {findings.length ? findings.map((f) => (
-          <article key={f.rule_id} className={`space-y-1 rounded-xl border p-3 ${f.status === "warn" || f.status === "bad" ? "border-warn/40 bg-warn-bg/40" : "border-line bg-bg/40"}`}>
-            <h4 className="font-semibold">{f.title_bn}</h4>
+          <FindingCard key={f.rule_id} tone={findingTone(f.status)} title={f.title_bn}>
             <p className="text-sm leading-relaxed">{f.message_bn}</p>
-            {typeof f.values?.next_action_bn === "string" && <p className="text-sm"><strong>এরপর:</strong> {f.values.next_action_bn}</p>}
-          </article>
+            {typeof f.values?.next_action_bn === "string" && <p className="text-sm leading-relaxed"><strong>এরপর:</strong> {f.values.next_action_bn}</p>}
+          </FindingCard>
         )) : <p className="rounded-xl border border-line bg-bg/40 p-3 text-sm text-muted">স্যাটেলাইট ছবিতে আশেপাশে সতর্ক হওয়ার মতো কোনো পরিবর্তন ধরা পড়েনি। এর মানে এই নয় যে জমিতে কোনো সমস্যা নেই; মাঠে গিয়ে নিজে দেখুন।</p>}
       </section>
     </div>
@@ -113,21 +114,47 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
 
   const pending = check?.status === "pending";
   return (
-    <section className="space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-5" aria-labelledby="satellite-title">
-      <div className="space-y-1">
-        <h2 id="satellite-title" className="font-heading text-lg font-bold">স্যাটেলাইট যাচাই</h2>
+    <section className="space-y-4 rounded-[var(--radius-card)] border border-line border-t-4 border-t-sat bg-surface p-4 shadow-[var(--shadow-card)] sm:p-5" aria-labelledby="satellite-title">
+      <div className="space-y-2">
+        <p className="inline-flex items-center gap-2 rounded-full bg-sat-soft px-3 py-1 text-xs font-semibold text-sat">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4"><path d="M4 12a8 8 0 0 1 8-8m-5 8a5 5 0 0 1 5-5m-1 8 7-7m-4 0h4v4M10 18l-2 2m6-6 6 6-2 2-6-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          মাঠের ছবি
+        </p>
+        <h2 id="satellite-title" className="font-heading text-xl font-bold text-ink">স্যাটেলাইট যাচাই</h2>
         <p className="text-sm leading-relaxed text-muted">মানচিত্রে প্লটের সীমানা আঁকুন। ২০১৯ থেকে প্রতি বছরের ফেব্রুয়ারির (শুকনো মৌসুম) স্যাটেলাইট ছবিতে প্লটের আশেপাশে গাছ ও পানি কেমন বদলেছে তা দেখা হবে।</p>
-        <p className="text-sm font-semibold text-warn">ছবির প্রতিটি বিন্দু ১০ মিটার, তাই ফলাফল প্লটের চারপাশের প্রায় ২০০ মিটার এলাকার, প্লটের সীমানার ভেতরের নয়।</p>
+        <p className="flex items-start gap-2 text-xs leading-relaxed text-muted">
+          <span aria-hidden="true" className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-muted text-[10px] font-bold">i</span>
+          ছবির প্রতিটি বিন্দু ১০ মিটার, তাই ফলাফল প্লটের চারপাশের প্রায় ২০০ মিটার এলাকার, প্লটের সীমানার ভেতরের নয়।
+        </p>
       </div>
-      <PlotMap landId={landId} geometry={geometry} onSaved={setShape} />
+      <div className="-mx-4 sm:mx-0">
+        <PlotMap landId={landId} geometry={geometry} onSaved={setShape} />
+      </div>
+      {!shape && (
+        <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-bg/60 p-4 text-sm leading-relaxed">
+          <p className="font-semibold text-ink">এখনো সীমানা আঁকা হয়নি</p>
+          <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-muted">
+            <li>মানচিত্রের ডান দিকের বহুভুজ বোতাম চাপুন।</li>
+            <li>প্লটের প্রতিটি কোণে একবার করে ক্লিক করুন, শেষে প্রথম বিন্দুতে ক্লিক করুন।</li>
+            <li>“সীমানা রাখুন” চাপুন, তারপর স্যাটেলাইট যাচাই শুরু করুন।</li>
+          </ol>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" onClick={start} disabled={!shape || starting || pending} className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+        <button type="button" onClick={start} disabled={!shape || starting || pending} className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">
           {starting ? "শুরু হচ্ছে…" : pending ? "যাচাই চলছে…" : "স্যাটেলাইট যাচাই করুন"}
         </button>
-        {!shape && <span className="text-sm text-muted">আগে সীমানা এঁকে রাখুন।</span>}
-        {pending && <span role="status" className="text-sm text-muted">সাত বছরের ছবি দেখতে কয়েক মিনিট লাগে। এই পাতা খোলা রাখুন।</span>}
         {check && !pending && <span className="text-xs text-muted">শেষ যাচাই: {new Date(check.created_at).toLocaleString("bn-BD")}</span>}
       </div>
+      {(pending || starting) && (
+        <div role="status" aria-live="polite" className="flex items-start gap-3 rounded-[var(--radius-card)] border border-sat/30 bg-sat-soft p-4 text-sm">
+          <Spinner size="sm" />
+          <div className="space-y-1">
+            <p className="font-semibold text-ink">স্যাটেলাইট ছবি দেখা হচ্ছে…</p>
+            <p className="leading-relaxed text-muted">২০১৯ থেকে ২০২৫ পর্যন্ত সাত বছরের ছবি দেখতে সাধারণত এক থেকে কয়েক মিনিট লাগে। এই পাতা খোলা রাখুন, ফল এলে এখানেই দেখাবে।</p>
+          </div>
+        </div>
+      )}
       {error && <p role="alert" className="rounded-lg border border-bad/40 bg-bad-bg p-3 text-sm">{error}</p>}
       {check?.status === "failed" && <p role="alert" className="rounded-lg border border-bad/40 bg-bad-bg p-3 text-sm">{check.error || "যাচাই করা যায়নি।"}</p>}
       {check?.status === "ok" && check.result && <SatelliteResults check={check} />}

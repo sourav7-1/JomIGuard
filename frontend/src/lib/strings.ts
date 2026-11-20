@@ -1,9 +1,10 @@
 export const strings = {
   app: {
-    name: "JomiGuard",
+    name: "JomiGuard Sentinel",
+    independentNote: "JomiGuard Sentinel একটি স্বাধীন প্রকল্প, এটি কোনো সরকারি সেবা নয়।",
     tagline: "জমি কেনার আগে, কেনার সময় আর কেনার পরে দলিল ও তথ্যের যাচাই",
     taglineShort: "দলিল ও তথ্যের যাচাই",
-    footerText: "স্বত্ব © ২০২৬ JomiGuard। এটি কোনো আইনি পরামর্শ নয়।",
+    footerText: "স্বত্ব © ২০২৬ JomiGuard Sentinel। এটি কোনো আইনি পরামর্শ নয়।",
     disclaimer:
       "কাগজে সব মিললেও মামলা, দখল বা গোপন বন্ধক কাগজে ধরা পড়ে না। তাই এই ব্যবস্থা কেবল বলে কী মিলেছে, কী মেলেনি, আর এরপর কী করণীয়।",
   },
