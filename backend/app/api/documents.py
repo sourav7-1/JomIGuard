@@ -24,6 +24,7 @@ from app.schemas.document import (
     count_needs_review,
 )
 from app.schemas.extraction import ExtractionOut
+from app.services import demo_guard
 from app.services.corrections import CorrectionRequest, apply_corrections
 from app.services.storage import Storage, get_storage
 from app.workers.tasks import process_document_task
@@ -75,6 +76,10 @@ def upload_document(
         and db.scalar(select(Land.id).where(Land.id == land_id, Land.owner_id == user.id)) is None
     ):
         raise HTTPException(404, "Land not found")
+    if demo_guard.is_prepared_sample(db, land_id):
+        raise HTTPException(403, demo_guard.SAMPLE_LOCKED_BN)
+    if not demo_guard.upload_allowed(db, user.id):
+        raise HTTPException(429, demo_guard.UPLOAD_LIMIT_BN)
 
     data = read_capped(file)
     # strip client-supplied paths ("../x", "C:\x") so the key stays under the doc id
@@ -130,6 +135,8 @@ def list_documents(
 @router.post("/{document_id}/reprocess", response_model=DocumentOut, status_code=202)
 def reprocess_document(document_id: uuid.UUID, db: Db, user: CurrentUser):
     doc = _owned_document(db, document_id, user)
+    if demo_guard.is_prepared_sample(db, doc.land_id):
+        raise HTTPException(403, demo_guard.SAMPLE_LOCKED_BN)
     process_document_task.delay(str(doc.id), force=True)
     return doc
 
@@ -148,6 +155,10 @@ def attach_document(document_id: uuid.UUID, body: DocumentPatch, db: Db, user: C
         is None
     ):
         raise HTTPException(404, "Land not found")
+    if demo_guard.is_prepared_sample(db, doc.land_id) or demo_guard.is_prepared_sample(
+        db, body.land_id
+    ):
+        raise HTTPException(403, demo_guard.SAMPLE_LOCKED_BN)
     doc.land_id = body.land_id
     db.commit()
     return doc
@@ -298,6 +309,8 @@ def patch_document_extraction(
 ):
     """Apply human corrections and field confirmations, saving a new extraction row."""
     doc = _owned_document(db, document_id, user)
+    if demo_guard.is_prepared_sample(db, doc.land_id):
+        raise HTTPException(403, demo_guard.SAMPLE_LOCKED_BN)
 
     latest = db.scalars(
         select(Extraction)

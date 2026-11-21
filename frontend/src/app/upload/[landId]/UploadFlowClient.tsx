@@ -1,18 +1,22 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import {
   DocumentDropZone,
+  type DropZoneHandle,
   type PendingUpload,
 } from "@/components/upload/DocumentDropZone";
 import { DocumentProgressCard } from "@/components/upload/DocumentProgressCard";
 import { RecommendedDocList } from "@/components/upload/RecommendedDocList";
+import { SampleSetCard } from "@/components/upload/SampleSetCard";
+import { En } from "@/components/ui/En";
 import { api, type DocumentStatusOut, type LandOut } from "@/lib/api";
 import { strings } from "@/lib/strings";
+import { bnDigits } from "@/lib/digits";
 
 export interface UploadFlowClientProps {
   landId: string;
@@ -28,6 +32,7 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAssessing, setIsAssessing] = useState(false);
   const [assessError, setAssessError] = useState<string | null>(null);
+  const dropZone = useRef<DropZoneHandle>(null);
 
   // 1. Load land details and existing documents on mount (so page survives refresh)
   useEffect(() => {
@@ -156,7 +161,8 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
                 {strings.uploadFlow.landInfoPrefix}
               </span>
               <span>মৌজা: {land.mouza}</span>
-              {land.dag_no && <span>• দাগ: {land.dag_no}</span>}
+              {land.dag_no && <span>• দাগ: {bnDigits(land.dag_no)}</span>}
+              {land.khatian_no && <span>• খতিয়ান: {bnDigits(land.khatian_no)}</span>}
               {land.upazila && <span>• উপজেলা: {land.upazila}</span>}
             </p>
           )}
@@ -174,7 +180,10 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left Column (2 cols on lg): Drop zone & Document Progress Cards */}
         <div className="lg:col-span-2 space-y-6">
+          <SampleSetCard landId={landId} dropZone={dropZone} hasDocuments={documents.length > 0} />
+
           <DocumentDropZone
+            ref={dropZone}
             landId={landId}
             onUploadStart={handleUploadStart}
             onUploadProgress={handleUploadProgress}
@@ -185,13 +194,21 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
           {/* Documents Section */}
           <div className="space-y-3">
             <h2 className="text-base font-bold font-heading text-ink">
-              কাগজপত্র ({documents.length})
+              কাগজপত্র ({bnDigits(documents.length)})
             </h2>
 
             {documents.length === 0 && Object.keys(pendingUploads).length === 0 ? (
               <Card className="p-8 text-center border-dashed bg-surface/50">
                 <p className="text-sm text-muted">
                   {strings.uploadFlow.noDocsYet}
+                  <En>No documents yet.</En>
+                </p>
+                <p className="mt-2 text-sm">
+                  হাতে কাগজ নেই?{" "}
+                  <a href="#samples" className="font-semibold text-accent underline underline-offset-4 hover:no-underline">
+                    উপরের নমুনা কাগজ দিয়ে চেষ্টা করুন
+                  </a>
+                  <En className="text-muted">No papers at hand? Use the sample documents above.</En>
                 </p>
               </Card>
             ) : (

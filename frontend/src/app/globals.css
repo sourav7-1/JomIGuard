@@ -333,3 +333,10 @@ html:has(dialog.modal[open]) { overflow: hidden; }
   html:not([data-theme="light"]) .from-accent.text-white { color: var(--bg); }
   html:not([data-theme="light"]) .from-accent { background-image: none; background-color: var(--accent); }
 }
+
+/* Guided tour: full-screen transparent dialog, spotlight hole, tooltip docked at the bottom. */
+dialog.tour { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; overflow: hidden; }
+dialog.tour::backdrop { background: transparent; }
+.tour-spot { position: fixed; border-radius: var(--radius-card); box-shadow: 0 0 0 200vmax rgb(12 15 32 / 0.55), 0 0 0 3px var(--accent); transition: all var(--dur-base) var(--ease); pointer-events: none; }
+.tour-tip { position: fixed; left: 0.75rem; right: 0.75rem; bottom: calc(5.5rem + env(safe-area-inset-bottom)); max-height: 55dvh; overflow-y: auto; }
+@media (min-width: 768px) { .tour-tip { left: auto; right: 1.5rem; bottom: 1.5rem; width: 26rem; } }

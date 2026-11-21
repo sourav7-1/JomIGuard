@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api, LandCaseViewOut } from "@/lib/api";
 import { strings } from "@/lib/strings";
 import { Spinner } from "@/components/ui/Spinner";
+import { bnDigits } from "@/lib/digits";
 
 interface CaseHeaderProps {
   caseView: LandCaseViewOut;
@@ -42,12 +43,12 @@ export function CaseHeader({ caseView, onAssessmentTriggered }: CaseHeaderProps)
             </span>
             {land.dag_no && (
               <span className="text-sm md:text-base font-mono bg-bg/80 px-2 py-0.5 rounded border border-line">
-                দাগ {land.dag_no}
+                দাগ {bnDigits(land.dag_no)}
               </span>
             )}
             {land.khatian_no && (
               <span className="text-sm md:text-base font-mono bg-bg/80 px-2 py-0.5 rounded border border-line">
-                খতিয়ান {land.khatian_no}
+                খতিয়ান {bnDigits(land.khatian_no)}
               </span>
             )}
           </h1>

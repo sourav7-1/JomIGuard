@@ -1,0 +1,33 @@
+{
+  "id": "C",
+  "scenario": "dag_mismatch",
+  "seed": 440821892,
+  "land": {
+    "district": "বরিশাল",
+    "upazila": "গৌরনদী",
+    "mouza": "চাঁদশী",
+    "dag_no": "2976",
+    "khatian_no": "144"
+  },
+  "files": [
+    {
+      "name": "1-khatian.png",
+      "doc_type": "khatian"
+    },
+    {
+      "name": "2-deed.png",
+      "doc_type": "deed"
+    },
+    {
+      "name": "3-mutation.png",
+      "doc_type": "dcr"
+    }
+  ],
+  "mismatch": {
+    "type": "dag_mismatch",
+    "field": "schedule_plots[0].dag_no",
+    "khatian_value": "2976",
+    "deed_value": "1945"
+  },
+  "dropped_heir": null
+}

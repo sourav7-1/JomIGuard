@@ -1,5 +1,5 @@
 # vendored OFL fonts + licenses stay byte-identical to upstream (and exceed the size limit)
-exclude: ^ml/synth/fonts/
+exclude: ^(ml/synth/fonts/|backend/app/assets/fonts/)
 
 repos:
   # Windows Smart App Control blocks the python.exe in pre-commit's own venvs, so every hook

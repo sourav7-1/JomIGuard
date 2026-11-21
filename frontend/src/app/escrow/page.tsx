@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { strings } from "@/lib/strings";
+import { bnDigits } from "@/lib/digits";
 
 const steps = [
   { title: "চুক্তির শর্ত ঠিক করুন", detail: "বায়না কোন শর্তে ছাড় হবে বা ফেরত যাবে তা চুক্তিতে নির্ধারিত থাকে।" },
@@ -19,7 +20,7 @@ export default function EscrowPage() {
       <section aria-label="বায়না Escrow-এর ধাপ" className="grid divide-y divide-line border-y border-line md:grid-cols-3 md:divide-x md:divide-y-0">
         {steps.map((step, index) => (
           <article key={step.title} className="py-6 md:px-6 md:first:pl-0 md:last:pr-0">
-            <p className="font-mono text-sm text-gold">০{index + 1}</p>
+            <p className="font-mono text-sm text-gold">{bnDigits(`0${index + 1}`)}</p>
             <h2 className="mt-4 text-xl font-semibold text-ink">{step.title}</h2>
             <p className="mt-2 text-sm leading-7 text-muted">{step.detail}</p>
           </article>

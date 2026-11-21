@@ -15,6 +15,7 @@ import {
 } from "@/lib/api";
 import { SatellitePanel } from "@/components/case/SatellitePanel";
 import { CaseTracker } from "@/components/case/CaseTracker";
+import { SampleCompare } from "@/components/case/SampleCompare";
 import { strings } from "@/lib/strings";
 import { CaseSkeleton } from "@/components/ui/Skeleton";
 import { Modal, useConfirm } from "@/components/ui/Modal";
@@ -272,6 +273,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
         const skippedChecks = assessment.coverage.checks_skipped ?? [];
         return <section id="risk-summary" className="scroll-mt-40 space-y-4">
           <VerdictBox riskLevel={assessment.risk_level as "low" | "medium" | "high"} title={assessment.headline_bn} summary={assessment.summary_bn} />
+          <SampleCompare landId={landId} risk={assessment.risk_level} ruleIds={findings.map((f) => f.rule_id)} />
           <p className="rounded-lg border border-line bg-surface p-3 text-sm text-muted">
             {assessmentDiff?.previous ? <>{riskName(assessmentDiff.previous.risk_level)} → {riskName(assessmentDiff.risk_level)}। {assessmentDiff.added_findings.length ? `${strings.casePage.diffAdded}: ${assessmentDiff.added_findings.join(", ")}. ` : ""}{assessmentDiff.removed_findings.length ? `${strings.casePage.diffRemoved}: ${assessmentDiff.removed_findings.join(", ")}.` : ""}{!assessmentDiff.added_findings.length && !assessmentDiff.removed_findings.length ? strings.casePage.diffSame : ""}</> : strings.casePage.diffFirst}
           </p>
@@ -279,7 +281,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
             <button type="button" onClick={runAssessment} disabled={assessing} className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{assessing ? strings.casePage.loadingAssessment : strings.casePage.retryAssessment}</button>
             <button type="button" onClick={() => api.downloadReport(landId, assessment.id).catch((e) => setError(e.message))} className="min-h-11 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-semibold">{strings.casePage.pdfReport}</button>
           </div>
-          <section className="space-y-3"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.findingsHeading}</h2>
+          <section data-tour="findings" className="space-y-3"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.findingsHeading}</h2>
             {findings.length ? findings.map((finding, i) => <FindingCard key={`${finding.rule_id}-${i}`} tone={findingTone(finding.status)} title={finding.title_bn}><p className="text-sm leading-relaxed">{finding.message_bn}</p><div className="flex flex-wrap gap-2">{(finding.sources ?? []).map((source, j) => <button key={`${source.source_id}-${source.field_path}-${j}`} type="button" onClick={() => focusSource(source.source_id, source.field_path)} aria-haspopup="dialog" className="inline-flex min-h-11 max-w-full items-center gap-2 break-words rounded-[var(--radius-control)] border border-edge bg-surface px-3 py-2 text-left text-xs font-medium text-accent shadow-rest transition-shadow hover:shadow-raised"><span aria-hidden="true">⧉</span>{strings.casePage.sourcePrefix}: {source.label_bn} → {source.value_bn || source.printed_text || source.field_path}</button>)}</div></FindingCard>) : <p className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">{strings.casePage.noFindings}</p>}
           </section>
           <section className="space-y-3"><h2 className="font-heading text-xl font-bold text-ink">{strings.casePage.passedHeading}</h2>

@@ -22,26 +22,19 @@ export function RecommendedDocList({
   assessError,
   className = "",
 }: RecommendedDocListProps) {
-  // Check which types are satisfied by finished documents
+  // A type is ticked when a document of that type was declared at upload (or detected when read),
+  // unless reading it failed.
   const doneDocs = documents.filter((d) => d.status === "done");
-
-  const hasCurrentKhatian = doneDocs.some(
-    (d) => d.detected_doc_type === "khatian" || d.doc_type === "khatian"
-  );
-
-  const deedDocs = doneDocs.filter(
-    (d) => d.detected_doc_type === "deed" || d.doc_type === "deed"
-  );
+  const typedDocs = documents.filter((d) => d.status !== "failed");
+  const isType = (d: DocumentStatusOut, t: string) => d.detected_doc_type === t || d.doc_type === t;
+  const hasCurrentKhatian = typedDocs.some((d) => isType(d, "khatian"));
+  const deedDocs = typedDocs.filter((d) => isType(d, "deed"));
   const hasDraftDeed = deedDocs.length > 0;
   const hasPriorDeed = deedDocs.length > 1;
 
-  const hasMutation = doneDocs.some(
-    (d) => d.detected_doc_type === "dcr" || d.doc_type === "dcr"
-  );
+  const hasMutation = typedDocs.some((d) => isType(d, "dcr"));
 
-  const hasHeirCert = doneDocs.some(
-    (d) => d.detected_doc_type === "heir_cert" || d.doc_type === "heir_cert"
-  );
+  const hasHeirCert = typedDocs.some((d) => isType(d, "heir_cert"));
 
   const recommendedItems = [
     { id: "khatian", label: strings.uploadFlow.recCurrentKhatian, checked: hasCurrentKhatian },
@@ -64,7 +57,7 @@ export function RecommendedDocList({
           <span>📋</span> {strings.uploadFlow.recommendedTitle}
         </h3>
         <p className="text-xs text-muted leading-relaxed">
-          কাগজের ধরন চিহ্নিত হলে পাশের বক্সে টিকচিহ্ন আসবে
+          কাগজের ধরন জানা গেলে পাশের বক্সে টিকচিহ্ন আসবে
         </p>
       </div>
 

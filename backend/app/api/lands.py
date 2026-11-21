@@ -39,6 +39,7 @@ from app.schemas.satellite import (
     SatelliteCheckOut,
     SatelliteCheckView,
 )
+from app.services import demo_guard
 from app.services.actions import next_actions
 from app.services.deed_archive import compare_deeds, integrity_status
 from app.services.land_case import load_land_case
@@ -620,6 +621,8 @@ def assessment_report(land_id: uuid.UUID, assessment_id: uuid.UUID, db: Db, user
 def set_land_geometry(land_id: uuid.UUID, body: PlotGeometry, db: Db, user: CurrentUser):
     """Save the plot outline drawn on the map (Polygon, inside Bangladesh, <= 50 acres)."""
     land = _owned_land(db, land_id, user)
+    if demo_guard.is_prepared_sample(db, land.id):
+        raise HTTPException(403, demo_guard.SAMPLE_LOCKED_BN)
     land.geometry = body.model_dump()
     db.commit()
     return land
@@ -634,8 +637,12 @@ def start_satellite_check(
 ):
     """Queue a satellite check; poll GET .../satellite-check/latest for the result."""
     land = _owned_land(db, land_id, user)
+    if demo_guard.is_prepared_sample(db, land.id):
+        raise HTTPException(403, demo_guard.SAMPLE_LOCKED_BN)
     if not land.geometry:
         raise HTTPException(409, NO_GEOMETRY_BN)
+    if not demo_guard.satellite_allowed(db, user.id):
+        raise HTTPException(429, demo_guard.SATELLITE_LIMIT_BN)
     body = body or SatelliteCheckIn()
     check = start_check(db, land, body.buffer_m, body.years)
     db.commit()

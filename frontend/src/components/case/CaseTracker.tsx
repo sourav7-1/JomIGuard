@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { api, LandCaseViewOut, SatelliteCheckOut } from "@/lib/api";
+import { bnDigits } from "@/lib/digits";
 
 type Tone = "done" | "warn" | "bad" | "running" | "todo";
 type Step = { label: string; status: string; tone: Tone; href: string };
 
-const BN = "০১২৩৪৫৬৭৮৯";
-const bn = (n: number) => String(n).replace(/\d/g, (d) => BN[Number(d)]);
+const bn = bnDigits;
 
 const toneStyle: Record<Tone, { dot: string; text: string; mark: string }> = {
   done: { dot: "border-ok bg-ok text-white", text: "text-ok", mark: "✓" },
@@ -122,7 +122,7 @@ export function CaseTracker({ landId, caseView }: { landId: string; caseView: La
         })}
       </ol>
       </div>
-      <div className="rounded-[var(--radius-card)] border border-accent/20 bg-gradient-to-br from-accent-soft/80 to-surface p-4">
+      <div data-tour="next" className="rounded-[var(--radius-card)] border border-accent/20 bg-gradient-to-br from-accent-soft/80 to-surface p-4">
         <h3 className="font-semibold text-ink">এখন কী করবেন</h3>
         {todo.length ? (
           <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-7 text-ink">

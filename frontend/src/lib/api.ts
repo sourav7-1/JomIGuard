@@ -119,6 +119,10 @@ export const api = {
   logout: () => apiFetch<void>("/auth/logout", { method: "POST" }),
   getMe: () => apiFetch<{ id: string; username: string }>("/auth/me", { method: "GET" }),
   getLands: () => apiFetch<LandOut[]>("/lands", { method: "GET" }),
+  // judge demo (backend app/api/demo.py)
+  demoPackCase: (packId: string) => apiFetch<LandOut>(`/demo/packs/${packId}/case`, { method: "POST" }),
+  demoPlotCase: (plotId: string) => apiFetch<LandOut>(`/demo/plots/${plotId}/case`, { method: "POST" }),
+  demoStatus: () => apiFetch<DemoStatus>("/demo/status", { method: "GET" }),
   createSellerLink: (landId: string, sellerName: string) =>
     apiFetch<{ url: string; expires_at: string }>(`/lands/${landId}/seller-links`, {
       method: "POST", body: { seller_name_on_deed: sellerName },
@@ -338,3 +342,5 @@ export type SatelliteCheckOut = {
 };
 
 export type { paths };
+
+export type DemoStatus = { backend: boolean; sentinel: boolean; earth_engine: boolean | null; last_check_at: string | null; last_ok_at: string | null; satellite_limit_per_hour: number };

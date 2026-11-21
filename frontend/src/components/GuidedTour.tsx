@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { BHOLA_CASE } from "@/lib/services";
 import { En } from "@/components/ui/En";
+import { bnDigits } from "@/lib/digits";
 
 // Step-by-step judge tour. Spotlight + docked tooltip inside a native <dialog> (focus trap, Esc).
 // Steps on a case page use the case the tour was started for (Bhola by default).
@@ -41,7 +42,7 @@ const store = { get: (k: string) => { try { return localStorage.getItem(k); } ca
 export const startTour = (step = 0, casePath?: string) =>
   window.dispatchEvent(new CustomEvent("jomiguard:tour", { detail: { step, casePath } }));
 
-const bnNum = (n: number) => String(n).replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
+const bnNum = bnDigits;
 
 export function GuidedTour() {
   const pathname = usePathname();
@@ -90,7 +91,7 @@ export function GuidedTour() {
   // Go to the step's page, wait for its target, scroll it into view and follow it.
   useEffect(() => {
     if (!step || !path) return;
-    if (pathname !== path.split("#")[0]) { setRect(null); router.push(path); return; }
+    if (pathname !== path.split("#")[0]) { router.push(path); return; }
     let el: Element | null = null;
     let raf = 0;
     const started = Date.now();
@@ -116,13 +117,14 @@ export function GuidedTour() {
   }, [step, path, pathname, router]);
 
   const pad = 8;
+  const spot = rect && path && pathname === path.split("#")[0] ? rect : null;
   return (
     <dialog ref={ref} className="tour" aria-labelledby={titleId} aria-describedby={bodyId}
       onCancel={(e) => { e.preventDefault(); close(); }}
       onWheel={(e) => window.scrollBy(0, e.deltaY)}>
       {step && run && <>
-        {rect
-          ? <div aria-hidden="true" className="tour-spot" style={{ top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 }} />
+        {spot
+          ? <div aria-hidden="true" className="tour-spot" style={{ top: spot.top - pad, left: spot.left - pad, width: spot.width + pad * 2, height: spot.height + pad * 2 }} />
           : <div aria-hidden="true" className="fixed inset-0 bg-[rgb(12_15_32/0.55)]" />}
         <section className="tour-tip animate-fade-up rounded-[var(--radius-card)] border border-edge bg-surface p-4 text-ink shadow-overlay sm:p-5">
           <p className="text-xs font-semibold text-accent">ধাপ {bnNum(run.step + 1)} / {bnNum(STEPS.length)} <span lang="en" className="font-normal text-muted">· Step {run.step + 1} of {STEPS.length}</span></p>
@@ -130,7 +132,7 @@ export function GuidedTour() {
           <div id={bodyId} className="mt-2 space-y-1">
             <p className="text-sm leading-6">{step.body}</p>
             <p lang="en" className="text-xs leading-5 text-muted">{step.bodyEn}</p>
-            {!rect && <p role="status" className="text-xs text-muted">পাতাটি লোড হচ্ছে… <span lang="en">Loading the page…</span></p>}
+            {!spot && <p role="status" className="text-xs text-muted">পাতাটি লোড হচ্ছে… <span lang="en">Loading the page…</span></p>}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button type="button" onClick={close} className="min-h-11 rounded-[var(--radius-control)] px-3 text-sm font-semibold text-muted hover:bg-bg">বাদ দিন<En>Skip</En></button>

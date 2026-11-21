@@ -7,6 +7,8 @@ import { strings } from "@/lib/strings";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ToastProvider } from "@/components/ui/Toast";
+import { GuidedTour } from "@/components/GuidedTour";
+import { HelpButton } from "@/components/HelpButton";
 
 const tiroBangla = Tiro_Bangla({
   weight: "400",
@@ -53,6 +55,10 @@ export default function RootLayout({
             <AuthGuard>{children}</AuthGuard>
           </Suspense>
         </main>
+        <Suspense fallback={null}>
+          <GuidedTour />
+          <HelpButton />
+        </Suspense>
         <footer className="w-full border-t border-line bg-surface/50 mt-auto py-6">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pb-24 text-sm text-muted sm:px-6 md:flex-row md:items-start md:justify-between md:pb-6 lg:px-8">
             <p className="max-w-3xl leading-relaxed">

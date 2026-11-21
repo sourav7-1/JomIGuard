@@ -9,10 +9,10 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { RuleResultOut } from "@/lib/api";
+import { bnDigits } from "@/lib/digits";
 
 const POLL_MS = 5000;
-const BN = "০১২৩৪৫৬৭৮৯";
-const bn = (v: number | string) => String(v).replace(/\d/g, (d) => BN[Number(d)]);
+const bn = bnDigits;
 const fmt = (v: number) => bn(Number.isInteger(v) ? v : v.toFixed(1));
 
 const METRICS: { key: string; label: string; unit: string }[] = [

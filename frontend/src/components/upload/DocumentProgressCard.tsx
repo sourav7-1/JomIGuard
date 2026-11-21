@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { api, type DocumentStatusOut } from "@/lib/api";
 import { strings } from "@/lib/strings";
+import { bnDigits } from "@/lib/digits";
 
 export interface DocumentProgressCardProps {
   document: DocumentStatusOut;
@@ -173,7 +174,7 @@ export function DocumentProgressCard({
               <span>{doc.step_label_bn || doc.status_label_bn}</span>
               {isUploading && (
                 <span className="font-mono text-accent">
-                  ({strings.uploadFlow.uploading} {uploadPercent}%)
+                  ({strings.uploadFlow.uploading} {bnDigits(uploadPercent)}%)
                 </span>
               )}
             </div>

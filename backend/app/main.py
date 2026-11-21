@@ -4,6 +4,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
+from app.api.demo import router as demo_router
 from app.api.documents import router as documents_router
 from app.api.escrow import router as escrow_router
 from app.api.guardian import router as guardian_router
@@ -40,6 +41,7 @@ app.include_router(auth_router)
 app.include_router(identity_router)
 app.include_router(guardian_router)
 app.include_router(escrow_router)
+app.include_router(demo_router)
 
 
 @app.get("/health")

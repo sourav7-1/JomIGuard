@@ -9,9 +9,9 @@ import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { services } from "@/lib/services";
+import { bnDigits } from "@/lib/digits";
 
-const BN = "০১২৩৪৫৬৭৮৯";
-const bn = (s: string) => s.replace(/\d/g, (d) => BN[Number(d)]);
+const bn = bnDigits;
 
 // Where "কেস খুলুন" lands for each service (anchors on the case page).
 const TARGET: Record<string, string> = { satellite: "#satellite-title", seller: "#seller-identity" };

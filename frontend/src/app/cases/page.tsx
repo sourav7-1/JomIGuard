@@ -7,8 +7,9 @@ import { strings } from "@/lib/strings";
 import { Card } from "@/components/ui/Card";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { isListedLand } from "@/lib/bd-locations";
+import { bnDigits } from "@/lib/digits";
 
-const bn = (s: string) => s.replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
+const bn = bnDigits;
 
 export default function CasesPage() {
   const [lands, setLands] = useState<LandOut[] | null>(null);

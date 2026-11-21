@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useImperativeHandle, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { strings } from "@/lib/strings";
 import {
@@ -9,6 +9,8 @@ import {
   validateFilePrecheck,
 } from "@/lib/upload";
 import type { DocumentStatusOut } from "@/lib/api";
+import { fetchSampleFile } from "@/lib/samples";
+import { En } from "@/components/ui/En";
 
 export interface PendingUpload {
   id: string;
@@ -19,7 +21,16 @@ export interface PendingUpload {
   docType?: string;
 }
 
+/** Lets the sample card add files through this same upload path (same checks, API and progress). */
+export interface DropZoneHandle {
+  addFiles: (files: File[], docType: string) => Promise<void>;
+}
+
+// "prior_deed" is only a UI choice: it uploads as doc_type "deed".
+const uploadType = (t: string) => (t === "unknown" ? undefined : t === "prior_deed" ? "deed" : t);
+
 export interface DocumentDropZoneProps {
+  ref?: React.Ref<DropZoneHandle>;
   landId: string;
   onUploadSuccess: (doc: DocumentStatusOut, uploadId: string) => void;
   onUploadStart?: (upload: PendingUpload) => void;
@@ -35,6 +46,7 @@ export function DocumentDropZone({
   onUploadProgress,
   onUploadError,
   className = "",
+  ref,
 }: DocumentDropZoneProps) {
   const [selectedDocType, setSelectedDocType] = useState<string>("unknown");
   const [isDragging, setIsDragging] = useState(false);
@@ -44,7 +56,7 @@ export function DocumentDropZone({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFiles = async (files: FileList | File[]) => {
+  const handleFiles = async (files: FileList | File[], docType: string = selectedDocType) => {
     setLocalError(null);
     if (!files || files.length === 0) return;
 
@@ -65,7 +77,7 @@ export function DocumentDropZone({
         name: file.name,
         progress: 0,
         status: "optimizing",
-        docType: selectedDocType !== "unknown" ? selectedDocType : undefined,
+        docType: uploadType(docType),
       };
 
       onUploadStart?.(pendingItem);
@@ -80,7 +92,7 @@ export function DocumentDropZone({
         // 4. Upload with XHR tracking upload percentage
         const uploadedDoc = await uploadDocumentWithProgress(fileToUpload, {
           landId,
-          docType: selectedDocType !== "unknown" ? selectedDocType : undefined,
+          docType: uploadType(docType),
           onProgress: (percent) => {
             onUploadProgress?.(tempId, percent);
           },
@@ -99,6 +111,27 @@ export function DocumentDropZone({
     // Reset file inputs
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
+  };
+
+  useImperativeHandle(ref, () => ({ addFiles: (files, docType) => handleFiles(files, docType) }));
+
+  // Option B: one synthetic sample of the selected type, rendered for this land.
+  const [loadingSample, setLoadingSample] = useState(false);
+  const addSample = async () => {
+    if (selectedDocType === "unknown") {
+      setLocalError("নমুনা নিতে আগে বেছে নিন কোন কাগজ। (Pick a document type first.)");
+      return;
+    }
+    setLoadingSample(true);
+    setLocalError(null);
+    try {
+      const file = await fetchSampleFile(`/api/demo/lands/${landId}/samples/${selectedDocType}.png`, `sample-${selectedDocType}.png`);
+      await handleFiles([file], selectedDocType);
+    } catch (e) {
+      setLocalError(e instanceof Error ? e.message : strings.uploadFlow.errGenericUpload);
+    } finally {
+      setLoadingSample(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -132,6 +165,7 @@ export function DocumentDropZone({
         >
           <span>📋</span> {strings.uploadFlow.docTypeQuestion}
         </label>
+        <div className="flex flex-wrap items-center gap-2">
         <select
           id="doc-type-select"
           value={selectedDocType}
@@ -140,10 +174,21 @@ export function DocumentDropZone({
         >
           <option value="unknown">{strings.uploadFlow.docTypeUnknown}</option>
           <option value="khatian">{strings.uploadFlow.docTypeKhatian}</option>
-          <option value="deed">{strings.uploadFlow.docTypeDeed}</option>
+          <option value="deed">{strings.uploadFlow.recDraftDeed}</option>
+          <option value="prior_deed">{strings.uploadFlow.recPriorDeed} (আগের দলিল)</option>
           <option value="dcr">{strings.uploadFlow.docTypeDcr}</option>
           <option value="heir_cert">{strings.uploadFlow.docTypeHeirCert}</option>
         </select>
+        <button
+          type="button"
+          onClick={() => void addSample()}
+          disabled={loadingSample || isProcessingFiles}
+          className="min-h-[44px] rounded-lg px-2 text-left text-xs font-semibold text-accent underline underline-offset-4 hover:no-underline disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          {loadingSample ? "নমুনা আনা হচ্ছে…" : "নমুনা ফাইল নিন"}
+          <En className="no-underline">Use a sample</En>
+        </button>
+        </div>
       </div>
 
       {/* Drop Zone */}
