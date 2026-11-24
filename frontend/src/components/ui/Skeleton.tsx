@@ -7,7 +7,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
 /** Card-shaped placeholders for lists. */
 export function ListSkeleton({ rows = 4, className = "grid gap-3 sm:grid-cols-2" }: { rows?: number; className?: string }) {
   return (
-    <div role="status" aria-label="লোড হচ্ছে" className={className}>
+    <div role="status" aria-label="লোড হচ্ছে / Loading" className={className}>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="space-y-3 rounded-[var(--radius-card)] border border-edge bg-surface p-4 shadow-rest">
           <Skeleton className="h-5 w-2/3" />
@@ -22,7 +22,7 @@ export function ListSkeleton({ rows = 4, className = "grid gap-3 sm:grid-cols-2"
 /** Placeholder with the case page's shape: header, tracker, verdict, findings. */
 export function CaseSkeleton() {
   return (
-    <div role="status" aria-label="কেস লোড হচ্ছে" className="mx-auto max-w-6xl space-y-6 py-4">
+    <div role="status" aria-label="কেস লোড হচ্ছে / Loading case" className="mx-auto max-w-6xl space-y-6 py-4">
       <div className="space-y-2"><Skeleton className="h-8 w-72 max-w-full" /><Skeleton className="h-4 w-48" /></div>
       <div className="rounded-[var(--radius-card)] border border-edge bg-surface p-5 shadow-rest">
         <Skeleton className="h-6 w-40" />

@@ -16,7 +16,7 @@ import {
 import { SatellitePanel } from "@/components/case/SatellitePanel";
 import { CaseTracker } from "@/components/case/CaseTracker";
 import { SampleCompare } from "@/components/case/SampleCompare";
-import { strings } from "@/lib/strings";
+import { useLang, useStrings, useEscrowFlow } from "@/lib/lang";
 import { CaseSkeleton } from "@/components/ui/Skeleton";
 import { Modal, useConfirm } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
@@ -31,7 +31,6 @@ import {
   DocumentFieldsPanel,
 } from "@/components/case";
 import { SellerIdentityPanel } from "@/components/case/SellerIdentityPanel";
-import { escrowFlow } from "@/lib/strings";
 
 interface CaseDetailClientProps {
   landId: string;
@@ -49,12 +48,18 @@ function archiveValue(value: unknown): string {
 }
 
 const RISK_BN: Record<string, string> = { low: "কম ঝুঁকি", medium: "মাঝারি ঝুঁকি", high: "উচ্চ ঝুঁকি" };
-const riskName = (level: string) => RISK_BN[level] ?? level;
+const RISK_EN: Record<string, string> = { low: "Low risk", medium: "Medium risk", high: "High risk" };
 // A rule's source field_path names a derived field; the document panel shows the printed one.
+const LOAD_ERROR = "__load__";
 const printedField = (path: string) => path.replace(/name_normalized$/, "name").replace(/_(?:shatangsho|fraction)$/, "_text");
 
 export function CaseDetailClient({ landId, source, field }: CaseDetailClientProps) {
   const router = useRouter();
+  const en = useLang() === "en";
+  const strings = useStrings();
+  const escrowFlow = useEscrowFlow();
+  const t = (b: string, e: string) => (en ? e : b);
+  const riskName = (level: string) => (en ? RISK_EN : RISK_BN)[level] ?? level;
   const [caseView, setCaseView] = useState<LandCaseViewOut | null>(null);
   const [deedArchive, setDeedArchive] = useState<DeedArchiveItemOut[]>([]);
   const [fingerprints, setFingerprints] = useState<Record<string, FingerprintVerificationOut>>({});
@@ -98,7 +103,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
         });
       }
     } catch {
-      setError("কেসের তথ্য লোড করতে সমস্যা হয়েছে।");
+      setError(LOAD_ERROR);
     } finally {
       setLoading(false);
     }
@@ -110,7 +115,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
     try {
       await api.assessLand(landId);
       await fetchData();
-      toast("ok", "নতুন করে মিলিয়ে দেখা হয়েছে।");
+      toast("ok", t("নতুন করে মিলিয়ে দেখা হয়েছে।", "Checked again."));
     } catch (e) {
       const msg = e instanceof Error ? e.message : strings.casePage.assessmentError;
       setError(msg);
@@ -150,7 +155,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
     try {
       await api.updateAction(landId, actionId, done);
       await fetchData();
-      toast("ok", done ? "কাজটি শেষ হিসেবে রাখা হয়েছে।" : "কাজটি আবার খোলা হয়েছে।");
+      toast("ok", done ? t("কাজটি শেষ হিসেবে রাখা হয়েছে।", "Task marked done.") : t("কাজটি আবার খোলা হয়েছে।", "Task reopened."));
     } catch (e) {
       toast("bad", e instanceof Error ? e.message : strings.casePage.assessmentError);
     } finally {
@@ -160,9 +165,9 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
 
   const startEscrow = async () => {
     const ok = await ask({
-      title: "বায়না escrow শুরু করবেন?",
-      message: "এই কেসের জন্য একটি নমুনা বায়না escrow চুক্তির খসড়া তৈরি হবে। ডেমোতে ব্যাংক নমুনা; কোনো আসল টাকা জমা বা স্থানান্তর হয় না।",
-      confirmLabel: "escrow শুরু করুন",
+      title: t("বায়না escrow শুরু করবেন?", "Start bayna escrow?"),
+      message: t("এই কেসের জন্য একটি নমুনা বায়না escrow চুক্তির খসড়া তৈরি হবে। ডেমোতে ব্যাংক নমুনা; কোনো আসল টাকা জমা বা স্থানান্তর হয় না।", "A sample bayna escrow draft will be created for this case. The bank is a sample in the demo; no real money is deposited or moved."),
+      confirmLabel: t("escrow শুরু করুন", "Start escrow"),
     });
     if (!ok) return;
     setEscrowBusy(true);
@@ -171,7 +176,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
         price: "6000000", bayna: "500000",
         deadline: new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10),
       });
-      toast("ok", "escrow খসড়া তৈরি হয়েছে।");
+      toast("ok", t("escrow খসড়া তৈরি হয়েছে।", "Escrow draft created."));
       router.push(`/escrow/${deal.id}`);
     } catch (e) { toast("bad", e instanceof Error ? e.message : strings.casePage.assessmentError); }
     finally { setEscrowBusy(false); }
@@ -212,7 +217,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
       <div className="max-w-2xl mx-auto py-12">
         <EmptyState
           title={strings.casePage.caseNotFound}
-          description={error || strings.casePage.invalidCaseId}
+          description={error === LOAD_ERROR ? t("কেসের তথ্য লোড করতে সমস্যা হয়েছে।", "Could not load the case data.") : error || strings.casePage.invalidCaseId}
           actionLabel={strings.casePage.startCheck}
           actionHref="/upload"
         />
@@ -231,7 +236,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
           actionLabel={strings.casePage.verify}
           actionHref={`/upload/${landId}`}
         />
-        <p className="rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed text-muted"><strong className="block text-ink">{strings.casePage.disclaimerTitle}</strong>{caseView.latest_assessment?.disclaimer_bn || strings.app.disclaimer}</p>
+        <p className="rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed text-muted"><strong className="block text-ink">{strings.casePage.disclaimerTitle}</strong>{(!en && caseView.latest_assessment?.disclaimer_bn) || strings.app.disclaimer}</p>
       </div>
     );
   }
@@ -256,13 +261,13 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
         wide
         open={!!sourceDoc}
         onClose={() => setSourceView(null)}
-        title={sourceDoc ? `উৎস: ${sourceDoc.label_bn}` : ""}
-        description="নথির ছবি আর পড়া তথ্য পাশাপাশি; চিহ্নিত ঘরটি এই অমিলের উৎস।"
-        footer={<button type="button" onClick={() => setSourceView(null)} className="min-h-11 rounded-[var(--radius-control)] border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-bg">বন্ধ করুন</button>}
+        title={sourceDoc ? `${strings.casePage.sourcePrefix}: ${sourceDoc.label_bn}` : ""}
+        description={t("নথির ছবি আর পড়া তথ্য পাশাপাশি; চিহ্নিত ঘরটি এই অমিলের উৎস।", "The document image and the data read from it, side by side; the marked field is the source of this mismatch.")}
+        footer={<button type="button" onClick={() => setSourceView(null)} className="min-h-11 rounded-[var(--radius-control)] border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-bg">{strings.buttons.close}</button>}
       >
         {sourceDoc && <DocumentFieldsPanel key={`modal-${sourceDoc.id}`} document={sourceDoc} fieldMetaList={sourceMeta} onExtractionUpdated={handleExtractionUpdated} highlightField={highlightField} />}
       </Modal>
-      {error && <div role="alert" className="rounded-xl border border-bad/40 bg-bad-bg p-3 text-sm">{error}</div>}
+      {error && error !== LOAD_ERROR && <div role="alert" className="rounded-xl border border-bad/40 bg-bad-bg p-3 text-sm">{error}</div>}
       {caseView.latest_assessment ? (() => {
         const assessment = caseView.latest_assessment;
         const findings = assessment.findings ?? [];
@@ -275,7 +280,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
           <VerdictBox riskLevel={assessment.risk_level as "low" | "medium" | "high"} title={assessment.headline_bn} summary={assessment.summary_bn} />
           <SampleCompare landId={landId} risk={assessment.risk_level} ruleIds={findings.map((f) => f.rule_id)} />
           <p className="rounded-lg border border-line bg-surface p-3 text-sm text-muted">
-            {assessmentDiff?.previous ? <>{riskName(assessmentDiff.previous.risk_level)} → {riskName(assessmentDiff.risk_level)}। {assessmentDiff.added_findings.length ? `${strings.casePage.diffAdded}: ${assessmentDiff.added_findings.join(", ")}. ` : ""}{assessmentDiff.removed_findings.length ? `${strings.casePage.diffRemoved}: ${assessmentDiff.removed_findings.join(", ")}.` : ""}{!assessmentDiff.added_findings.length && !assessmentDiff.removed_findings.length ? strings.casePage.diffSame : ""}</> : strings.casePage.diffFirst}
+            {assessmentDiff?.previous ? <>{riskName(assessmentDiff.previous.risk_level)} → {riskName(assessmentDiff.risk_level)}{en ? ". " : "। "}{assessmentDiff.added_findings.length ? `${strings.casePage.diffAdded}: ${assessmentDiff.added_findings.join(", ")}. ` : ""}{assessmentDiff.removed_findings.length ? `${strings.casePage.diffRemoved}: ${assessmentDiff.removed_findings.join(", ")}.` : ""}{!assessmentDiff.added_findings.length && !assessmentDiff.removed_findings.length ? strings.casePage.diffSame : ""}</> : strings.casePage.diffFirst}
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <button type="button" onClick={runAssessment} disabled={assessing} className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{assessing ? strings.casePage.loadingAssessment : strings.casePage.retryAssessment}</button>
@@ -304,14 +309,14 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
           <button type="button" onClick={startEscrow} disabled={escrowBusy} className="min-h-11 rounded-lg border border-line bg-surface px-4 text-sm font-semibold text-accent">{escrowBusy ? strings.labels.loading : escrowFlow.start}</button>
         </section>;
       })() : <><SellerIdentityPanel landId={landId} sellers={sellerRows} verifications={caseView.identity_verifications || []} /><section className="space-y-3 rounded-xl border border-line bg-surface p-5"><h2 className="text-lg font-bold">{strings.casePage.findingsHeading}</h2><p className="text-sm text-muted">{assessmentCount ? strings.casePage.assessmentError : strings.casePage.noAssessment}</p><button type="button" onClick={runAssessment} disabled={assessing} className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{assessing ? strings.casePage.loadingAssessment : strings.casePage.verify}</button></section></>}
-      <p className="rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed text-muted"><strong className="block text-ink">{strings.casePage.disclaimerTitle}</strong>{caseView.latest_assessment?.disclaimer_bn || strings.app.disclaimer}</p>
+      <p className="rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed text-muted"><strong className="block text-ink">{strings.casePage.disclaimerTitle}</strong>{(!en && caseView.latest_assessment?.disclaimer_bn) || strings.app.disclaimer}</p>
 
       <SatellitePanel landId={landId} geometry={(caseView.land as { geometry?: PlotGeometry | null }).geometry ?? null} />
 
       <section className="space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-5" aria-labelledby="deed-archive-title">
         <div className="space-y-1">
           <h2 id="deed-archive-title" className="font-heading text-xl font-bold text-ink">{strings.deedArchive.title}</h2>
-          <Link href={`/cases/${landId}/deeds`} className="inline-flex min-h-11 items-center rounded-lg border border-line px-3 py-2 text-sm font-semibold text-accent">আগের দলিল ও প্রমাণ বিস্তারিত দেখুন</Link>
+          <Link href={`/cases/${landId}/deeds`} className="inline-flex min-h-11 items-center rounded-lg border border-line px-3 py-2 text-sm font-semibold text-accent">{t("আগের দলিল ও প্রমাণ বিস্তারিত দেখুন", "See earlier deeds and evidence in detail")}</Link>
           <p className="text-sm leading-relaxed text-muted">{strings.deedArchive.description}</p>
           <p className="text-sm font-semibold text-warn">{strings.deedArchive.officialNotice}</p>
           <p className="text-xs leading-relaxed text-muted">{strings.deedArchive.authenticityLimit}</p>
@@ -326,7 +331,7 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
                 <div className="min-w-0 space-y-1">
                   <h3 className="break-words font-semibold">{deed.data.deed_no ? `${strings.deedArchive.title} · ${deed.data.deed_no}` : deed.original_filename}</h3>
                   <p className="break-words text-sm text-muted">{deed.data.registration_date || deed.data.registration_date_text || deed.data.deed_year || "—"} · {deed.data.sellers.map((p) => p.name).join(", ")} → {deed.data.buyers.map((p) => p.name).join(", ")}</p>
-                  <p className="break-all text-xs text-muted">{strings.deedArchive.uploadedAt}: {new Date(deed.created_at).toLocaleDateString("bn-BD")}{deed.uploaded_by ? ` · ${strings.deedArchive.uploadedBy}: ${deed.uploaded_by}` : ""}</p>
+                  <p className="break-all text-xs text-muted">{strings.deedArchive.uploadedAt}: {new Date(deed.created_at).toLocaleDateString(en ? "en-GB" : "bn-BD")}{deed.uploaded_by ? ` · ${strings.deedArchive.uploadedBy}: ${deed.uploaded_by}` : ""}</p>
                 </div>
                 <button type="button" aria-haspopup="dialog" onClick={() => showArchiveSource(deed.id)} className="min-h-11 shrink-0 rounded-lg border border-line bg-surface px-3 py-2 text-left text-sm font-semibold text-accent">{strings.deedArchive.source}</button>
               </div>
@@ -391,13 +396,13 @@ export function CaseDetailClient({ landId, source, field }: CaseDetailClientProp
       {/* Link to Upload more docs */}
       <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-bg/50">
         <div className="text-xs text-muted">
-          আরো কোনো দলিল বা খতিয়ান যোগ করতে চান?
+          {t("আরো কোনো দলিল বা খতিয়ান যোগ করতে চান?", "Want to add another deed or khatian?")}
         </div>
         <Link
           href={`/upload/${landId}`}
           className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 min-h-[44px] px-3 py-2 border border-line rounded-lg bg-surface self-start sm:self-auto"
         >
-          + আরো কাগজ যোগ করুন
+          {t("+ আরো কাগজ যোগ করুন", "+ Add more papers")}
         </Link>
       </Card>
     </div>

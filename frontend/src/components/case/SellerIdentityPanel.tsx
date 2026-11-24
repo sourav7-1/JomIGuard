@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { api, IdentityVerificationOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/lib/lang";
 
 export function SellerIdentityPanel({
   landId, sellers, verifications,
@@ -11,6 +11,7 @@ export function SellerIdentityPanel({
   sellers: { name: string }[];
   verifications: IdentityVerificationOut[];
 }) {
+  const strings = useStrings();
   const [links, setLinks] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState("");

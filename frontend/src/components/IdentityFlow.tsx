@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { api, IdentityVerificationOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
+import { useLang, useStrings } from "@/lib/lang";
 
 type Outcome = "verified" | "failed" | "pending";
 
 function CameraStep({ title, onContinue }: { title: string; onContinue: () => void }) {
+  const strings = useStrings();
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const previewRef = useRef("");
@@ -62,6 +63,9 @@ function CameraStep({ title, onContinue }: { title: string; onContinue: () => vo
 }
 
 export function IdentityFlow({ mode, token }: { mode: "seller" | "buyer"; token?: string }) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [step, setStep] = useState(0);
   const [land, setLand] = useState<{ mouza: string; dag_no: string; message_bn: string; escrow_agreement_requested: boolean } | null>(null);
   const [sellerAgreed, setSellerAgreed] = useState(false);
@@ -81,7 +85,7 @@ export function IdentityFlow({ mode, token }: { mode: "seller" | "buyer"; token?
     }
     if (!token) return;
     api.getSellerLink(token).then(setLand).catch(() => setError(strings.identity.expired));
-  }, [mode, token]);
+  }, [mode, token, strings.identity.expired]);
 
   const consent = async () => {
     setBusy(true); setError("");
@@ -143,7 +147,7 @@ export function IdentityFlow({ mode, token }: { mode: "seller" | "buyer"; token?
       <label className="block space-y-1 text-sm"><span>{strings.identity.outcome}</span><select value={outcome} onChange={(e) => setOutcome(e.target.value as Outcome)} className="min-h-11 w-full rounded-lg border border-line bg-bg px-3"><option value="verified">{strings.identity.outcomeVerified}</option><option value="failed">{strings.identity.outcomeFailed}</option><option value="pending">{strings.identity.outcomePending}</option></select></label>
       <button type="button" disabled={busy || !name.trim() || !fatherName.trim()} onClick={submit} className="min-h-11 rounded-lg bg-accent px-4 font-semibold text-white disabled:opacity-60">{busy ? strings.labels.loading : strings.identity.submit}</button>
     </section>}
-    {step === 5 && result && <section className="space-y-3 rounded-xl border border-line p-4"><h2 className="font-heading text-xl font-bold">{strings.identity.resultTitle}</h2><p>{result.status === "verified" ? strings.identity.verified : result.status === "failed" ? strings.identity.failed : strings.identity.pending}</p><p className="text-sm text-muted">{result.name_bn_as_per_nid || "—"}</p>{land?.escrow_agreement_requested && result.status === "verified" && <button type="button" disabled={busy || sellerAgreed} onClick={agreeEscrow} className="min-h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-white">{sellerAgreed ? "বায়না চুক্তিতে সম্মতি দেওয়া হয়েছে" : "বায়না চুক্তিতে সম্মতি দিন"}</button>}<button type="button" disabled={busy} onClick={remove} className="min-h-11 rounded-lg border border-line px-4 text-sm">{busy ? strings.labels.loading : strings.identity.delete}</button></section>}
+    {step === 5 && result && <section className="space-y-3 rounded-xl border border-line p-4"><h2 className="font-heading text-xl font-bold">{strings.identity.resultTitle}</h2><p>{result.status === "verified" ? strings.identity.verified : result.status === "failed" ? strings.identity.failed : strings.identity.pending}</p><p className="text-sm text-muted">{result.name_bn_as_per_nid || "—"}</p>{land?.escrow_agreement_requested && result.status === "verified" && <button type="button" disabled={busy || sellerAgreed} onClick={agreeEscrow} className="min-h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-white">{sellerAgreed ? t("বায়না চুক্তিতে সম্মতি দেওয়া হয়েছে", "Bayna contract agreed") : t("বায়না চুক্তিতে সম্মতি দিন", "Agree to the bayna contract")}</button>}<button type="button" disabled={busy} onClick={remove} className="min-h-11 rounded-lg border border-line px-4 text-sm">{busy ? strings.labels.loading : strings.identity.delete}</button></section>}
     {error && <p role="alert" className="rounded-lg border border-warn/40 bg-warn-bg p-3 text-sm">{error}</p>}
   </main>;
 }

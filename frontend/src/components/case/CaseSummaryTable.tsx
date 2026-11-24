@@ -2,7 +2,7 @@
 
 import React from "react";
 import { CaseViewDocOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
+import { useLang, useStrings } from "@/lib/lang";
 
 interface CaseSummaryTableProps {
   documents: CaseViewDocOut[];
@@ -15,6 +15,9 @@ export function CaseSummaryTable({
   selectedDocId,
   onSelectDoc,
 }: CaseSummaryTableProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   if (documents.length === 0) {
     return null;
   }
@@ -37,7 +40,7 @@ export function CaseSummaryTable({
       }
     } else if (docType === "heir_cert") {
       if (raw.deceased_name) {
-        owners = `মৃত ${raw.deceased_name}`;
+        owners = `${t("মৃত", "Late")} ${raw.deceased_name}`;
       }
     }
 
@@ -72,11 +75,11 @@ export function CaseSummaryTable({
     let area = "—";
     if (docType === "khatian" || docType === "dcr") {
       if (raw.total_area_shatangsho !== undefined && raw.total_area_shatangsho !== null) {
-        area = raw.total_area_text ? `${raw.total_area_text} · ${raw.total_area_shatangsho} শতাংশ` : "—";
+        area = raw.total_area_text ? `${raw.total_area_text} · ${raw.total_area_shatangsho} ${t("শতাংশ", "shatangsho")}` : "—";
       }
     } else if (docType === "deed") {
       if (raw.transferred_area_shatangsho !== undefined && raw.transferred_area_shatangsho !== null) {
-        area = raw.transferred_area_text ? `${raw.transferred_area_text} · ${raw.transferred_area_shatangsho} শতাংশ` : "—";
+        area = raw.transferred_area_text ? `${raw.transferred_area_text} · ${raw.transferred_area_shatangsho} ${t("শতাংশ", "shatangsho")}` : "—";
       }
     }
 

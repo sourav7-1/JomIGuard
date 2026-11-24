@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { api, LandCaseViewOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
 import { Spinner } from "@/components/ui/Spinner";
 import { bnDigits } from "@/lib/digits";
+import { useLang, useStrings } from "@/lib/lang";
 
 interface CaseHeaderProps {
   caseView: LandCaseViewOut;
@@ -13,6 +13,9 @@ interface CaseHeaderProps {
 }
 
 export function CaseHeader({ caseView, onAssessmentTriggered }: CaseHeaderProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [reassessing, setReassessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,17 +46,17 @@ export function CaseHeader({ caseView, onAssessmentTriggered }: CaseHeaderProps)
             </span>
             {land.dag_no && (
               <span className="text-sm md:text-base font-mono bg-bg/80 px-2 py-0.5 rounded border border-line">
-                দাগ {bnDigits(land.dag_no)}
+                {t("দাগ", "Dag")} {en ? land.dag_no : bnDigits(land.dag_no)}
               </span>
             )}
             {land.khatian_no && (
               <span className="text-sm md:text-base font-mono bg-bg/80 px-2 py-0.5 rounded border border-line">
-                খতিয়ান {bnDigits(land.khatian_no)}
+                {t("খতিয়ান", "Khatian")} {en ? land.khatian_no : bnDigits(land.khatian_no)}
               </span>
             )}
           </h1>
           <p className="text-xs md:text-sm text-muted">
-            উপজেলা: {land.upazila || "—"}, জেলা: {land.district || "—"}
+            {t("উপজেলা", "Upazila")}: {land.upazila || "—"}, {t("জেলা", "District")}: {land.district || "—"}
           </p>
         </div>
 

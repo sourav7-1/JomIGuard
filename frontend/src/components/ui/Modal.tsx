@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useLang } from "@/lib/lang";
 
 // Native <dialog>: showModal() makes the rest of the page inert (focus trap), Esc fires
 // "cancel", the browser returns focus to the trigger on close. Scroll lock and the
@@ -17,6 +18,7 @@ export interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, description, children, footer, wide = false }: ModalProps) {
+  const en = useLang() === "en";
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descId = useId();
@@ -45,7 +47,7 @@ export function Modal({ open, onClose, title, description, children, footer, wid
               <h2 id={titleId} className="font-heading text-xl font-bold leading-snug text-ink">{title}</h2>
               {description && <p id={descId} className="text-sm leading-6 text-muted">{description}</p>}
             </div>
-            <button type="button" onClick={onClose} aria-label="বন্ধ করুন" className="-mr-2 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-muted transition-colors hover:bg-bg hover:text-ink">
+            <button type="button" onClick={onClose} aria-label={en ? "Close" : "বন্ধ করুন"} className="-mr-2 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-muted transition-colors hover:bg-bg hover:text-ink">
               <span aria-hidden="true">×</span>
             </button>
           </header>
@@ -61,6 +63,7 @@ type ConfirmOptions = { title: string; message: React.ReactNode; confirmLabel: s
 
 /** Promise-based confirm built on Modal (no browser confirm()). Render `dialog` once. */
 export function useConfirm() {
+  const en = useLang() === "en";
   const [state, setState] = useState<(ConfirmOptions & { resolve: (ok: boolean) => void }) | null>(null);
   const ask = useCallback((opts: ConfirmOptions) => new Promise<boolean>((resolve) => setState({ ...opts, resolve })), []);
   const done = (ok: boolean) => { state?.resolve(ok); setState(null); };
@@ -70,7 +73,7 @@ export function useConfirm() {
       onClose={() => done(false)}
       title={state?.title ?? ""}
       footer={<>
-        <button type="button" onClick={() => done(false)} className="min-h-11 rounded-[var(--radius-control)] border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-bg">ফিরে যান</button>
+        <button type="button" onClick={() => done(false)} className="min-h-11 rounded-[var(--radius-control)] border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-bg">{en ? "Go back" : "ফিরে যান"}</button>
         <button type="button" onClick={() => done(true)} className={`min-h-11 rounded-[var(--radius-control)] px-4 text-sm font-semibold text-white shadow-rest ${state?.danger ? "bg-bad" : "bg-accent"}`}>{state?.confirmLabel}</button>
       </>}
     >

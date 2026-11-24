@@ -4,6 +4,8 @@
 // would stop cacheComponents from prerendering every route). Server HTML is Bangla; the
 // client swaps to English after hydration when the viewer picked it.
 import { useEffect, useSyncExternalStore } from "react";
+import { escrowFlow, guardianFlow, strings } from "./strings";
+import { escrowFlowEn, guardianFlowEn, stringsEn, type Widen } from "./strings-en";
 
 export type Lang = "bn" | "en";
 const KEY = "jomiguard-lang";
@@ -65,4 +67,15 @@ export function LangToggle() {
       {lang === "en" ? "বাং" : "EN"}
     </button>
   );
+}
+
+/** The shared copy (strings.ts) in the viewer's language. */
+export function useStrings(): Widen<typeof strings> {
+  return useLang() === "en" ? stringsEn : strings;
+}
+export function useGuardianFlow(): Widen<typeof guardianFlow> {
+  return useLang() === "en" ? guardianFlowEn : guardianFlow;
+}
+export function useEscrowFlow(): Widen<typeof escrowFlow> {
+  return useLang() === "en" ? escrowFlowEn : escrowFlow;
 }

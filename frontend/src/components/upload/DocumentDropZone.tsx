@@ -2,7 +2,6 @@
 
 import React, { useImperativeHandle, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { strings } from "@/lib/strings";
 import {
   prepareFileForUpload,
   uploadDocumentWithProgress,
@@ -11,6 +10,7 @@ import {
 import type { DocumentStatusOut } from "@/lib/api";
 import { fetchSampleFile } from "@/lib/samples";
 import { En } from "@/components/ui/En";
+import { useLang, useStrings } from "@/lib/lang";
 
 export interface PendingUpload {
   id: string;
@@ -48,6 +48,9 @@ export function DocumentDropZone({
   className = "",
   ref,
 }: DocumentDropZoneProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [selectedDocType, setSelectedDocType] = useState<string>("unknown");
   const [isDragging, setIsDragging] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -119,7 +122,7 @@ export function DocumentDropZone({
   const [loadingSample, setLoadingSample] = useState(false);
   const addSample = async () => {
     if (selectedDocType === "unknown") {
-      setLocalError("নমুনা নিতে আগে বেছে নিন কোন কাগজ। (Pick a document type first.)");
+      setLocalError(t("নমুনা নিতে আগে বেছে নিন কোন কাগজ।", "Pick a document type first."));
       return;
     }
     setLoadingSample(true);
@@ -175,7 +178,7 @@ export function DocumentDropZone({
           <option value="unknown">{strings.uploadFlow.docTypeUnknown}</option>
           <option value="khatian">{strings.uploadFlow.docTypeKhatian}</option>
           <option value="deed">{strings.uploadFlow.recDraftDeed}</option>
-          <option value="prior_deed">{strings.uploadFlow.recPriorDeed} (আগের দলিল)</option>
+          <option value="prior_deed">{strings.uploadFlow.recPriorDeed}{en ? "" : " (আগের দলিল)"}</option>
           <option value="dcr">{strings.uploadFlow.docTypeDcr}</option>
           <option value="heir_cert">{strings.uploadFlow.docTypeHeirCert}</option>
         </select>
@@ -185,7 +188,7 @@ export function DocumentDropZone({
           disabled={loadingSample || isProcessingFiles}
           className="min-h-[44px] rounded-lg px-2 text-left text-xs font-semibold text-accent underline underline-offset-4 hover:no-underline disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {loadingSample ? "নমুনা আনা হচ্ছে…" : "নমুনা ফাইল নিন"}
+          {loadingSample ? t("নমুনা আনা হচ্ছে…", "Fetching sample…") : t("নমুনা ফাইল নিন", "Get a sample file")}
           <En className="no-underline">Use a sample</En>
         </button>
         </div>

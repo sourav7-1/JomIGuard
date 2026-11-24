@@ -1,6 +1,10 @@
+"use client";
+
 import React from "react";
 import { Badge, type BadgeVariant } from "./Badge";
 import { strings } from "@/lib/strings";
+import { stringsEn } from "@/lib/strings-en";
+import { useLang } from "@/lib/lang";
 
 export type DocumentStatus =
   | "uploaded"
@@ -27,10 +31,11 @@ const statusMap: Record<DocumentStatus, { variant: BadgeVariant; defaultLabel: s
 
 export function StatusPill({ status, label, className }: StatusPillProps) {
   const item = statusMap[status] || statusMap.uploaded;
+  const en = useLang() === "en";
   return (
     <Badge variant={item.variant} className={className}>
       <span className="w-1.5 h-1.5 rounded-full bg-current" aria-hidden="true" />
-      {label || item.defaultLabel}
+      {label || (en ? stringsEn.status[status in statusMap ? status : "uploaded"] : item.defaultLabel)}
     </Badge>
   );
 }

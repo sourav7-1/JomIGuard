@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useState } from "react";
+import { useLang } from "@/lib/lang";
 
 type Tone = "ok" | "info" | "bad";
 type Toast = { id: number; tone: Tone; text: string };
@@ -18,6 +19,7 @@ const style: Record<Tone, string> = {
 const icon: Record<Tone, string> = { ok: "✓", info: "i", bad: "!" };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const en = useLang() === "en";
   const [toasts, setToasts] = useState<Toast[]>([]);
   const dismiss = (id: number) => setToasts((t) => t.filter((x) => x.id !== id));
   const push = useCallback((tone: Tone, text: string) => {
@@ -30,7 +32,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <div key={t.id} className={`pointer-events-auto flex items-start gap-3 rounded-[var(--radius-control)] border bg-[var(--glass)] p-3 pr-2 shadow-overlay backdrop-blur-md [animation:toast-in_250ms_var(--ease)_both] ${style[t.tone]}`}>
       <span aria-hidden="true" className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-current/15 text-xs font-bold">{icon[t.tone]}</span>
       <p className="min-w-0 flex-1 text-sm leading-6 text-ink">{t.text}</p>
-      <button type="button" onClick={() => dismiss(t.id)} aria-label="বার্তা বন্ধ করুন" className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg">×</button>
+      <button type="button" onClick={() => dismiss(t.id)} aria-label={en ? "Close message" : "বার্তা বন্ধ করুন"} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg">×</button>
     </div>
   ));
 

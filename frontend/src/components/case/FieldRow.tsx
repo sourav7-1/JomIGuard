@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { ConfidenceBadge } from "./ConfidenceBadge";
-import { strings } from "@/lib/strings";
 import { type EnumOption } from "@/lib/api";
+import { useLang, useStrings } from "@/lib/lang";
 
 interface FieldRowProps {
   id?: string;
@@ -38,6 +38,9 @@ export function FieldRow({
   onConfirm,
   onEdit,
 }: FieldRowProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState<string>("");
 
@@ -92,7 +95,7 @@ export function FieldRow({
             <ConfidenceBadge flags={effectiveFlags} />
             {isEdited && (
               <span className="text-[10px] font-medium bg-accent-soft text-accent px-1.5 py-0.2 rounded">
-                সংশোধিত
+                {t("সংশোধিত", "Corrected")}
               </span>
             )}
           </div>
@@ -104,7 +107,7 @@ export function FieldRow({
               </span>
               {derivedValue !== undefined && derivedValue !== null && String(derivedValue).trim() !== "" && (
                 <span className="text-xs text-muted font-mono bg-bg/60 px-1.5 py-0.5 rounded border border-line/50 self-start">
-                  হিসাবকৃত: {String(derivedValue)}
+                  {t("হিসাবকৃত", "Calculated")}: {String(derivedValue)}
                 </span>
               )}
             </div>
@@ -116,7 +119,7 @@ export function FieldRow({
                   onChange={(e) => setEditValue(e.target.value)}
                   className="w-full text-sm p-1.5 rounded border border-line bg-surface text-ink focus:outline-accent"
                 >
-                  <option value="">নির্বাচন করুন</option>
+                  <option value="">{t("নির্বাচন করুন", "Select")}</option>
                   {enumOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label_bn} ({opt.value})
@@ -167,7 +170,7 @@ export function FieldRow({
                   : "bg-surface hover:bg-bg text-ink border-line"
               }`}
             >
-              {isConfirmed ? "✓ নিশ্চিত" : strings.casePage.confirmField}
+              {isConfirmed ? t("✓ নিশ্চিত", "✓ Confirmed") : strings.casePage.confirmField}
             </button>
             <button
               type="button"

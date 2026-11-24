@@ -6,11 +6,14 @@ import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 import { api, TimelineEvent, TimelineOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
+import { useLang, useStrings } from "@/lib/lang";
 
 const statusClass = { ok: "bg-ok", warn: "bg-warn", bad: "bg-bad" };
 
 function TimelineContent() {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const { id } = useParams<{ id: string }>();
   const [timeline, setTimeline] = useState<TimelineOut | null>(null);
   const [error, setError] = useState(false);
@@ -23,7 +26,7 @@ function TimelineContent() {
   const proposedSellers = new Set(timeline.events.filter((event) => event.kind === "proposed_sale").flatMap((event) => event.from_owners.map((owner) => owner.name)));
   return <main className="mx-auto max-w-3xl space-y-6 px-4 py-6">
     <header className="space-y-3">
-      <p className="text-sm font-semibold text-accent">মালিকানার ইতিহাস</p>
+      <p className="text-sm font-semibold text-accent">{t("মালিকানার ইতিহাস", "Ownership history")}</p>
       <h1 className="font-heading text-2xl font-bold text-ink">{timeline.title_bn}</h1>
       <p className="text-sm leading-6 text-muted">{strings.pages.caseTimeline.desc}</p>
       <Link href={`/cases/${id}`} className="inline-flex min-h-11 items-center rounded-lg border border-line bg-surface px-4 text-sm font-semibold text-ink">{strings.pages.caseTimeline.backToCase}</Link>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { BHOLA_CASE } from "@/lib/services";
-import { En } from "@/components/ui/En";
+import { useLang } from "@/lib/lang";
 import { bnDigits } from "@/lib/digits";
 
 // Step-by-step judge tour. Spotlight + docked tooltip inside a native <dialog> (focus trap, Esc).
@@ -13,25 +13,25 @@ type Step = { path: string | "case"; sel: string; title: string; en: string; bod
 const STEPS: Step[] = [
   { path: "/", sel: '[aria-labelledby="services-title"]', title: "সেবাসমূহ", en: "Services",
     body: "ছয়টি সেবা: কাগজ যাচাই, মালিকানার ইতিহাস, স্যাটেলাইট যাচাই, বায়না এসক্রো, প্রবাসী গার্ডিয়ান ও বিক্রেতা যাচাই। প্রতিটি কার্ডে “কীভাবে?” চাপলে ধাপগুলো দেখবেন।",
-    bodyEn: "Six services. “কীভাবে?” on each card shows how to use it." },
+    bodyEn: "Six services: document check, ownership history, satellite check, bayna escrow, probashi guardian and seller check. Press “How?” on any card to see its steps." },
   { path: "/", sel: '[data-tour="bhola"]', title: "ভোলার নমুনা কেস", en: "The Bhola sample case",
     body: "চর মেঘনার এই প্লটে খতিয়ানে জমি 'নাল', কিন্তু স্যাটেলাইট ছবিতে আশেপাশে পানি বাড়ছে। “পরের ধাপ” চাপলে কেসটি খুলবে।",
-    bodyEn: "Paper says farmland, satellite shows rising water. Next opens the case." },
+    bodyEn: "This Char Meghna plot is listed as 'nal' (cropland) in the khatian, yet satellite images show water rising around it. Press Next to open the case." },
   { path: "case", sel: '[aria-labelledby="tracker-title"]', title: "যাচাইয়ের অবস্থা", en: "Case tracker",
     body: "কাগজ জমা থেকে রিপোর্ট পর্যন্ত ৫টি ধাপ: কাগজ জমা, তথ্য পড়া, মিলিয়ে দেখা, স্যাটেলাইট যাচাই, রিপোর্ট। কোনটা শেষ আর কোনটা বাকি, এখানে দেখা যায়।",
-    bodyEn: "Five steps from papers to report, with what is done and what is left." },
+    bodyEn: "Five steps from papers to report: upload, reading, cross-check, satellite check, report. See what is done and what is left." },
   { path: "case", sel: '[data-tour="findings"]', title: "ঝুঁকির মাত্রা ও “যা মেলেনি”", en: "Risk level and mismatches",
     body: "উপরে ঝুঁকির মাত্রা, নিচে প্রতিটি অমিল। অমিলের নিচের উৎস-বোতাম চাপলে নথির যে ঘর থেকে তথ্যটি এসেছে, সেটি চিহ্নিত অবস্থায় খোলে।",
-    bodyEn: "Each mismatch opens the exact field of the source document." },
+    bodyEn: "Risk level on top, each mismatch below. The source button under a mismatch opens the exact field of the document it came from." },
   { path: "case", sel: '[aria-labelledby="satellite-title"]', title: "স্যাটেলাইট যাচাই", en: "Satellite check",
     body: "মানচিত্রে প্লটের সীমানা, প্রতি ফেব্রুয়ারির পানি ও গাছের চার্ট, আর তা থেকে পাওয়া ফল। ফল প্লটের চারপাশের প্রায় ২০০ মিটার এলাকার, প্লটের ভেতরের নয়।",
-    bodyEn: "Map, February water and tree charts, and findings for ~200 m around the plot." },
+    bodyEn: "Plot boundary on the map, water and tree charts for every February, and the findings. Results cover about 200 m around the plot, not inside it." },
   { path: "case", sel: '[data-tour="next"]', title: "এখন কী করবেন ও PDF রিপোর্ট", en: "Next steps and PDF report",
     body: "অমিল থেকে পাওয়া পরের কাজগুলো, সবচেয়ে জরুরিটা আগে। ঝুঁকির কার্ডের নিচে “PDF রিপোর্ট” বোতামে পুরো ফল নামানো যায়।",
-    bodyEn: "Next actions from the findings, most urgent first. “PDF রিপোর্ট” downloads the report." },
+    bodyEn: "Next actions from the mismatches, most urgent first. The “PDF report” button under the risk card downloads the full result." },
   { path: "/demo", sel: "main h1", title: "নিজে চেষ্টা করুন", en: "Try it yourself",
     body: "নমুনা ডেটা পাতায় নথির প্যাক, এক ক্লিকে নতুন কেস আর স্যাটেলাইট নমুনা প্লট আছে। সব নথি কৃত্রিম; আসল কারো নয়।",
-    bodyEn: "Demo data: document packs, one-click cases and satellite sample plots. All synthetic." },
+    bodyEn: "The demo data page has document packs, one-click new cases and satellite sample plots. Every document is synthetic; none belongs to a real person." },
 ];
 
 const SEEN = "jg-tour-seen";
@@ -47,6 +47,7 @@ const bnNum = bnDigits;
 export function GuidedTour() {
   const pathname = usePathname();
   const router = useRouter();
+  const en = useLang() === "en";
   const [run, setRun] = useState<{ step: number; casePath: string } | null>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const ref = useRef<HTMLDialogElement>(null);
@@ -69,16 +70,6 @@ export function GuidedTour() {
     window.addEventListener("jomiguard:tour", onStart);
     return () => window.removeEventListener("jomiguard:tour", onStart);
   }, []);
-
-  // First visit after login: start on the home page once the services are on screen.
-  useEffect(() => {
-    if (pathname !== "/" || store.get(SEEN) || run) return;
-    const t = window.setInterval(() => {
-      if (document.querySelector(STEPS[0].sel)) { window.clearInterval(t); setRun({ step: 0, casePath: BHOLA_CASE }); }
-    }, 400);
-    const stop = window.setTimeout(() => window.clearInterval(t), 20000);
-    return () => { window.clearInterval(t); window.clearTimeout(stop); };
-  }, [pathname, run]);
 
   // Open/close the dialog.
   useEffect(() => {
@@ -127,19 +118,18 @@ export function GuidedTour() {
           ? <div aria-hidden="true" className="tour-spot" style={{ top: spot.top - pad, left: spot.left - pad, width: spot.width + pad * 2, height: spot.height + pad * 2 }} />
           : <div aria-hidden="true" className="fixed inset-0 bg-[rgb(12_15_32/0.55)]" />}
         <section className="tour-tip animate-fade-up rounded-[var(--radius-card)] border border-edge bg-surface p-4 text-ink shadow-overlay sm:p-5">
-          <p className="text-xs font-semibold text-accent">ধাপ {bnNum(run.step + 1)} / {bnNum(STEPS.length)} <span lang="en" className="font-normal text-muted">· Step {run.step + 1} of {STEPS.length}</span></p>
-          <h2 id={titleId} className="mt-1 font-heading text-lg font-bold leading-snug">{step.title}<En className="text-muted">{step.en}</En></h2>
+          <p className="text-xs font-semibold text-accent">{en ? `Step ${run.step + 1} of ${STEPS.length}` : `ধাপ ${bnNum(run.step + 1)} / ${bnNum(STEPS.length)}`}</p>
+          <h2 id={titleId} className="mt-1 font-heading text-lg font-bold leading-snug">{en ? step.en : step.title}</h2>
           <div id={bodyId} className="mt-2 space-y-1">
-            <p className="text-sm leading-6">{step.body}</p>
-            <p lang="en" className="text-xs leading-5 text-muted">{step.bodyEn}</p>
-            {!spot && <p role="status" className="text-xs text-muted">পাতাটি লোড হচ্ছে… <span lang="en">Loading the page…</span></p>}
+            <p className="text-sm leading-6">{en ? step.bodyEn : step.body}</p>
+            {!spot && <p role="status" className="text-xs text-muted">{en ? "Loading the page…" : "পাতাটি লোড হচ্ছে…"}</p>}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={close} className="min-h-11 rounded-[var(--radius-control)] px-3 text-sm font-semibold text-muted hover:bg-bg">বাদ দিন<En>Skip</En></button>
+            <button type="button" onClick={close} className="min-h-11 rounded-[var(--radius-control)] px-3 text-sm font-semibold text-muted hover:bg-bg">{en ? "Skip" : "বাদ দিন"}</button>
             <span className="flex-1" />
-            {run.step > 0 && <button type="button" onClick={() => go(run.step - 1)} className="min-h-11 rounded-[var(--radius-control)] border border-line bg-surface px-3 text-sm font-semibold hover:bg-bg">← আগের<En>Back</En></button>}
+            {run.step > 0 && <button type="button" onClick={() => go(run.step - 1)} className="min-h-11 rounded-[var(--radius-control)] border border-line bg-surface px-3 text-sm font-semibold hover:bg-bg">{en ? "← Back" : "← আগের"}</button>}
             <button ref={nextRef} type="button" onClick={() => go(run.step + 1)} className="min-h-11 rounded-[var(--radius-control)] bg-accent px-4 text-sm font-semibold text-white shadow-rest">
-              {run.step === STEPS.length - 1 ? "শেষ" : "পরের ধাপ →"}<En>{run.step === STEPS.length - 1 ? "Finish" : "Next"}</En>
+              {run.step === STEPS.length - 1 ? (en ? "Finish" : "শেষ") : (en ? "Next →" : "পরের ধাপ →")}
             </button>
           </div>
         </section>

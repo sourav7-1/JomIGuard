@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BHOLA_CASE } from "@/lib/services";
 import { bnDigits } from "@/lib/digits";
 import { T as Tr } from "@/lib/lang";
+import { ChartYears } from "@/components/ChartYears";
 
 // Recorded Bhola demo result (backend/app/scripts/demo_data/satellite_bhola.json), water % per February.
 export const BHOLA_WATER = [[2019, 28.1], [2020, 32.1], [2021, 36.2], [2022, 35.7], [2023, 43.9], [2024, 52.5], [2025, 65.0]] as const;
@@ -22,14 +23,14 @@ export function BholaPreview() {
         </div>
         <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-warn/30 bg-warn-bg px-2.5 py-0.5 text-xs font-semibold text-warn"><span aria-hidden="true">!</span><Tr bn="পানি বাড়ছে" en="Water rising" /></span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="mt-3 h-auto w-full text-sat" role="img" aria-label="আশেপাশে পানি, ২০১৯ সালে ২৮ শতাংশ থেকে ২০২৫ সালে ৬৫ শতাংশ">
+      <svg viewBox={`0 0 ${W} ${H}`} className="mt-3 h-auto w-full text-sat" role="img" aria-label="Water nearby: 28% in 2019 to 65% in 2025 · আশেপাশে পানি, ২০১৯ সালে ২৮ শতাংশ থেকে ২০২৫ সালে ৬৫ শতাংশ">
         <defs>
           <linearGradient id="bhola-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity=".28" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></linearGradient>
         </defs>
         <path d={area} fill="url(#bhola-fill)" className="[animation:fade-in_900ms_var(--ease)_400ms_both]" />
         <path d={line} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" pathLength={1} className="[stroke-dasharray:1] [animation:draw-line_1200ms_var(--ease)_200ms_both]" />
         {BHOLA_WATER.map(([yr, v], i) => <circle key={yr} cx={x(i)} cy={y(v)} r={3.5} className="fill-surface [animation:fade-in_300ms_var(--ease)_both]" stroke="currentColor" strokeWidth={2} style={{ animationDelay: `${300 + i * 140}ms` }} />)}
-        {BHOLA_WATER.map(([yr], i) => <text key={yr} x={x(i)} y={H - 6} textAnchor="middle" fontSize={12} className="fill-muted">{bn(String(yr).slice(2))}</text>)}
+        <ChartYears years={BHOLA_WATER.map(([yr], i) => [yr, x(i)])} y={H - 6} />
       </svg>
       <p className="mt-2 text-sm leading-6 text-muted"><Tr bn={<>শুকনো মৌসুমে আশেপাশে পানি <b className="text-ink">{bn(28)}%</b> থেকে <b className="text-ink">{bn(65)}%</b>; খতিয়ানে জমি &apos;নাল&apos;।</>} en={<>Dry-season water nearby went from <b className="text-ink">28%</b> to <b className="text-ink">65%</b>; the khatian says &apos;nal&apos; (cropland).</>} /></p>
       <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-sat"><Tr bn="কেস খুলুন" en="Open case" /> <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span></span>

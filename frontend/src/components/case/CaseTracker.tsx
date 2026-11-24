@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { api, LandCaseViewOut, SatelliteCheckOut } from "@/lib/api";
 import { bnDigits } from "@/lib/digits";
+import { useLang } from "@/lib/lang";
 
 type Tone = "done" | "warn" | "bad" | "running" | "todo";
 type Step = { label: string; status: string; tone: Tone; href: string };
 
-const bn = bnDigits;
 
 const toneStyle: Record<Tone, { dot: string; text: string; mark: string }> = {
   done: { dot: "border-ok bg-ok text-white", text: "text-ok", mark: "✓" },
@@ -38,7 +38,9 @@ export function nextActions(caseView: LandCaseViewOut, check: SatelliteCheckOut 
     .map((a) => a.text);
 }
 
-function steps(caseView: LandCaseViewOut, check: SatelliteCheckOut | null, checkLoaded: boolean): Step[] {
+function steps(caseView: LandCaseViewOut, check: SatelliteCheckOut | null, checkLoaded: boolean, en: boolean): Step[] {
+  const t = (b: string, e: string) => (en ? e : b);
+  const n = (v: number) => (en ? String(v) : bnDigits(v));
   const docs = caseView.documents;
   const a = caseView.latest_assessment;
   const processing = docs.filter((d) => d.status === "uploaded" || d.status === "processing").length;
@@ -46,35 +48,37 @@ function steps(caseView: LandCaseViewOut, check: SatelliteCheckOut | null, check
   const review = (a?.review_needed?.length ?? 0) + docs.filter((d) => d.latest_extraction?.status === "needs_review").length;
   const risk = a?.risk_level;
 
-  const read: Pick<Step, "status" | "tone"> = !docs.length ? { status: "কাগজ নেই", tone: "todo" }
-    : processing ? { status: "পড়া চলছে", tone: "running" }
-    : failed ? { status: `${bn(failed)}টি পড়া যায়নি`, tone: "bad" }
-    : review ? { status: "কিছু ঘর দেখে নিন", tone: "warn" }
-    : { status: "সব পড়া হয়েছে", tone: "done" };
-  const compare: Pick<Step, "status" | "tone"> = !a ? { status: "এখনো হয়নি", tone: "todo" }
-    : caseView.assessment_stale ? { status: "তথ্য বদলেছে, আবার মিলান", tone: "warn" }
-    : risk === "high" ? { status: "উচ্চ ঝুঁকি", tone: "bad" }
-    : risk === "medium" ? { status: "মাঝারি ঝুঁকি", tone: "warn" }
-    : { status: "কম ঝুঁকি", tone: "done" };
-  const sat: Pick<Step, "status" | "tone"> = !checkLoaded ? { status: "দেখা হচ্ছে…", tone: "todo" }
-    : !check ? { status: "শুরু হয়নি", tone: "todo" }
-    : check.status === "pending" ? { status: "চলছে", tone: "running" }
-    : check.status === "failed" ? { status: "করা যায়নি", tone: "bad" }
-    : (check.findings ?? []).some((f) => f.status === "warn" || f.status === "bad") ? { status: `${bn((check.findings ?? []).length)}টি বিষয় দেখুন`, tone: "warn" }
-    : { status: "শেষ হয়েছে", tone: "done" };
+  const read: Pick<Step, "status" | "tone"> = !docs.length ? { status: t("কাগজ নেই", "No papers"), tone: "todo" }
+    : processing ? { status: t("পড়া চলছে", "Reading"), tone: "running" }
+    : failed ? { status: en ? `${failed} could not be read` : `${n(failed)}টি পড়া যায়নি`, tone: "bad" }
+    : review ? { status: t("কিছু ঘর দেখে নিন", "Check a few fields"), tone: "warn" }
+    : { status: t("সব পড়া হয়েছে", "All read"), tone: "done" };
+  const compare: Pick<Step, "status" | "tone"> = !a ? { status: t("এখনো হয়নি", "Not yet"), tone: "todo" }
+    : caseView.assessment_stale ? { status: t("তথ্য বদলেছে, আবার মিলান", "Data changed, check again"), tone: "warn" }
+    : risk === "high" ? { status: t("উচ্চ ঝুঁকি", "High risk"), tone: "bad" }
+    : risk === "medium" ? { status: t("মাঝারি ঝুঁকি", "Medium risk"), tone: "warn" }
+    : { status: t("কম ঝুঁকি", "Low risk"), tone: "done" };
+  const sat: Pick<Step, "status" | "tone"> = !checkLoaded ? { status: t("দেখা হচ্ছে…", "Checking…"), tone: "todo" }
+    : !check ? { status: t("শুরু হয়নি", "Not started"), tone: "todo" }
+    : check.status === "pending" ? { status: t("চলছে", "Running"), tone: "running" }
+    : check.status === "failed" ? { status: t("করা যায়নি", "Failed"), tone: "bad" }
+    : (check.findings ?? []).some((f) => f.status === "warn" || f.status === "bad") ? { status: en ? `See ${(check.findings ?? []).length} items` : `${n((check.findings ?? []).length)}টি বিষয় দেখুন`, tone: "warn" }
+    : { status: t("শেষ হয়েছে", "Done"), tone: "done" };
 
   return [
-    { label: "কাগজ জমা", href: "#source-document-panel", ...(docs.length ? { status: `${bn(docs.length)}টি নথি`, tone: "done" as Tone } : { status: "কাগজ যোগ করুন", tone: "todo" as Tone }) },
-    { label: "তথ্য পড়া", href: "#source-document-panel", ...read },
-    { label: "মিলিয়ে দেখা", href: "#risk-summary", ...compare },
-    { label: "স্যাটেলাইট যাচাই", href: "#satellite-title", ...sat },
-    { label: "রিপোর্ট", href: "#risk-summary", ...(a ? { status: "PDF নেওয়া যায়", tone: "done" as Tone } : { status: "মিলানোর পরে", tone: "todo" as Tone }) },
+    { label: t("কাগজ জমা", "Papers"), href: "#source-document-panel", ...(docs.length ? { status: en ? `${docs.length} documents` : `${n(docs.length)}টি নথি`, tone: "done" as Tone } : { status: t("কাগজ যোগ করুন", "Add papers"), tone: "todo" as Tone }) },
+    { label: t("তথ্য পড়া", "Reading"), href: "#source-document-panel", ...read },
+    { label: t("মিলিয়ে দেখা", "Cross-check"), href: "#risk-summary", ...compare },
+    { label: t("স্যাটেলাইট যাচাই", "Satellite check"), href: "#satellite-title", ...sat },
+    { label: t("রিপোর্ট", "Report"), href: "#risk-summary", ...(a ? { status: t("PDF নেওয়া যায়", "PDF ready"), tone: "done" as Tone } : { status: t("মিলানোর পরে", "After cross-check"), tone: "todo" as Tone }) },
   ];
 }
 
 export function CaseTracker({ landId, caseView }: { landId: string; caseView: LandCaseViewOut }) {
   const [check, setCheck] = useState<SatelliteCheckOut | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const en = useLang() === "en";
+  const bn = (v: number) => (en ? String(v) : bnDigits(v));
 
   useEffect(() => {
     let cancelled = false;
@@ -85,7 +89,7 @@ export function CaseTracker({ landId, caseView }: { landId: string; caseView: La
     return () => { cancelled = true; };
   }, [landId]);
 
-  const list = steps(caseView, check, loaded);
+  const list = steps(caseView, check, loaded, en);
   const todo = nextActions(caseView, check);
   const current = list.findIndex((s) => s.tone !== "done");
   const doneCount = current === -1 ? list.length : current;
@@ -93,8 +97,8 @@ export function CaseTracker({ landId, caseView }: { landId: string; caseView: La
   return (
     <section aria-labelledby="tracker-title" className="surface-grad space-y-4 rounded-[var(--radius-card)] border border-edge bg-surface p-4 shadow-raised sm:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="tracker-title" className="font-heading text-xl font-bold text-ink">যাচাইয়ের অবস্থা</h2>
-        <p className="text-sm text-muted">{bn(doneCount)}/{bn(list.length)} ধাপ শেষ</p>
+        <h2 id="tracker-title" className="font-heading text-xl font-bold text-ink">{en ? "Check progress" : "যাচাইয়ের অবস্থা"}</h2>
+        <p className="text-sm text-muted">{bn(doneCount)}/{bn(list.length)} {en ? "steps done" : "ধাপ শেষ"}</p>
       </div>
       <div className="relative">
       {/* progress line behind the dots (desktop) */}
@@ -123,15 +127,15 @@ export function CaseTracker({ landId, caseView }: { landId: string; caseView: La
       </ol>
       </div>
       <div data-tour="next" className="rounded-[var(--radius-card)] border border-accent/20 bg-gradient-to-br from-accent-soft/80 to-surface p-4">
-        <h3 className="font-semibold text-ink">এখন কী করবেন</h3>
+        <h3 className="font-semibold text-ink">{en ? "What to do now" : "এখন কী করবেন"}</h3>
         {todo.length ? (
           <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-7 text-ink">
             {todo.map((t) => <li key={t}>{t}</li>)}
           </ol>
         ) : (
-          <p className="mt-1 text-sm leading-6 text-muted">এখনো কোনো খোলা কাজ নেই। কাগজ যোগ করে মিলিয়ে দেখলে এখানে পরের কাজ দেখাবে।</p>
+          <p className="mt-1 text-sm leading-6 text-muted">{en ? "No open tasks yet. Add papers and cross-check them to see the next tasks here." : "এখনো কোনো খোলা কাজ নেই। কাগজ যোগ করে মিলিয়ে দেখলে এখানে পরের কাজ দেখাবে।"}</p>
         )}
-        <a href="#actions-title" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-accent underline underline-offset-4">সব কাজের তালিকা দেখুন</a>
+        <a href="#actions-title" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-accent underline underline-offset-4">{en ? "See all tasks" : "সব কাজের তালিকা দেখুন"}</a>
       </div>
     </section>
   );

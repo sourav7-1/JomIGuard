@@ -13,16 +13,18 @@ import {
 import { DocumentProgressCard } from "@/components/upload/DocumentProgressCard";
 import { RecommendedDocList } from "@/components/upload/RecommendedDocList";
 import { SampleSetCard } from "@/components/upload/SampleSetCard";
-import { En } from "@/components/ui/En";
 import { api, type DocumentStatusOut, type LandOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
 import { bnDigits } from "@/lib/digits";
+import { useLang, useStrings } from "@/lib/lang";
 
 export interface UploadFlowClientProps {
   landId: string;
 }
 
 export function UploadFlowClient({ landId }: UploadFlowClientProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const router = useRouter();
 
   const [land, setLand] = useState<LandOut | null>(null);
@@ -120,7 +122,7 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
     } catch {
       setAssessError(strings.error.defaultMessage);
     }
-  }, []);
+  }, [strings.error.defaultMessage]);
 
   // Handler for "যাচাই করুন" (Assess)
   const handleAssess = async () => {
@@ -150,7 +152,7 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-line pb-4">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-soft text-accent text-xs font-semibold">
-            <span>ধাপ ২</span> • {strings.uploadFlow.step2Title}
+            <span>{t("ধাপ ২", "Step 2")}</span> • {strings.uploadFlow.step2Title}
           </div>
           <h1 className="text-xl md:text-2xl font-bold font-heading text-ink">
             {strings.uploadFlow.step2Title}
@@ -160,10 +162,10 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
               <span className="font-semibold text-ink">
                 {strings.uploadFlow.landInfoPrefix}
               </span>
-              <span>মৌজা: {land.mouza}</span>
-              {land.dag_no && <span>• দাগ: {bnDigits(land.dag_no)}</span>}
-              {land.khatian_no && <span>• খতিয়ান: {bnDigits(land.khatian_no)}</span>}
-              {land.upazila && <span>• উপজেলা: {land.upazila}</span>}
+              <span>{t("মৌজা", "Mouza")}: {land.mouza}</span>
+              {land.dag_no && <span>• {t("দাগ", "Dag")}: {en ? land.dag_no : bnDigits(land.dag_no)}</span>}
+              {land.khatian_no && <span>• {t("খতিয়ান", "Khatian")}: {en ? land.khatian_no : bnDigits(land.khatian_no)}</span>}
+              {land.upazila && <span>• {t("উপজেলা", "Upazila")}: {land.upazila}</span>}
             </p>
           )}
         </div>
@@ -194,26 +196,24 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
           {/* Documents Section */}
           <div className="space-y-3">
             <h2 className="text-base font-bold font-heading text-ink">
-              কাগজপত্র ({bnDigits(documents.length)})
+              {t("কাগজপত্র", "Papers")} ({en ? documents.length : bnDigits(documents.length)})
             </h2>
 
             {documents.length === 0 && Object.keys(pendingUploads).length === 0 ? (
               <Card className="p-8 text-center border-dashed bg-surface/50">
                 <p className="text-sm text-muted">
                   {strings.uploadFlow.noDocsYet}
-                  <En>No documents yet.</En>
                 </p>
                 <p className="mt-2 text-sm">
-                  হাতে কাগজ নেই?{" "}
+                  {t("হাতে কাগজ নেই?", "No papers at hand?")}{" "}
                   <a href="#samples" className="font-semibold text-accent underline underline-offset-4 hover:no-underline">
-                    উপরের নমুনা কাগজ দিয়ে চেষ্টা করুন
+                    {t("উপরের নমুনা কাগজ দিয়ে চেষ্টা করুন", "Try the sample documents above")}
                   </a>
-                  <En className="text-muted">No papers at hand? Use the sample documents above.</En>
                 </p>
               </Card>
             ) : (
               <div className="space-y-3">
-                {Object.values(pendingUploads).map((upload) => <Card key={upload.id} className="p-4"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-ink">{upload.name}</p><p className="text-xs text-muted">{upload.status === "error" ? upload.error : upload.status === "optimizing" ? "ফাইল প্রস্তুত হচ্ছে" : "আপলোড হচ্ছে"}</p></div><button type="button" onClick={() => { setPendingUploads((prev) => { const copy = { ...prev }; delete copy[upload.id]; return copy; }); setUploadPercents((prev) => { const copy = { ...prev }; delete copy[upload.id]; return copy; }); }} className="min-h-11 min-w-11 rounded-lg text-sm text-muted hover:bg-bg" aria-label={`${upload.name} তালিকা থেকে সরান`}>×</button></div>{upload.status !== "error" && <div className="mt-3 h-2 overflow-hidden rounded-full bg-line" role="progressbar" aria-label={`${upload.name} আপলোডের অগ্রগতি`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={upload.progress}><div className="h-full bg-accent transition-[width]" style={{ width: `${upload.progress}%` }} /></div>}</Card>)}
+                {Object.values(pendingUploads).map((upload) => <Card key={upload.id} className="p-4"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-ink">{upload.name}</p><p className="text-xs text-muted">{upload.status === "error" ? upload.error : upload.status === "optimizing" ? t("ফাইল প্রস্তুত হচ্ছে", "Preparing file") : t("আপলোড হচ্ছে", "Uploading")}</p></div><button type="button" onClick={() => { setPendingUploads((prev) => { const copy = { ...prev }; delete copy[upload.id]; return copy; }); setUploadPercents((prev) => { const copy = { ...prev }; delete copy[upload.id]; return copy; }); }} className="min-h-11 min-w-11 rounded-lg text-sm text-muted hover:bg-bg" aria-label={`${upload.name} ${t("তালিকা থেকে সরান", "remove from list")}`}>×</button></div>{upload.status !== "error" && <div className="mt-3 h-2 overflow-hidden rounded-full bg-line" role="progressbar" aria-label={`${upload.name} ${t("আপলোডের অগ্রগতি", "upload progress")}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={upload.progress}><div className="h-full bg-accent transition-[width]" style={{ width: `${upload.progress}%` }} /></div>}</Card>)}
                 {/* Uploaded Documents */}
                 {documents.map((doc) => (
                   <DocumentProgressCard

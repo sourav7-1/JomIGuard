@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import type { DocumentStatusOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
+import { useLang, useStrings } from "@/lib/lang";
 
 export interface RecommendedDocListProps {
   documents: DocumentStatusOut[];
@@ -22,6 +22,9 @@ export function RecommendedDocList({
   assessError,
   className = "",
 }: RecommendedDocListProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   // A type is ticked when a document of that type was declared at upload (or detected when read),
   // unless reading it failed.
   const doneDocs = documents.filter((d) => d.status === "done");
@@ -57,7 +60,7 @@ export function RecommendedDocList({
           <span>📋</span> {strings.uploadFlow.recommendedTitle}
         </h3>
         <p className="text-xs text-muted leading-relaxed">
-          কাগজের ধরন জানা গেলে পাশের বক্সে টিকচিহ্ন আসবে
+          {t("কাগজের ধরন জানা গেলে পাশের বক্সে টিকচিহ্ন আসবে", "A tick appears in the box once the paper type is known")}
         </p>
       </div>
 

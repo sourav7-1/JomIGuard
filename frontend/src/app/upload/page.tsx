@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { api } from "@/lib/api";
-import { strings } from "@/lib/strings";
 import { divisions } from "@/lib/bd-locations";
+import { useLang, useStrings } from "@/lib/lang";
 
 export default function NewCheckPage() {
   return <Suspense><NewCheckForm /></Suspense>;
 }
 
 function NewCheckForm() {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const router = useRouter();
   // pre-filled from the location picker (/find)
   const params = useSearchParams();
@@ -32,7 +35,7 @@ function NewCheckForm() {
 
     const trimmedMouza = mouza.trim();
     if (!district) {
-      setError("জেলা বেছে নিন।");
+      setError(t("জেলা বেছে নিন।", "Choose a district."));
       return;
     }
     if (!trimmedMouza) {
@@ -62,7 +65,7 @@ function NewCheckForm() {
       {/* Step Header */}
       <div className="space-y-3 md:pt-5">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-soft text-accent text-xs font-semibold mb-1">
-          <span>ধাপ ১</span> • {strings.uploadFlow.step1Title}
+          <span>{t("ধাপ ১", "Step 1")}</span> • {strings.uploadFlow.step1Title}
         </div>
         <h1 className="text-2xl md:text-3xl font-bold font-heading text-ink">
           {strings.uploadFlow.step1Title}
@@ -75,11 +78,11 @@ function NewCheckForm() {
       <Card className="p-5 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-5">
           {khatianNo && (
-            <p className="rounded-lg bg-accent-soft px-3 py-2 text-sm text-ink">খতিয়ান নং: <b>{khatianNo}</b></p>
+            <p className="rounded-lg bg-accent-soft px-3 py-2 text-sm text-ink">{t("খতিয়ান নং", "Khatian no.")}: <b>{khatianNo}</b></p>
           )}
           <div className="space-y-1.5">
             <label htmlFor="district-input" className="block text-sm font-semibold text-ink">
-              জেলা <span className="text-bad">*</span>
+              {t("জেলা", "District")} <span className="text-bad">*</span>
             </label>
             <select
               id="district-input"
@@ -88,9 +91,9 @@ function NewCheckForm() {
               onChange={(e) => setDistrict(e.target.value)}
               className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-line bg-bg text-ink text-sm"
             >
-              <option value="">জেলা বেছে নিন</option>
+              <option value="">{t("জেলা বেছে নিন", "Choose a district")}</option>
               {divisions.map((d) => (
-                <optgroup key={d.name} label={`${d.name} বিভাগ`}>
+                <optgroup key={d.name} label={`${d.name} ${t("বিভাগ", "Division")}`}>
                   {d.districts.map((name) => <option key={name}>{name}</option>)}
                 </optgroup>
               ))}
@@ -132,7 +135,7 @@ function NewCheckForm() {
               className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-line bg-bg text-ink placeholder:text-muted/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent text-sm"
             />
             <p className="text-[11px] text-muted">
-              বাংলা বা ইংরেজি সংখ্যায় লিখতে পারেন
+              {t("বাংলা বা ইংরেজি সংখ্যায় লিখতে পারেন", "Bangla or English digits both work")}
             </p>
           </div>
 
