@@ -6,13 +6,17 @@ import { api, ApiError } from "@/lib/api";
 import { strings } from "@/lib/strings";
 import { Spinner } from "@/components/ui/Spinner";
 
+// Pages anyone can open without signing in.
+const PUBLIC = ["/", "/login", "/offline", "/help", "/docs", "/how-it-works"];
+const isPublic = (p: string) => PUBLIC.includes(p) || p.startsWith("/verify/");
+
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [authorizedPath, setAuthorizedPath] = useState("");
 
   useEffect(() => {
-    if (pathname === "/login" || pathname === "/offline" || pathname.startsWith("/verify/")) return;
+    if (isPublic(pathname)) return;
     let active = true;
     const redirectToLogin = () => router.replace(`/login?next=${encodeURIComponent(pathname)}&expired=1`);
     const redirectForMissingSession = () => router.replace(`/login?next=${encodeURIComponent(pathname)}`);
@@ -32,6 +36,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     };
   }, [pathname, router]);
 
-  if (pathname === "/login" || pathname === "/offline" || pathname.startsWith("/verify/") || authorizedPath === pathname) return children;
+  if (isPublic(pathname) || authorizedPath === pathname) return children;
   return <div className="flex min-h-[50vh] items-center justify-center gap-3 text-sm text-muted"><Spinner />{strings.auth.checking}</div>;
 }

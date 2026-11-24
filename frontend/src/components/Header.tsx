@@ -5,6 +5,7 @@ import { JourneyRail } from "./JourneyRail";
 import { strings } from "@/lib/strings";
 import { AuthControls } from "@/components/AuthControls";
 import { HeaderScroll } from "@/components/HeaderScroll";
+import { LangToggle, T } from "@/lib/lang";
 
 function ShieldMark() {
   return (
@@ -28,23 +29,20 @@ export function Header() {
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[var(--glass)] backdrop-blur-xl backdrop-saturate-150" />
       <HeaderScroll />
       <p className="border-b border-edge bg-accent-soft/70 px-4 py-1 text-center text-xs leading-5 text-ink">
-        <span aria-hidden="true" className="mr-1 font-semibold text-accent">ⓘ</span>{strings.app.independentNote}
+        <span aria-hidden="true" className="mr-1 font-semibold text-accent">ⓘ</span><T bn={strings.app.independentNote} en="JomiGuard Sentinel is an independent project, not a government service." />
       </p>
       <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:min-h-[76px] lg:px-8">
-        <Link href="/" aria-label="JomiGuard মূল পাতা" className="flex min-h-11 min-w-0 items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+        <Link href="/" aria-label="JomiGuard home" className="flex min-h-11 min-w-0 items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
           <ShieldMark />
           <span className="min-w-0">
             <span className="block truncate font-heading text-base font-bold sm:text-xl leading-6 tracking-tight text-accent">{strings.app.name}</span>
-            <span className="hidden text-xs leading-4 text-muted sm:block">কাগজের তথ্য মিলিয়ে দেখুন</span>
+            <span className="hidden text-xs leading-4 text-muted sm:block"><T bn="কাগজের তথ্য মিলিয়ে দেখুন" en="Cross-check your land papers" /></span>
           </span>
         </Link>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <Link href="/upload" className="hidden min-h-11 items-center sm:inline-flex justify-center rounded-[var(--radius-control)] bg-gradient-to-b from-accent to-[#23317A] px-3.5 text-sm font-semibold text-white shadow-rest transition-shadow hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-4">
-            <span className="sm:hidden">যাচাই শুরু</span>
-            <span className="hidden sm:inline">{strings.buttons.newCheck}</span>
-          </Link>
+          <LangToggle />
           <ThemeToggle />
-          <AuthControls />
+          <Suspense fallback={null}><AuthControls /></Suspense>
         </div>
       </div>
       <Suspense fallback={<div className="h-14 md:h-12" />}>

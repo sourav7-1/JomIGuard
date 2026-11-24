@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { ToastProvider } from "@/components/ui/Toast";
 import { GuidedTour } from "@/components/GuidedTour";
 import { HelpButton } from "@/components/HelpButton";
+import { T } from "@/lib/lang";
 
 const tiroBangla = Tiro_Bangla({
   weight: "400",
@@ -62,11 +63,11 @@ export default function RootLayout({
         <footer className="w-full border-t border-line bg-surface/50 mt-auto py-6">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pb-24 text-sm text-muted sm:px-6 md:flex-row md:items-start md:justify-between md:pb-6 lg:px-8">
             <p className="max-w-3xl leading-relaxed">
-              {strings.app.disclaimer}
+              <T bn={strings.app.disclaimer} en="Even when every paper matches, lawsuits, possession disputes or hidden mortgages do not show on paper. So this service only says what matched, what did not, and what to do next." />
             </p>
             <div className="shrink-0 md:text-right">
-              <p className="font-medium text-ink">{strings.app.footerText}</p>
-              <p className="mt-1">{strings.app.independentNote}</p>
+              <p className="font-medium text-ink"><T bn={strings.app.footerText} en="© 2026 JomiGuard Sentinel. This is not legal advice." /></p>
+              <p className="mt-1"><T bn={strings.app.independentNote} en="JomiGuard Sentinel is an independent project, not a government service." /></p>
               <p className="mt-1">Developed by Team 2:29 AM Error</p>
             </div>
           </div>
