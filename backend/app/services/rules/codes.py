@@ -22,6 +22,7 @@ CODES: dict[str, Code] = {
         Code("seller_father_mismatch", "identity", "warn"),
         Code("seller_identity_unverified", "identity", "warn"),
         Code("seller_nid_name_mismatch", "identity", "bad"),
+        Code("seller_nid_name_partial", "identity", "warn"),
         Code("area_exceeds_share", "area", "bad"),
         Code("area_sum_mismatch", "area", "warn"),
         Code("unsupported_unit", "area", "warn"),

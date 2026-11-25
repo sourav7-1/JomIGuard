@@ -63,6 +63,7 @@ class IdentityCaseResult(BaseModel):
     status: str
     name_bn_as_per_nid: str | None = None
     father_name_as_per_nid: str | None = None
+    name_source: str = "typed"  # "ocr": read by Tesseract, a mismatch only goes to to_verify
     verified_at: date | None = None
 
 

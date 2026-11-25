@@ -18,7 +18,7 @@ Example values follow the team demo (দাগ ৩০৫, খতিয়ান 
 - **Decimals.** Areas, shares and money are `decimal`, never float.
 - **Dates.** `date` fields are ISO `YYYY-MM-DD`. If the document uses বঙ্গাব্দ or only a year, keep `*_text` and leave the date `null`.
 - **Unknown fields are rejected** on every model (`extra="forbid"`).
-- **Excluded personal data.** NID, phone numbers and birth registration numbers are **never** extracted, even when printed. Same for photos and signatures.
+- **Excluded personal data.** NID numbers, phone numbers, birth registration numbers, dates of birth and addresses on an NID are **never** extracted, even when printed. Same for photos and signatures. The only exception is the `nid` reader below (names only).
 - **filled_by column.** `extractor` = read from the document as printed; `normalize` = derived later by `normalize.py`. Every `normalize` field is optional (default `null`), so raw extractor output validates.
 - **Rule column.** `identity` = names/IDs match across documents; `area` = shares and areas add up; `heirs` = who the heirs are; `chain` = ownership history links; `none yet` = stored for display or future use.
 
@@ -194,3 +194,15 @@ One schema for the mutation khatian plus the DCR fee receipt. All DCR fields (`d
 6. **বঙ্গাব্দ dates.** Keep the text; the `date` field stays `null`.
 7. **Witnesses and deed writer** (সাক্ষী, দলিল লেখক) are not extracted.
 8. **Area unit.** normalize reads the unit from `area_text` first; if the cell has no unit, it uses `area_unit_text`; if neither has a unit, it emits a `missing_unit` warning and leaves `*_shatangsho` empty.
+
+## nid (NID name reading, not a land document)
+
+Owner decision 2026-11-26. Read from an NID photo **only** to match the seller/buyer with the deed and khatian (`services/identity/nid.py`, details in `identity.md`). Not part of `ExtractedDocument`; never saved as an extraction.
+
+| field | type | filled_by | rule | notes |
+|---|---|---|---|---|
+| `name_bn` | str \| null | extractor | identity | after "নাম", as printed (honorifics kept) |
+| `name_en` | str \| null | extractor | identity | after "Name", as printed |
+| `father_or_husband_name` | str \| null | extractor | identity | after "পিতা" or "স্বামী", as printed |
+
+Everything else on the card (NID number, date of birth, address, blood group, mother's name, signature, photo) has no field and is dropped if a model returns it.

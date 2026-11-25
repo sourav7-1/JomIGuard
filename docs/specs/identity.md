@@ -1,6 +1,7 @@
 # Identity verification
 
-**Status: DRAFT.** No code yet. Placement: after login (Day 39), together with Phase 6 (escrow).
+**Status:** mock provider and NID name reading implemented (`services/identity/`, `api/identity.py`).
+The provider check of NID genuineness and face match is still a mock.
 
 ## Purpose
 
@@ -15,7 +16,8 @@
 - Identity checks go through a **licensed e-KYC provider or the escrow partner bank**. The
   provider does the NID check and the face / liveness check.
 - JomiGuard **never builds its own** face matching, liveness detection or NID database lookup,
-  and never sees the raw identity data those checks use.
+  and never sees the raw identity data those checks use, except the **name fields of the NID
+  photo** (below).
 - JomiGuard receives only a **result** (below) and uses it in rules and in escrow.
 
 ## Provider interface
@@ -57,11 +59,50 @@ The seller may not have an account. The buyer starts the seller's check from the
 If the seller does not verify (no result, or the link expired), the case shows
 `seller_identity_unverified` (warn). A `failed` result also leaves the seller unverified.
 
+## NID name reading (owner decision, 2026-11-26)
+
+The owner allows reading **only the name fields** of an NID photo, to match the seller or buyer
+with the khatian and the deed. Everything else on the card stays forbidden.
+
+- **What is read:** `name_bn`, `name_en`, `father_or_husband_name` (fields.md, `nid`). The prompt
+  forbids the NID number, date of birth, address, blood group, mother's name, signature and photo;
+  `NidNames` keeps only the three fields, so anything else a model returns is dropped before it can
+  be stored, returned or logged.
+- **Endpoints:** `POST /verify/{token}/nid` (seller, after consent) and `POST /me/verification/nid`
+  (buyer, `consent=true`). Multipart `image` (max 5 MB) plus the mocked provider `outcome`.
+- **The image stays in memory.** It is read in the request and dropped: never written to MinIO,
+  disk or the extraction cache.
+- **Chain:** a paid Anthropic model (only when `ANTHROPIC_API_KEY` and the LLM settings are set),
+  then local Tesseract, which keeps only the "নাম", "Name", "পিতা"/"স্বামী" lines. **Never Gemini**:
+  its free tier may use inputs for training. A Tesseract read is stored as `name_source = "ocr"`.
+- **Matching** (`nid_match` in `rules/names.py`, on top of `names_match`: honorifics removed,
+  spelling variants, father/husband name when both are present):
+
+  | result | Bangla | seller: when | buyer: when |
+  |---|---|---|---|
+  | `matched` | মিলেছে | the name matches the deed seller and a matched khatian owner, father/husband not different | the name matches a buyer on the proposed deed of one of the user's own cases, father/husband not different |
+  | `partial` | আংশিক | only one of the two, or the father/husband name differs | the father/husband name differs |
+  | `no_match` | মেলেনি | neither | no buyer |
+  | `unreadable` | পড়া যায়নি | no name could be read; the link is **not** used up, so the seller can try again or type the name | same |
+
+  A buyer with no proposed deed in their cases gets no match result (`null`); there is no buyer
+  rule, the result card only.
+- **Rule:** `seller_identity` recomputes the result on the current documents: `matched` passes,
+  `partial` gives `seller_nid_name_partial` (warn), `no_match` gives `seller_nid_name_mismatch`
+  (bad). An OCR-read name never gives a mismatch: it goes to "যাচাই করা যায়নি / মিলিয়ে নিন"
+  (rules.md, OCR guard).
+- **What it does not prove:** a name match does not prove the NID is genuine; that needs the
+  Election Commission service through a provider (mocked in this demo). The UI says so.
+- **Audit:** one log line `identity.nid_read party=… result=… source=… status=… land=…`, with no
+  names and no image data.
+- **Tests** use only synthetic cards from `ml/synth/nid.py` (watermarked "নমুনা / SAMPLE",
+  placeholder ID number and birth date).
+
 ## Data we store
 
 | stored | never stored |
 |---|---|
-| `status`, `name_bn_as_per_nid`, `father_name_as_per_nid`, `verified_at`, `provider`, `provider_ref`, the purpose, the user, the time of consent | NID number, NID images (front/back), selfies or video, face templates or embeddings, signatures, date of birth, address, phone number, birth registration number |
+| `status`, `name_bn_as_per_nid`, `name_en_as_per_nid`, `father_name_as_per_nid`, `match_result`, `match_confidence`, `name_source` (ai / ocr / typed), `verified_at`, `provider`, `provider_ref`, the party, the user, the time and version of consent | NID number, NID images (front/back), selfies or video, face templates or embeddings, signatures, date of birth, address, blood group, mother's name, phone number, birth registration number |
 
 If a provider sends more than the result fields, the extra data is dropped before anything is
 saved or logged.
@@ -72,21 +113,26 @@ saved or logged.
   - **what** is checked (জাতীয় পরিচয়পত্র ও চেহারা মিলিয়ে দেখা),
   - **by whom** (the named provider or bank, not JomiGuard),
   - **why** (seller is the khatian owner; KYC before escrow),
-  - **what JomiGuard keeps** (only the result fields above),
+  - **what JomiGuard keeps** (only the result fields above), and the line
+    "শুধু নাম মেলাতে ছবি পড়া হবে; নম্বর, জন্মতারিখ বা ছবি রাখা হবে না" before the NID photo;
+    consent version `identity-nid-name-v1`,
   - that the user can **delete their data** at any time (except what the law requires the bank
     to keep).
 - Verification starts only after the user agrees; the consent (text version, time, user) is
   recorded. Withdrawing consent deletes the stored result.
 
-## Rules (later)
+## Rules
 
-Both compare `name_bn_as_per_nid` with the matched owner on the current khatian using
-`names_match` (`rules/names.py`) and are added to `findings.md` when built:
+`seller_identity` (findings.md) compares `name_bn_as_per_nid` with the deed seller and the
+matched owner on the current khatian using `nid_match` (`rules/names.py`):
 
 | code | severity | fires when |
 |---|---|---|
-| `seller_identity_unverified` | warn | A deed seller has no `verified` result for `seller_ownership` (not started, link not used or expired, pending, or failed). |
-| `seller_nid_name_mismatch` | bad | A seller is verified, but `name_bn_as_per_nid` (and, if both exist, `father_name_as_per_nid` vs the owner's `father_or_husband_name`) does not match the khatian owner. |
+| `seller_identity_unverified` | warn | A deed seller has no `verified` result for `seller_ownership` (not started, link not used or expired, pending, failed, or the NID was unreadable). |
+| `seller_nid_name_partial` | warn | The name matches only the deed seller or only the owner, or the father/husband name differs. |
+| `seller_nid_name_mismatch` | bad | The name matches neither the deed seller nor the owner. |
+
+Both name codes go to `to_verify` instead when the name was read by OCR.
 
 Messages follow the usual rules: say what matched and what to do next; never call land safe.
 

@@ -19,6 +19,7 @@ are always kept. No action says the land is safe (forbidden-words test).
 | `khatian_mismatch` | 1 | land_office | `দলিলে লেখা {survey} খতিয়ান {deed_khatian_no}-এর সার্টিফায়েড কপি ভূমি অফিস থেকে তুলে মিলিয়ে নিন।` | The deed cites another khatian; its official copy shows what it covers. |
 | `mouza_mismatch` | 1 | land_office | `জমিটি কোন মৌজার ({deed_mouza} না {khatian_mouza}), ভূমি অফিসে যাচাই করুন।` | Different mouza means possibly different land. |
 | `chain_break` | 1 | lawyer | `{to_document}-এর আগের হস্তান্তরের কাগজ চেয়ে নিন এবং মালিকানার ধারা একজন আইনজীবীকে দেখান।` | A gap in the ownership chain needs the missing transfer document and a professional reading. |
+| `seller_nid_name_partial` | 2 | buyer | `বিক্রেতার পরিচয়পত্রের নাম ও পিতা/স্বামীর নাম দলিল ও খতিয়ানের সঙ্গে মিলিয়ে দেখুন।` | The NID name matched only partly (one document, or a different father/husband); possibly a different person. |
 | `seller_father_mismatch` | 2 | seller | `{seller}-এর পরিচয় (পিতা/স্বামীর নাম) কাগজ দিয়ে নিশ্চিত হোন।` | Same name, different father: possibly a different person. |
 | `heir_missing_from_mutation` | 2 | land_office | `{heir}-এর নাম নামজারিতে কেন নেই, ভূমি অফিসে জেনে নিন।` | An heir may still have a claim if the mutation left them out. |
 | `document_missing` | 2 | seller | `বিক্রেতার কাছ থেকে {missing_document}-এর কপি চেয়ে নিন।` | The deed relies on a document (e.g. heir certificate) the case does not have. |

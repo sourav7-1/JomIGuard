@@ -1,10 +1,11 @@
 import hashlib
+import logging
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
@@ -20,15 +21,18 @@ from app.schemas.identity import (
     SellerLinkCreated,
     VerificationCompleteIn,
 )
-from app.services.identity import get_provider
+from app.services.identity import Outcome, get_provider
+from app.services.identity.nid import MAX_IMAGE_BYTES, confidence, read_nid
 from app.services.land_case import load_land_case
-from app.services.rules.names import names_match
+from app.services.rules.common import resolve_sellers
+from app.services.rules.names import names_match, nid_match, person_key
 
 router = APIRouter(tags=["identity"])
 Db = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(authenticated_user)]
 TOKEN_LIFETIME = timedelta(days=7)
-CONSENT_VERSION = "identity-demo-v1"
+CONSENT_VERSION = "identity-nid-name-v1"  # consent covers reading the NID name fields only
+log = logging.getLogger("app.audit.identity")
 
 
 def _token_hash(token: str) -> str:
@@ -45,6 +49,23 @@ def _live_link(db: Session, token: str) -> SellerLink:
     if link is None or link.used_at is not None or _utc(link.expires_at) <= now:
         raise HTTPException(410, "এই যাচাইয়ের link আর ব্যবহার করা যাবে না।")
     return link
+
+
+def _consume(db: Session, link: SellerLink) -> None:
+    now = datetime.now(UTC)
+    consumed = db.execute(
+        update(SellerLink)
+        .where(
+            SellerLink.id == link.id,
+            SellerLink.used_at.is_(None),
+            SellerLink.expires_at > now,
+            SellerLink.consent_at.is_not(None),
+        )
+        .values(used_at=now)
+    )
+    if consumed.rowcount != 1:
+        db.rollback()
+        raise HTTPException(410, "এই যাচাইয়ের link আর ব্যবহার করা যাবে না।")
 
 
 @router.post("/lands/{land_id}/seller-links", response_model=SellerLinkCreated, status_code=201)
@@ -117,20 +138,7 @@ def complete_seller_verification(token: str, body: VerificationCompleteIn, db: D
     if provider.name != settings.identity_provider:
         raise HTTPException(503, "পরিচয় যাচাইয়ের provider প্রস্তুত নয়।")
     result = provider.verify(body.name.strip(), body.father_name.strip(), body.outcome)
-    now = datetime.now(UTC)
-    consumed = db.execute(
-        update(SellerLink)
-        .where(
-            SellerLink.id == link.id,
-            SellerLink.used_at.is_(None),
-            SellerLink.expires_at > now,
-            SellerLink.consent_at.is_not(None),
-        )
-        .values(used_at=now)
-    )
-    if consumed.rowcount != 1:
-        db.rollback()
-        raise HTTPException(410, "এই যাচাইয়ের link আর ব্যবহার করা যাবে না।")
+    _consume(db, link)
     row = IdentityVerification(
         land_id=link.land_id,
         user_id=None,
@@ -212,3 +220,117 @@ def delete_seller_verification(token: str, db: Db):
         db.delete(row)
     db.delete(link)
     db.commit()
+
+
+# --- NID name reading (docs/specs/identity.md): the image stays in memory, only names kept ---
+
+
+def _image_bytes(image: UploadFile) -> bytes:
+    data = image.file.read(MAX_IMAGE_BYTES + 1)
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(413, "ছবিটি ৫ MB-এর বেশি।")
+    if not data:
+        raise HTTPException(422, "ছবি পাওয়া যায়নি।")
+    return data
+
+
+def _seller_groups(db: Session, land_id: uuid.UUID, seller_name: str) -> list[list]:
+    """[deed seller], [the khatian owners with that name], as the seller_identity rule uses."""
+    case = load_land_case(db, land_id)
+    owners = case.current_khatian.data.owners if case.current_khatian else []
+    for match in resolve_sellers(case):
+        if names_match(person_key(seller_name), person_key(match.seller.name))[0]:
+            seller = match.seller
+            return [
+                [(seller.name, seller.father_or_husband_name)],
+                [(owners[i].name, owners[i].father_or_husband_name) for i in match.candidates],
+            ]
+    return [[(seller_name, None)], []]
+
+
+def _nid_row(read, groups, outcome: Outcome, **fields) -> IdentityVerification:
+    names = read.names
+    name = names.name_bn or names.name_en
+    result, score = nid_match(name, names.father_or_husband_name, *groups) if groups else (
+        "unreadable" if not name else None, 0.0)  # fmt: skip
+    readable = result != "unreadable"
+    verified = get_provider().verify(name or "", names.father_or_husband_name or "", outcome)
+    return IdentityVerification(
+        status=verified.status if readable else "pending",
+        name_bn_as_per_nid=names.name_bn if readable else None,
+        name_en_as_per_nid=names.name_en if readable else None,
+        father_name_as_per_nid=names.father_or_husband_name if readable else None,
+        match_result=result,
+        match_confidence=confidence(score, read.source) if readable and result else None,
+        name_source=read.source or "ocr",
+        provider=verified.provider,
+        provider_ref=verified.provider_ref,
+        verified_at=verified.verified_at if readable else None,
+        **fields,
+    )
+
+
+def _audit(row: IdentityVerification) -> None:
+    # no names, no image data: only what happened
+    log.info("identity.nid_read party=%s result=%s source=%s status=%s land=%s",
+             row.party, row.match_result, row.name_source, row.status, row.land_id)  # fmt: skip
+
+
+@router.post("/verify/{token}/nid", response_model=IdentityVerificationOut)
+def read_seller_nid(
+    token: str,
+    db: Db,
+    image: UploadFile,
+    outcome: Annotated[Outcome, Form()] = "verified",  # the mocked Election Commission result
+):
+    link = _live_link(db, token)
+    if link.consent_at is None:
+        raise HTTPException(409, "আগে সম্মতি দিন।")
+    read = read_nid(_image_bytes(image))  # the bytes are dropped after this call
+    groups = _seller_groups(db, link.land_id, link.seller_name_on_deed)
+    row = _nid_row(
+        read, groups, outcome,
+        land_id=link.land_id, user_id=None, party="seller",
+        seller_name_on_deed=link.seller_name_on_deed, consent_at=link.consent_at,
+        consent_version=link.consent_version or CONSENT_VERSION,
+    )  # fmt: skip
+    if row.match_result != "unreadable":  # an unreadable photo can be retried on the same link
+        _consume(db, link)
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    _audit(row)
+    return row
+
+
+def _buyer_groups(db: Session, user: User) -> list[list]:
+    """The buyers of the proposed deed on each of the user's own cases (one group)."""
+    buyers = []
+    for land_id in db.scalars(select(Land.id).where(Land.owner_id == user.id)):
+        deed = load_land_case(db, land_id).proposed_deed
+        if deed is not None:
+            buyers += [(b.name, b.father_or_husband_name) for b in deed.data.buyers]
+    return [buyers] if buyers else []
+
+
+@router.post("/me/verification/nid", response_model=IdentityVerificationOut, status_code=201)
+def read_buyer_nid(
+    db: Db,
+    user: CurrentUser,
+    image: UploadFile,
+    consent: Annotated[bool, Form()],
+    outcome: Annotated[Outcome, Form()] = "verified",
+):
+    if not consent:
+        raise HTTPException(422, "আগে সম্মতি দিন।")
+    read = read_nid(_image_bytes(image))
+    row = _nid_row(
+        read, _buyer_groups(db, user), outcome,
+        land_id=None, user_id=user.id, party="buyer", seller_name_on_deed=None,
+        consent_at=datetime.now(UTC), consent_version=CONSENT_VERSION,
+    )  # fmt: skip
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    _audit(row)
+    return row

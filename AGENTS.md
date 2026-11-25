@@ -82,7 +82,7 @@ docs/legal-notes.md  verified legal facts and their sources
 
 - Never write that land is "safe". No "নিরাপদ", "safe", "guaranteed" or similar in reports, findings, agent replies or UI copy. Say what matched, what did not, and what to do next.
 - Never commit real documents, NID numbers, real names or real deeds. All test data is synthetic. `data/` and `.env` are gitignored.
-- Never extract or store NID, phone numbers, birth registration numbers, photos or signatures.
+- Never extract or store NID numbers, dates of birth, addresses, NID images, selfies, face data, signatures, phone numbers or birth registration numbers. **Exception (owner decision, 2026-11-26):** the name fields of an NID photo (name in Bangla and English, father's or husband's name) may be read, in memory only, to match the seller/buyer with the khatian and deed; the image is discarded after reading and never stored (not in MinIO, not on disk). Never send a real NID to the Gemini free tier (the NID reader has no Gemini step). Identity genuineness still goes through a verification provider; store only the result (see docs/specs/identity.md).
 - Never invent legal facts (inheritance shares, mutation steps, law sections). Use only what is written in `docs/legal-notes.md` or a spec. If it is missing, stop and ask.
 - Every new rule needs tests. A task is not done until its tests pass.
 - No secrets in committed files. Real values live in `.env`; `.env.example` uses placeholders.

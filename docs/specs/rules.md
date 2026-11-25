@@ -250,10 +250,16 @@ certificate) is OCR-read, it stays a finding with the OCR note.
 
 **Stays a finding, with an OCR note:** every other code: identity (`dag_mismatch`,
 `khatian_mismatch`, `mouza_mismatch`, `seller_not_owner`, `seller_father_mismatch`,
-`seller_identity_unverified`, `seller_nid_name_mismatch`), `heir_missing_from_mutation`,
+`seller_identity_unverified`), `heir_missing_from_mutation`,
 `heir_consent_missing` when its numbers were AI-read, `chain_break` and `document_missing`. Identifiers and names are
 compared as text and stay mismatches. The message gets " (দ্রষ্টব্য: …-এর লেখা OCR দিয়ে পড়া;
 আসল কাগজের সঙ্গে মিলিয়ে নিন।)" and `values.ocr_read` is set.
+
+**NID names read by OCR:** `seller_nid_name_mismatch` and `seller_nid_name_partial` come from a
+name read off an NID photo. When that name was read by the Tesseract step (`name_source = "ocr"`),
+`seller_identity` itself returns them as `skipped`, titled "যাচাই করা যায়নি / মিলিয়ে নিন", with
+`values.ocr_read`, `ocr_original_code` and `ocr_original_title` (listed in `to_verify`, no risk).
+An AI-read or typed name keeps the finding.
 
 **Action:** when a case has an `ocr_read` document and a non-empty `to_verify`, the first action is
 `verify_ocr_numbers` (buyer). Its text is "N টি কাগজ OCR দিয়ে পড়া — অংশ ও জমির পরিমাণ আসল কাগজের

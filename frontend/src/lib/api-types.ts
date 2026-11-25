@@ -630,6 +630,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/verify/{token}/nid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read Seller Nid */
+        post: operations["read_seller_nid_verify__token__nid_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/verification/nid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read Buyer Nid */
+        post: operations["read_buyer_nid_me_verification_nid_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/guardian/lands": {
         parameters: {
             query?: never;
@@ -1271,6 +1305,30 @@ export interface components {
              */
             created_at: string;
         };
+        /** Body_read_buyer_nid_me_verification_nid_post */
+        Body_read_buyer_nid_me_verification_nid_post: {
+            /** Image */
+            image: string;
+            /** Consent */
+            consent: boolean;
+            /**
+             * Outcome
+             * @default verified
+             * @enum {string}
+             */
+            outcome: "verified" | "failed" | "pending";
+        };
+        /** Body_read_seller_nid_verify__token__nid_post */
+        Body_read_seller_nid_verify__token__nid_post: {
+            /** Image */
+            image: string;
+            /**
+             * Outcome
+             * @default verified
+             * @enum {string}
+             */
+            outcome: "verified" | "failed" | "pending";
+        };
         /** Body_upload_document_documents_post */
         Body_upload_document_documents_post: {
             /** File */
@@ -1904,6 +1962,11 @@ export interface components {
             name_bn_as_per_nid?: string | null;
             /** Father Name As Per Nid */
             father_name_as_per_nid?: string | null;
+            /**
+             * Name Source
+             * @default typed
+             */
+            name_source: string;
             /** Verified At */
             verified_at?: string | null;
         };
@@ -1932,6 +1995,18 @@ export interface components {
             name_bn_as_per_nid?: string | null;
             /** Father Name As Per Nid */
             father_name_as_per_nid?: string | null;
+            /** Name En As Per Nid */
+            name_en_as_per_nid?: string | null;
+            /** Match Result */
+            match_result?: ("matched" | "partial" | "no_match" | "unreadable") | null;
+            /** Match Confidence */
+            match_confidence?: number | null;
+            /**
+             * Name Source
+             * @default typed
+             * @enum {string}
+             */
+            name_source: "ai" | "ocr" | "typed";
             /** Provider */
             provider: string;
             /** Provider Ref */
@@ -3711,6 +3786,74 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_seller_nid_verify__token__nid_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_read_seller_nid_verify__token__nid_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityVerificationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_buyer_nid_me_verification_nid_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_read_buyer_nid_me_verification_nid_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityVerificationOut"];
+                };
             };
             /** @description Validation Error */
             422: {

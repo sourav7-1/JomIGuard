@@ -15,6 +15,10 @@ class IdentityVerificationOut(BaseModel):
     status: Literal["pending", "verified", "failed"]
     name_bn_as_per_nid: str | None = None
     father_name_as_per_nid: str | None = None
+    name_en_as_per_nid: str | None = None
+    match_result: Literal["matched", "partial", "no_match", "unreadable"] | None = None
+    match_confidence: float | None = None
+    name_source: Literal["ai", "ocr", "typed"] = "typed"
     provider: str
     provider_ref: str
     verified_at: datetime | None

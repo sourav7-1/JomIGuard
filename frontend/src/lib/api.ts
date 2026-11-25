@@ -10,6 +10,9 @@ export type IdentityVerificationOut = {
   id: string; land_id: string | null; party: "buyer" | "seller";
   seller_name_on_deed: string | null; status: "pending" | "verified" | "failed";
   name_bn_as_per_nid: string | null; father_name_as_per_nid: string | null;
+  name_en_as_per_nid?: string | null;
+  match_result?: "matched" | "partial" | "no_match" | "unreadable" | null;
+  match_confidence?: number | null; name_source?: "ai" | "ocr" | "typed";
   provider: string; provider_ref: string; verified_at: string | null; created_at: string;
 };
 export type DocumentStatusOut = components["schemas"]["DocumentStatusOut"];
@@ -151,6 +154,15 @@ export const api = {
     apiFetch<{ consented: boolean }>(`/verify/${token}/consent`, { method: "POST", body: { consent: true } }),
   completeSellerVerification: (token: string, body: { name: string; father_name: string; outcome: "verified" | "failed" | "pending" }) =>
     apiFetch<IdentityVerificationOut>(`/verify/${token}/complete`, { method: "POST", body }),
+  // NID photo: read on the server for the name fields only; the image is not kept
+  readSellerNid: (token: string, image: Blob, outcome: "verified" | "failed" | "pending") => {
+    const body = new FormData(); body.append("image", image, "nid.jpg"); body.append("outcome", outcome);
+    return apiFetch<IdentityVerificationOut>(`/verify/${token}/nid`, { method: "POST", body });
+  },
+  readBuyerNid: (image: Blob, outcome: "verified" | "failed" | "pending") => {
+    const body = new FormData(); body.append("image", image, "nid.jpg"); body.append("outcome", outcome); body.append("consent", "true");
+    return apiFetch<IdentityVerificationOut>("/me/verification/nid", { method: "POST", body });
+  },
   deleteSellerVerification: (token: string) => apiFetch<void>(`/verify/${token}`, { method: "DELETE" }),
   verifyBuyer: (body: { name: string; father_name: string; outcome: "verified" | "failed" | "pending"; consent: true }) =>
     apiFetch<IdentityVerificationOut>("/me/verification", { method: "POST", body }),

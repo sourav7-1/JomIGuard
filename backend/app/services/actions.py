@@ -38,6 +38,8 @@ FINDING_ACTIONS: dict[str, tuple[str, int, str, str]] = {
         "বিক্রেতাকে পরিচয় যাচাইয়ের link পাঠান"),
     "seller_nid_name_mismatch": ("review_seller_identity", 1, "buyer",
         "বিক্রেতার পরিচয়পত্রের নাম দলিল ও খতিয়ানের সঙ্গে মিলিয়ে দেখুন।"),
+    "seller_nid_name_partial": ("review_seller_identity", 2, "buyer",
+        "বিক্রেতার পরিচয়পত্রের নাম ও পিতা/স্বামীর নাম দলিল ও খতিয়ানের সঙ্গে মিলিয়ে দেখুন।"),
     "heir_missing_from_mutation": ("ask_land_office_heir", 2, "land_office",
         "{heir}-এর নাম নামজারিতে কেন নেই, ভূমি অফিসে জেনে নিন।"),
     "document_missing": ("get_missing_document", 2, "seller",

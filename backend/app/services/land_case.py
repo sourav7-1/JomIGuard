@@ -185,6 +185,7 @@ def load_land_case(db: Session, land_id: uuid.UUID) -> LandCase:
             status=row.status,
             name_bn_as_per_nid=row.name_bn_as_per_nid,
             father_name_as_per_nid=row.father_name_as_per_nid,
+            name_source=row.name_source or "typed",
             verified_at=row.verified_at.date() if row.verified_at else None,
         )
         for row in rows
