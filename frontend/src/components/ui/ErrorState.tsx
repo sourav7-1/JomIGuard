@@ -1,6 +1,8 @@
+"use client";
+
 import React from "react";
 import { Button } from "./Button";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/lib/lang";
 
 export interface ErrorStateProps {
   title?: string;
@@ -10,11 +12,14 @@ export interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = strings.error.defaultTitle,
-  message = strings.error.defaultMessage,
+  title,
+  message,
   onRetry,
   className = "",
 }: ErrorStateProps) {
+  const strings = useStrings();
+  title ??= strings.error.defaultTitle;
+  message ??= strings.error.defaultMessage;
   return (
     <div
       role="alert"

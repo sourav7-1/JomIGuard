@@ -57,6 +57,15 @@ def tables():
     Base.metadata.drop_all(engine)
 
 
+@pytest.fixture(autouse=True)
+def no_demo_limits(monkeypatch):
+    """Hourly demo limits count rows across the whole test run; tests of the limits set them."""
+    from app.services import demo_guard
+
+    monkeypatch.setattr(demo_guard, "SATELLITE_PER_HOUR", 10**6)
+    monkeypatch.setattr(demo_guard, "UPLOADS_PER_HOUR", 10**6)
+
+
 @pytest.fixture
 def storage():
     return FakeStorage()

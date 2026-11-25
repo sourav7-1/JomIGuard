@@ -5,7 +5,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { api, type DocumentStatusOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
+import { bnDigits } from "@/lib/digits";
+import { useLang, useStrings } from "@/lib/lang";
+
+type S = ReturnType<typeof useStrings>;
 
 export interface DocumentProgressCardProps {
   document: DocumentStatusOut;
@@ -15,7 +18,7 @@ export interface DocumentProgressCardProps {
   className?: string;
 }
 
-const PIPELINE_STEPS = [
+const pipelineSteps = (strings: S) => [
   { id: "queued", label: strings.uploadFlow.pipelineUpload },
   { id: "reading", label: strings.uploadFlow.pipelineReading },
   { id: "classifying", label: strings.uploadFlow.pipelineClassifying },
@@ -42,7 +45,7 @@ function getStepIndex(step: string | null | undefined, status: string): number {
   }
 }
 
-function getDetectedTypeLabel(type: string | null | undefined): string {
+function getDetectedTypeLabel(strings: S, type: string | null | undefined): string {
   if (!type) return "";
   switch (type) {
     case "khatian":
@@ -65,6 +68,8 @@ export function DocumentProgressCard({
   onRemove,
   className = "",
 }: DocumentProgressCardProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
   const [isReprocessing, setIsReprocessing] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const activeRef = useRef(true);
@@ -74,6 +79,9 @@ export function DocumentProgressCard({
   const isDone = doc.status === "done";
   const isProcessing = doc.status === "processing" || doc.status === "uploaded";
   const currentStepIdx = getStepIndex(doc.current_step, doc.status);
+  const steps = pipelineSteps(strings);
+  // Backend labels are Bangla only; in English show the matching pipeline step.
+  const stepLabel = en ? (isFailed ? strings.uploadFlow.pipelineFailed : steps[currentStepIdx].label) : doc.step_label_bn || doc.status_label_bn;
 
   // Polling logic
   useEffect(() => {
@@ -150,13 +158,13 @@ export function DocumentProgressCard({
     }
   };
 
-  const detectedLabel = getDetectedTypeLabel(doc.detected_doc_type || doc.doc_type);
+  const detectedLabel = getDetectedTypeLabel(strings, doc.detected_doc_type || doc.doc_type);
 
   return (
     <div
       role="region"
       aria-live="polite"
-      aria-label={`${doc.original_filename} - ${doc.step_label_bn || doc.status_label_bn}`}
+      aria-label={`${doc.original_filename} - ${stepLabel}`}
       className={`rounded-2xl border border-line bg-surface p-4 md:p-5 space-y-4 shadow-xs transition-colors ${className}`}
     >
       {/* Header: File Name & Badges */}
@@ -170,10 +178,10 @@ export function DocumentProgressCard({
               {doc.original_filename}
             </h4>
             <div className="text-xs text-muted flex items-center gap-2 mt-0.5">
-              <span>{doc.step_label_bn || doc.status_label_bn}</span>
+              <span>{stepLabel}</span>
               {isUploading && (
                 <span className="font-mono text-accent">
-                  ({strings.uploadFlow.uploading} {uploadPercent}%)
+                  ({strings.uploadFlow.uploading} {en ? uploadPercent : bnDigits(uploadPercent)}%)
                 </span>
               )}
             </div>
@@ -202,7 +210,7 @@ export function DocumentProgressCard({
           {isProcessing && !isUploading && (
             <div className="flex items-center gap-1.5 text-xs text-accent">
               <Spinner size="sm" />
-              <span>{doc.step_label_bn || strings.status.processing}</span>
+              <span>{en ? stepLabel : doc.step_label_bn || strings.status.processing}</span>
             </div>
           )}
         </div>
@@ -218,10 +226,10 @@ export function DocumentProgressCard({
         </div>
       )}
 
-      {/* Pipeline Strip (अपলোড → পড়া হচ্ছে → চেনা হচ্ছে → তথ্য বের হচ্ছে → শেষ) */}
+      {/* Pipeline strip: upload → reading → classifying → extracting → finished */}
       <div className="pt-1">
         <div className="grid grid-cols-5 gap-1 md:gap-2">
-          {PIPELINE_STEPS.map((step, idx) => {
+          {steps.map((step, idx) => {
             const isCompleted = isDone || idx < currentStepIdx;
             const isCurrent = !isDone && !isFailed && idx === currentStepIdx;
             const isStepFailed = isFailed && idx === currentStepIdx;
@@ -257,6 +265,13 @@ export function DocumentProgressCard({
           })}
         </div>
       </div>
+
+      {isDone && doc.latest_extraction?.extractor === "tesseract_regex" && (
+        <p role="status" className="rounded-lg border border-warn/30 bg-warn-bg p-3 text-xs text-warn">
+          <b>{en ? "Limited read (OCR)" : "সীমিত পাঠ (OCR)"}:</b>{" "}
+          {en ? "the AI reader was unavailable, so this page was read by OCR. Some fields may be missing; check them on the case page." : "AI দিয়ে পড়া যায়নি, তাই OCR দিয়ে পড়া হয়েছে। কিছু তথ্য বাদ থাকতে পারে; কেসের পাতায় মিলিয়ে নিন।"}
+        </p>
+      )}
 
       {/* Stale Warning & Retry */}
       {doc.is_stale && !isFailed && (

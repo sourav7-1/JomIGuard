@@ -1,170 +1,103 @@
 import Link from "next/link";
 import { strings } from "@/lib/strings";
+import { BHOLA_CASE, officialLinks } from "@/lib/services";
+import { Card } from "@/components/ui/Card";
+import { PHASE_LABELS, STEP_LABELS, type Phase, type StepKey } from "@/lib/journey";
+import { BholaPreview, bn } from "@/components/BholaPreview";
+import { T } from "@/lib/lang";
 
-const services = [
-  {
-    title: "দলিলের তথ্য যাচাই",
-    detail: "খতিয়ান, দলিল ও নামজারির তথ্য পাশাপাশি মিলিয়ে দেখুন।",
-    href: "/upload",
-    tag: "কেনার আগে",
-  },
-  {
-    title: "মালিকানার ইতিহাস",
-    detail: "নথিতে থাকা মালিকানা পরিবর্তনের ধারাবাহিকতা দেখুন।",
-    href: "/cases/801bc1b6-b43c-5147-9b4f-b0baa3815cd0/timeline",
-    tag: "কাগজপত্র থেকে",
-  },
-  {
-    title: "বায়না Escrow",
-    detail: "চুক্তির শর্তে বায়নার টাকা ব্যাংক অংশীদার পরিচালনা করে।",
-    href: "/escrow",
-    tag: "লেনদেনের সময়",
-  },
-  {
-    title: "প্রবাসী Guardian",
-    detail: "খতিয়ানের নতুন কপি আগেরটির সঙ্গে মিলিয়ে পরিবর্তন দেখুন।",
-    href: "/guardian",
-    tag: "কেনার পরে",
-  },
+const h = strings.pages.home;
+const phases: Phase[] = ["before", "during", "after"];
+const steps: { key: StepKey; phase: Phase; bn: string; en: string }[] = [
+  { key: "location", phase: "before", bn: "মৌজা ও দাগ দিয়ে জমি খুঁজুন", en: "Find the plot by mouza and dag" },
+  { key: "documents", phase: "before", bn: "খতিয়ান, দলিল, নামজারির ছবি দিন", en: "Add photos of khatian, deed, mutation" },
+  { key: "paper", phase: "before", bn: "কাগজের নাম, দাগ ও পরিমাণ মেলানো", en: "Names, dag and area are cross-checked" },
+  { key: "ground", phase: "before", bn: "স্যাটেলাইটে পানি ও গাছের বদল", en: "Water and tree changes from satellite" },
+  { key: "report", phase: "before", bn: "কী মিলেছে, কী মেলেনি, এরপর কী", en: "What matched, what did not, what next" },
+  { key: "seller", phase: "during", bn: "যাচাই সেবার মাধ্যমে বিক্রেতার পরিচয়", en: "Seller identity through a verification provider" },
+  { key: "escrow", phase: "during", bn: "বায়নার টাকা ব্যাংকে, শর্ত মিললে ছাড়", en: "Earnest money held by a bank, released on conditions" },
+  { key: "guardian", phase: "after", bn: "প্রতি মাসে খতিয়ানের বদলের খবর", en: "Monthly alert if the khatian changes" },
 ];
 
-const demoLinks = [
-  { label: "demoCase1", href: "/cases/66c09208-d737-59f0-937e-de349f50899a" },
-  { label: "demoCase26", href: "/cases/6c530a00-cc5c-5c6b-a341-ae4491761d4e" },
-  { label: "demoDeedArchive26", href: "/cases/6c530a00-cc5c-5c6b-a341-ae4491761d4e#deed-archive-title" },
-  { label: "demoCase29", href: "/cases/801bc1b6-b43c-5147-9b4f-b0baa3815cd0" },
-  { label: "demoTimeline29", href: "/cases/801bc1b6-b43c-5147-9b4f-b0baa3815cd0/timeline" },
-  { label: "demoGuardian", href: "/guardian" },
-  { label: "demoEscrow26", href: "/escrow/demo-00026" },
-] as const;
-
-function ParcelStudy() {
-  return (
-    <div className="relative mx-auto w-full max-w-[620px] lg:ml-auto" aria-hidden="true">
-      <div className="absolute inset-8 rotate-[-5deg] border border-accent/20 bg-[#EAF1EB]" />
-      <svg viewBox="0 0 620 440" fill="none" className="relative block w-full text-accent">
-        <path d="m28 110 165-60 135 44 105-45 152 69-31 251-160 28-134-46-152 45-90-73 10-213Z" fill="#EEF4EF" stroke="#0D624D" strokeOpacity=".45" strokeWidth="1.4" />
-        <path d="m28 110 164 46 1-106m0 106 135-62 1 246m-136-184 136 66 164-98m-164 98 134 72m-270-138-1 183m137-117 163-98m-163 98 28 138m134-236 29 236M48 225l177-51 153 50 185-82M39 302l179-52 164 51 170-44" stroke="#0D624D" strokeOpacity=".3" strokeWidth="1.1" />
-        <path d="m241 168 76-29 75 31-1 89-76 29-74-31v-89Z" fill="#DDBA54" fillOpacity=".24" stroke="#B98716" strokeWidth="2" />
-        <path d="m250 180 65-24 61 25-1 71-61 24-64-27v-69Z" stroke="#B98716" strokeOpacity=".55" strokeDasharray="4 5" />
-        <path d="M68 92 185 57m232 27 88 41M91 343l61 48m297-27 96-19" stroke="#0D624D" strokeOpacity=".35" strokeWidth="1.4" />
-        <circle cx="316" cy="213" r="4" fill="#B98716" />
-      </svg>
-      <div className="absolute -bottom-2 left-2 border-l-2 border-gold pl-3 text-xs leading-5 text-muted sm:left-8">
-        জমির নকশার রেখা থেকে অনুপ্রাণিত অলঙ্করণ
-      </div>
-    </div>
-  );
-}
+const primary = "inline-flex min-h-12 items-center justify-center rounded-[var(--radius-control)] bg-gradient-to-b from-accent to-[#23317A] px-5 text-base font-semibold text-white shadow-raised transition-transform hover:-translate-y-0.5";
 
 export default function HomePage() {
   return (
-    <div className="space-y-20 pb-10 sm:space-y-24">
-      <section className="grid items-center gap-8 border-b border-line pb-12 sm:gap-10 sm:pb-16 lg:grid-cols-[0.88fr_1.12fr] lg:gap-14">
-        <div className="relative z-10 max-w-xl">
-          <p className="mb-5 flex items-center gap-3 text-sm font-semibold text-accent">
+    <div className="space-y-14 pb-10 sm:space-y-16">
+      <section className="hero-glow grid items-center gap-10 border-b border-line pb-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
+        <div className="animate-fade-up relative z-10 max-w-2xl">
+          <p className="mb-4 flex flex-wrap items-center gap-3 text-sm font-semibold text-accent">
             <span className="h-px w-8 bg-gold" />
-            জমির কাগজপত্র, এক জায়গায়
-            <span className="rounded-full border border-gold/50 bg-gold/10 px-3 py-1 text-xs font-medium text-ink">{strings.pages.home.samplePill}</span>
+            <T bn="জমি কেনার আগে, সময়ে ও পরে" en="Before, while and after you buy land" />
+            <span className="rounded-full border border-gold/40 bg-surface/70 px-3 py-1 text-xs font-medium text-ink"><T bn={h.samplePill} en="All names and numbers are samples" /></span>
           </p>
-          <h1 className="max-w-lg text-4xl font-semibold leading-[1.2] tracking-tight text-ink sm:text-5xl lg:text-[3.6rem]">
-            কেনার আগে নথির তথ্য মিলিয়ে নিন
+          <h1 className="text-[2.6rem] font-semibold leading-[1.2] tracking-tight text-ink sm:text-6xl lg:text-[4.1rem]">
+            <T bn={<>কাগজ যাচাই, <span className="text-gradient">মাটি যাচাই</span>, তারপর কিনুন</>} en={<>Check the papers, <span className="text-gradient">check the ground</span>, then buy</>} />
           </h1>
-          <p className="mt-5 max-w-lg text-base leading-8 text-muted sm:text-lg">
-            খতিয়ান, দলিল ও নামজারির তথ্য পাশাপাশি দেখুন। অমিল পেলে কোন নথিতে কী আছে এবং এরপর কী যাচাই করবেন তা জানুন।
+          <p className="mt-6 max-w-xl text-base leading-8 text-muted sm:text-lg">
+            <T
+              bn="খতিয়ান, দলিল ও নামজারির তথ্য মিলিয়ে দেখুন, স্যাটেলাইট ছবিতে জমির আশেপাশে পানি ও গাছের বদল দেখুন, আর জেনে নিন এরপর কী যাচাই করবেন।"
+              en="Cross-check khatian, deed and mutation data, see water and tree changes around the plot in satellite images, and learn what to check next."
+            />
           </p>
-          <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <Link href="/upload" className="inline-flex min-h-12 items-center justify-center rounded-md bg-accent px-5 text-base font-semibold text-white transition-colors hover:bg-[#185541] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              যাচাই শুরু করুন
-            </Link>
-            <a href="#how-it-works" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent underline decoration-gold decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              কাজের পদ্ধতি
-            </a>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link href="/login" className={primary}><T bn="প্রবেশ করে শুরু করুন" en="Login to get started" /></Link>
+            <Link href="/how-it-works" className="inline-flex min-h-12 items-center text-base font-semibold text-accent underline decoration-gold underline-offset-4"><T bn="কীভাবে কাজ করে" en="How it works" /></Link>
           </div>
         </div>
-
-        <ParcelStudy />
+        <BholaPreview />
       </section>
 
-      <section aria-labelledby="demo-title" className="rounded-2xl border border-line bg-surface p-5 sm:p-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-accent">JomiGuard</p>
-            <h2 id="demo-title" className="mt-1 text-2xl font-semibold text-ink sm:text-3xl">{strings.pages.home.demoTitle}</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{strings.pages.home.demoDesc}</p>
-          </div>
-          <p className="text-xs text-muted">{strings.pages.home.demoLoginNote}</p>
+      <section data-tour="journey" aria-labelledby="journey-title" className="space-y-6">
+        <div>
+          <h2 id="journey-title" className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl"><T bn="এক জমি, আট ধাপ" en="One plot, eight steps" /></h2>
+          <p className="mt-2 text-sm leading-6 text-muted"><T bn="প্রতিটি কেস এই পথ ধরে চলে; কোন ধাপ বাকি, অ্যাপ তা দেখায়।" en="Every case follows this path; the app shows which step is still open." /></p>
         </div>
-        <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {demoLinks.map(({ label, href }) => (
-            <li key={href}>
-              <Link href={href} className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-line px-4 py-3 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                <span>{strings.pages.home[label]}</span><span aria-hidden="true">→</span>
-              </Link>
+        <ol className="grid gap-4 lg:grid-cols-3">
+          {phases.map((phase) => (
+            <li key={phase} className="rounded-[var(--radius-card)] border border-line bg-surface p-5 shadow-rest">
+              <p className="text-sm font-semibold text-accent"><T bn={PHASE_LABELS[phase].bn} en={PHASE_LABELS[phase].en} /></p>
+              <ol className="mt-4 space-y-4 border-l-2 border-gold/50 pl-5">
+                {steps.filter((s) => s.phase === phase).map((s) => {
+                  const n = steps.indexOf(s) + 1;
+                  return (
+                    <li key={s.key} className="relative">
+                      <span aria-hidden="true" className="absolute -left-[33px] top-0 inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-accent bg-surface text-xs font-bold text-accent"><T bn={bn(n)} en={String(n)} /></span>
+                      <p className="font-semibold text-ink"><T bn={STEP_LABELS[s.key].bn} en={STEP_LABELS[s.key].en} /></p>
+                      <p className="text-sm leading-6 text-muted"><T bn={s.bn} en={s.en} /></p>
+                    </li>
+                  );
+                })}
+              </ol>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section aria-labelledby="example-title" className="space-y-4">
+        <h2 id="example-title" className="text-2xl font-semibold text-ink sm:text-3xl"><T bn="একটি উদাহরণ" en="An example" /></h2>
+        <ul>
+          <Card as="li" data-tour="bhola" variant="interactive" href={BHOLA_CASE} className="!border-sat/40 !bg-sat-soft/50"
+            title={<T bn={<>ভোলা · চর মেঘনা, দাগ {bn(417)}</>} en="Bhola · Char Meghna, dag 417" />}
+            meta={<span className="rounded-full bg-sat px-2.5 py-0.5 text-xs font-semibold text-white">★ <T bn="স্যাটেলাইট" en="Satellite" /></span>}
+            description={<T bn="খতিয়ানে জমি 'নাল', কিন্তু শুকনো মৌসুমেও আশেপাশে পানি, আর ২০১৯ থেকে পানি বছর বছর বাড়ছে।" en="The khatian lists the land as 'nal' (cropland), yet there is water around it even in the dry season, and it has grown every year since 2019." />} />
+        </ul>
+        <p className="text-sm text-muted"><T bn={h.demoLoginNote} en="Login first to open the sample links." /> <Link href="/demo" className="font-semibold text-accent underline underline-offset-4"><T bn="আরো নমুনা কেস" en="More sample cases" /></Link></p>
+      </section>
+
+      <section aria-labelledby="official-title" className="rounded-[var(--radius-card)] border border-dashed border-line bg-bg p-5 sm:p-6">
+        <h2 id="official-title" className="text-xl font-semibold text-ink"><T bn="সরকারি সেবা লাগলে" en="If you need a government service" /></h2>
+        <p className="mt-1 text-sm leading-6 text-muted"><T bn="সার্টিফাইড খতিয়ান, নামজারি বা ভূমি উন্নয়ন কর আমাদের সেবা নয়; এগুলো সরকারি সাইট থেকে নিতে হয়।" en="Certified khatian, mutation and land development tax are not our services; get them from the government sites." /></p>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+          {officialLinks.map((l) => (
+            <li key={l.href}>
+              <a href={l.href} target="_blank" rel="noopener noreferrer" className="flex min-h-12 flex-col justify-center rounded-[var(--radius-control)] border border-line bg-surface px-4 py-2.5 shadow-rest hover:border-accent">
+                <span className="text-sm font-semibold text-accent"><T bn={l.label} en={l.labelEn} /> <span aria-hidden="true">↗</span></span>
+                <span className="text-xs text-muted"><T bn="সরকারি সাইট, আমাদের নয়" en="Government site, not ours" /></span>
+              </a>
             </li>
           ))}
         </ul>
-      </section>
-
-      <section aria-labelledby="services-title" className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:gap-16">
-        <div className="max-w-md">
-          <p className="mb-4 flex items-center gap-3 text-sm font-semibold text-accent">
-            <span className="h-px w-8 bg-gold" />
-            প্রয়োজন অনুযায়ী
-          </p>
-          <h2 id="services-title" className="text-3xl font-semibold leading-snug tracking-tight text-ink sm:text-4xl">
-            জমি কেনার আগে থেকে মালিকানা নজরদারি পর্যন্ত
-          </h2>
-          <p className="mt-4 text-base leading-7 text-muted">
-            কাগজ যাচাই, মালিকানার নথিভিত্তিক ইতিহাস, বায়না Escrow এবং খতিয়ান পর্যবেক্ষণ।
-          </p>
-          <Link href="/upload" className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-accent underline decoration-gold decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-            কাগজ যাচাই শুরু করুন
-          </Link>
-        </div>
-
-        <ul className="divide-y divide-line border-y border-line">
-          {services.map((service) => (
-            <li key={service.title}>
-              <Link href={service.href} className="group grid min-h-24 gap-1 py-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:grid-cols-[150px_1fr_24px] sm:items-center sm:gap-5 sm:py-5">
-                <span className="text-xs font-medium text-muted">{service.tag}</span>
-                <span>
-                  <span className="block text-lg font-semibold text-ink group-hover:text-accent">{service.title}</span>
-                  <span className="mt-1 block text-sm leading-6 text-muted">{service.detail}</span>
-                </span>
-                <span aria-hidden="true" className="hidden text-lg text-gold transition-transform group-hover:translate-x-1 sm:block">→</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section id="how-it-works" aria-labelledby="steps-title" className="border-t border-line pt-10 sm:pt-12">
-        <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:gap-16">
-          <div className="max-w-md">
-            <p className="mb-4 flex items-center gap-3 text-sm font-semibold text-accent">
-              <span className="h-px w-8 bg-gold" />
-              যাচাইয়ের ধাপ
-            </p>
-            <h2 id="steps-title" className="text-3xl font-semibold leading-snug tracking-tight text-ink sm:text-4xl">
-              নথি থেকে পরের করণীয়
-            </h2>
-          </div>
-          <ol className="divide-y divide-line border-y border-line">
-            <li className="grid gap-2 py-5 sm:grid-cols-[44px_1fr] sm:gap-4">
-              <span className="font-mono text-sm text-gold">০১</span>
-              <div><h3 className="font-semibold text-ink">জমির পরিচিতি দিন</h3><p className="mt-1 text-sm leading-6 text-muted">মৌজা ও দাগের তথ্য দিয়ে যাচাই শুরু করুন।</p></div>
-            </li>
-            <li className="grid gap-2 py-5 sm:grid-cols-[44px_1fr] sm:gap-4">
-              <span className="font-mono text-sm text-gold">০২</span>
-              <div><h3 className="font-semibold text-ink">সংশ্লিষ্ট কাগজ যোগ করুন</h3><p className="mt-1 text-sm leading-6 text-muted">খতিয়ান, দলিল বা নামজারির কপি দিন।</p></div>
-            </li>
-            <li className="grid gap-2 py-5 sm:grid-cols-[44px_1fr] sm:gap-4">
-              <span className="font-mono text-sm text-gold">০৩</span>
-              <div><h3 className="font-semibold text-ink">মিল ও অমিল পর্যালোচনা করুন</h3><p className="mt-1 text-sm leading-6 text-muted">প্রতিটি তথ্যের উৎস এবং পরের যাচাইয়ের ধাপ দেখুন।</p></div>
-            </li>
-          </ol>
-        </div>
       </section>
     </div>
   );

@@ -34,6 +34,7 @@ class CaseDocumentInput(BaseModel):
     extraction_status: str = "ok"  # "ok" | "needs_review"
     field_flags: dict[str, list[str]] = Field(default_factory=dict)
     handwritten: bool = False
+    ocr_read: bool = False  # read by the Tesseract fallback: its numbers are not trusted
 
 
 class CaseDocument(BaseModel):
@@ -45,6 +46,7 @@ class CaseDocument(BaseModel):
     extraction_status: str
     field_flags: dict[str, list[str]] = Field(default_factory=dict)
     handwritten: bool = False
+    ocr_read: bool = False
 
 
 class BuilderWarning(BaseModel):
@@ -61,6 +63,7 @@ class IdentityCaseResult(BaseModel):
     status: str
     name_bn_as_per_nid: str | None = None
     father_name_as_per_nid: str | None = None
+    name_source: str = "typed"  # "ocr": read by Tesseract, a mismatch only goes to to_verify
     verified_at: date | None = None
 
 

@@ -66,6 +66,7 @@ class LatestExtractionOut(BaseModel):
 
     id: uuid.UUID
     status: ExtractionStatus
+    extractor: str | None = None  # "tesseract_regex" = limited OCR read (সীমিত পাঠ)
     needs_review_count: int
     warnings_count: int
 

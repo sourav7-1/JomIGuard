@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, IdTimestampMixin
@@ -21,6 +21,13 @@ class IdentityVerification(IdTimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(10))
     name_bn_as_per_nid: Mapped[str | None] = mapped_column(String(200))
     father_name_as_per_nid: Mapped[str | None] = mapped_column(String(200))
+    # NID name reading (docs/specs/identity.md): only the names, the match result and how the
+    # names were read; never the NID number, date of birth, address or the image
+    name_en_as_per_nid: Mapped[str | None] = mapped_column(String(200))
+    # matched | partial | no_match | unreadable
+    match_result: Mapped[str | None] = mapped_column(String(12))
+    match_confidence: Mapped[float | None] = mapped_column(Float)
+    name_source: Mapped[str] = mapped_column(String(10), default="typed", server_default="typed")
     provider: Mapped[str] = mapped_column(String(50))
     provider_ref: Mapped[str] = mapped_column(String(100))
     consent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

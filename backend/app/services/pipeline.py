@@ -5,6 +5,7 @@ Status lives on the document row (uploaded -> processing -> done | failed); ever
 adds an extractions row, so reprocessing keeps history.
 """
 
+import logging
 import uuid
 from dataclasses import asdict
 from datetime import UTC, datetime
@@ -17,6 +18,7 @@ from app.models import DocStatus, DocType, Document, Extraction, ExtractionStatu
 from app.models.document import DocStep
 from app.services.classify import check_user_label, classify_ocr
 from app.services.extraction import BudgetExceeded, Extractor
+from app.services.extraction.fallback import TESSERACT
 from app.services.normalize import normalize_document
 from app.services.ocr import ocr
 from app.services.preprocess import PreprocessError, preprocess
@@ -27,17 +29,22 @@ TRANSIENT_ERRORS = (ConnectionError, TimeoutError, urllib3.exceptions.HTTPError,
 NOT_LAND_BN = "এই ছবিটি কোন জমির কাগজ বলে চেনা যায়নি"
 OTHER_LABEL_BN = "এই ধরনের কাগজ থেকে তথ্য পড়া হয় না"
 BAD_IMAGE_BN = "ছবিটি খোলা যায়নি"
-EXTRACT_FAILED_BN = "কাগজ থেকে তথ্য পড়া যায়নি"
-CONFIG_BN = "সার্ভারের extraction সেটিংস ঠিক নেই"
+# user-facing messages stay friendly; the technical reason goes to the log only
+EXTRACT_FAILED_BN = "কাগজটি এখন পড়া যায়নি। কিছুক্ষণ পরে “আবার চেষ্টা করুন” চাপুন, বা আরও পরিষ্কার ছবি দিন।"
+CONFIG_BN = "সার্ভারে কাগজ পড়ার ব্যবস্থা এখন চালু নেই। একটু পরে আবার চেষ্টা করুন।"
+OCR_LIMITED_BN = "সীমিত পাঠ (OCR)"  # read by Tesseract: some fields may be missing
+
+log = logging.getLogger(__name__)
 BUDGET_BN = "আজকের LLM খরচের দৈনিক সীমা (daily limit) শেষ হয়েছে; আগামীকাল আবার চেষ্টা করুন"
 
 
 def make_extractor(name: str) -> Extractor:
-    """Extractor from the EXTRACTOR setting: "llm" (default) or "tesseract_regex"."""
+    """Extractor from the EXTRACTOR setting: "llm" (default: LLM_PROVIDER, then the fallbacks in
+    extraction/fallback.py, ending with Tesseract) or "tesseract_regex"."""
     if name == "llm":
-        from app.services.extraction.llm import make_llm_extractor
+        from app.services.extraction.fallback import make_fallback_extractor
 
-        extractor = make_llm_extractor()  # LLM_PROVIDER: anthropic | gemini
+        extractor = make_fallback_extractor()
     elif name == "tesseract_regex":
         from app.services.extraction.tesseract_regex import TesseractRegexExtractor
 
@@ -106,7 +113,9 @@ def process_document(
     doc.error_message = doc.label_warning = None
     db.commit()
 
-    def fail(message: str) -> DocStatus:
+    def fail(message: str, technical: str | None = None) -> DocStatus:
+        if technical:
+            log.warning("document %s failed: %s", document_id, technical)
         db.rollback()  # drop anything half-written in this attempt
         failed = db.get(Document, document_id)
         failed.status, failed.error_message, failed.finished_at = DocStatus.failed, message, _now()
@@ -140,9 +149,10 @@ def process_document(
         doc.current_step = DocStep.extracting
         db.commit()
         ex = extractor.extract(data, doc_type.value)
+        used = ex.extractor or getattr(extractor, "name", type(extractor).__name__)
         row = Extraction(
             document_id=doc.id,
-            extractor=getattr(extractor, "name", type(extractor).__name__),
+            extractor=used,
             created_by="ai",
             model=ex.meta.model,
             prompt_version=ex.meta.prompt_version,
@@ -154,7 +164,8 @@ def process_document(
             row.status, row.warnings, row.field_flags = ExtractionStatus.failed, [], {}
             db.add(row)
             doc.status, doc.finished_at = DocStatus.failed, _now()
-            doc.error_message = f"{EXTRACT_FAILED_BN}: {ex.error}"
+            doc.error_message = EXTRACT_FAILED_BN
+            log.warning("document %s: every extractor failed, last: %s", doc.id, ex.error)
             db.commit()
             return doc.status
         doc.current_step = DocStep.normalizing
@@ -163,11 +174,12 @@ def process_document(
         row.data = normalized.doc.model_dump(mode="json")
         row.warnings = [asdict(w) for w in normalized.warnings]
         row.field_flags = field_flags(normalized.warnings)
-        if ex.handwritten:
+        limited = used == TESSERACT  # OCR read: every field is less certain, review needed
+        if ex.handwritten or limited:
             row.field_flags = lower_field_confidence(row.data, row.field_flags)
         row.status = (
             ExtractionStatus.needs_review
-            if normalized.warnings or doc.label_warning or ex.handwritten
+            if normalized.warnings or doc.label_warning or ex.handwritten or limited
             else ExtractionStatus.ok
         )
         db.add(row)
@@ -178,10 +190,11 @@ def process_document(
     except BudgetExceeded:
         return fail(BUDGET_BN)  # not retried: tomorrow's budget is a new day
     except TRANSIENT_ERRORS as e:
-        fail(f"storage/network error: {type(e).__name__}")
+        fail(EXTRACT_FAILED_BN, f"storage/network error: {type(e).__name__}: {e}")
         raise  # the Celery task retries these
-    except Exception as e:  # noqa: BLE001  any other error: failed, with the reason
-        return fail(f"{type(e).__name__}: {e}")
+    except Exception as e:  # noqa: BLE001  any other error: failed; the reason goes to the log
+        log.exception("document %s crashed: %s", document_id, type(e).__name__)
+        return fail(EXTRACT_FAILED_BN)
 
 
 def process_with_settings(
@@ -190,12 +203,13 @@ def process_with_settings(
     """Build the configured extractor, then process; a config error fails the document."""
     try:
         extractor = make_extractor(extractor_name)
-    except ValueError as e:  # e.g. LLM_MODEL or prices not set
+    except ValueError as e:  # e.g. an unknown EXTRACTOR name
         doc = db.get(Document, document_id)
         if doc is None:
             return None
+        log.error("extractor config error: %s", e)
         doc.status, doc.finished_at = DocStatus.failed, _now()
-        doc.error_message = f"{CONFIG_BN}: {e}"
+        doc.error_message = CONFIG_BN
         db.commit()
         return doc.status
     return process_document(document_id, db, storage, extractor, force)

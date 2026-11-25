@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { strings } from "@/lib/strings";
+import { useLang, useStrings } from "@/lib/lang";
 
 interface ConfidenceBadgeProps {
   flags?: string[] | string;
@@ -9,6 +9,9 @@ interface ConfidenceBadgeProps {
 }
 
 export function ConfidenceBadge({ flags, className = "" }: ConfidenceBadgeProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [showTooltip, setShowTooltip] = useState(false);
 
   const flagList: string[] = Array.isArray(flags)
@@ -97,7 +100,7 @@ export function ConfidenceBadge({ flags, className = "" }: ConfidenceBadgeProps)
             </ul>
           ) : (
             <div className="text-[11px] text-surface/80">
-              কাগজের এই লেখাটি অস্পষ্ট হওয়ায় AI কম নিশ্চয়তায় তথ্যটি পড়েছে। অনুগ্রহ করে মূল কাগজের সাথে মিলিয়ে নিন।
+              {t("কাগজের এই লেখাটি অস্পষ্ট হওয়ায় AI কম নিশ্চয়তায় তথ্যটি পড়েছে। অনুগ্রহ করে মূল কাগজের সাথে মিলিয়ে নিন।", "This text on the paper is unclear, so the AI read it with low confidence. Please compare it with the original paper.")}
             </div>
           )}
         </div>

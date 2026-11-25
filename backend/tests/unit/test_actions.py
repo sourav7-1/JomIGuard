@@ -11,6 +11,7 @@ from app.services.actions import (
     ALWAYS_ACTIONS,
     FINDING_ACTIONS,
     MAX_ACTIONS,
+    OCR_ACTION,
     REVIEW_ACTION,
     UPLOAD_ACTION,
     next_actions,
@@ -150,3 +151,28 @@ def test_assessment_history_diff_and_action_completion(client):
     assert (
         client.put(f"/lands/{land_id}/actions/{action_id}", json={"done": "yes"}).status_code == 422
     )
+
+
+def test_ocr_read_case_with_numbers_to_check_starts_with_the_ocr_action():
+    case, _ = load_scenario(SCENARIOS / "11_owner_shares_sum_900")
+    for doc in case.documents:
+        doc.ocr_read = doc.role.value in ("current_khatian", "mutation")
+    run = run_rules(case)
+    assessment = assess(case, run)
+    assert assessment.to_verify  # the share sum went to "check by hand"
+    first = next_actions(case, run, assessment)[0]
+    assert first.id == OCR_ACTION[0] and first.priority == 1 and first.sources
+    ocr_count = sum(d.ocr_read for d in case.documents)
+    assert first.text_bn.startswith(f"{'০১২৩৪৫৬৭৮৯'[ocr_count]} টি কাগজ OCR দিয়ে পড়া — ")
+    assert "“আবার চেষ্টা করুন”" in first.text_bn and not forbidden_words_in(first.text_bn)
+
+
+def test_no_ocr_action_without_ocr_documents_or_without_numbers_to_check():
+    assert OCR_ACTION[0] not in [a.id for a in actions_for(SCENARIOS / "11_owner_shares_sum_900")]
+    case, _ = load_scenario(SCENARIOS / "02_sells_within_share")  # nothing numeric to check
+    for doc in case.documents:
+        doc.ocr_read = True
+    run = run_rules(case)
+    assessment = assess(case, run)
+    assert assessment.to_verify == []
+    assert OCR_ACTION[0] not in [a.id for a in next_actions(case, run, assessment)]

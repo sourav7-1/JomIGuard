@@ -21,6 +21,14 @@ Passing checks are not listed.
 | `medium` | no `bad`, at least one `warn` |
 | `low` | no findings |
 
+**OCR-read documents (rules.md, "OCR guard"):** an `area` result that uses a document read by the
+Tesseract fallback is not a finding, and neither is `heir_consent_missing` when its sale vs share
+numbers came from such a document. It is listed under `to_verify` ("যাচাই করা যায়নি / মিলিয়ে নিন")
+and **never raises the risk level**. It does count as a check that could not run, so a case with
+`to_verify` items never gets the clean `low` headline ("কাগজে বড় কোনো অমিল পাওয়া যায়নি"); it
+gets the partial one instead. Every other code keeps its severity, and its message carries an
+OCR note.
+
 A `low` risk only means the documents in the case agree with each other. The app never calls land
 safe (CLAUDE.md): disputes, possession and mortgages do not show up in these documents.
 
@@ -34,7 +42,8 @@ safe (CLAUDE.md): disputes, possession and mortgages do not show up in these doc
 | `seller_not_owner` | identity | bad | A seller on the deed is not an owner on the khatian or mutation. | দলিলের বিক্রেতা খতিয়ান বা নামজারিতে মালিক হিসাবে নেই। |
 | `seller_father_mismatch` | identity | warn | The seller's name matches an owner, but the father's/husband's name differs. | বিক্রেতার নাম মিলেছে, কিন্তু পিতা/স্বামীর নাম মেলে না। |
 | `seller_identity_unverified` | identity | warn | A deed seller has no verified identity result. | দলিলের বিক্রেতার পরিচয় যাচাই হয়নি। |
-| `seller_nid_name_mismatch` | identity | bad | The verified name does not match both the deed seller and a khatian owner. | যাচাইয়ের নাম দলিলের বিক্রেতা ও খতিয়ানের মালিকের সঙ্গে মেলে না। |
+| `seller_nid_name_mismatch` | identity | bad | The verified name matches neither the deed seller nor a khatian owner. | যাচাইয়ের নাম দলিলের বিক্রেতা ও খতিয়ানের মালিকের সঙ্গে মেলে না। |
+| `seller_nid_name_partial` | identity | warn | The verified name matches only one of the deed seller and the khatian owner, or the father's/husband's name differs. | যাচাইয়ের নাম আংশিক মিলেছে; একই ব্যক্তি কিনা মিলিয়ে নিন। |
 | `area_exceeds_share` | area | bad | The deed transfers more land than the sellers own. | দলিলে বিক্রেতার অংশের চেয়ে বেশি জমি হস্তান্তর হচ্ছে। |
 | `area_sum_mismatch` | area | warn | Owner shares on a khatian or mutation do not add up to the whole. | খতিয়ান বা নামজারিতে মালিকদের অংশের যোগফল পুরো জমির সমান নয়। |
 | `unsupported_unit` | area | warn | An area is in a unit the app does not convert (বিঘা, কাঠা, আনা …). | জমির পরিমাণ এমন এককে লেখা যা app রূপান্তর করে না (বিঘা, কাঠা, আনা …)। |
@@ -64,7 +73,8 @@ General rules:
 | `seller_not_owner` | A deed seller's `name_normalized` is not among the owners. |
 | `seller_father_mismatch` | A seller matches an owner by name, but `father_or_husband_name` differs (after the same normalization as names). |
 | `seller_identity_unverified` | A database-backed case has a deed seller without a verified `seller_ownership` result. |
-| `seller_nid_name_mismatch` | A verified identity name does not match the deed seller and a matched current-khatian owner by `names_match`; compare father names only when both are present. Scenario cases without identity data skip these rules. |
+| `seller_nid_name_mismatch` | A verified identity name matches neither the deed seller nor a matched current-khatian owner (`nid_match` in `rules/names.py`, built on `names_match`). Scenario cases without identity data skip these rules. If the name was read by OCR (`name_source = "ocr"`), it goes to `to_verify` instead (see rules.md, OCR guard). |
+| `seller_nid_name_partial` | The name matches the deed seller or the owner but not both, or it matches both but `father_name_as_per_nid` differs from every matched person's `father_or_husband_name` (compared only when both are present). OCR-read names go to `to_verify` as above. |
 | `area_exceeds_share` | `transferred_area_shatangsho` > the sellers' combined share. Per seller: `share_fraction` × the sold dag's `area_shatangsho` if the dag is on the khatian (Decision 3, *needs expert check*), else the seller's `share_shatangsho`. Not evaluated if either side has no shatangsho value. |
 | `area_sum_mismatch` | On a khatian or mutation, owners' `share_fraction` do not sum to 1, or owners' `share_shatangsho` do not sum to `total_area_shatangsho`. |
 | `unsupported_unit` | normalize met a unit other than একর, শতাংশ or a decimal fraction (Decision 2). One finding per document. |

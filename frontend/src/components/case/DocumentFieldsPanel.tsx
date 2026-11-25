@@ -12,8 +12,9 @@ import {
   EditItem,
   FieldMeta,
 } from "@/lib/api";
-import { strings } from "@/lib/strings";
 import { Spinner } from "@/components/ui/Spinner";
+import { useLang, useStrings } from "@/lib/lang";
+import { bnDigits } from "@/lib/digits";
 
 interface DocumentFieldsPanelProps {
   document: CaseViewDocOut;
@@ -28,6 +29,9 @@ export function DocumentFieldsPanel({
   onExtractionUpdated,
   highlightField = null,
 }: DocumentFieldsPanelProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [filterNeedsReview, setFilterNeedsReview] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -157,7 +161,7 @@ export function DocumentFieldsPanel({
       if (err instanceof ApiError) {
         setServerError(err.message);
       } else {
-        setServerError("তথ্য সংরক্ষণ করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+        setServerError(t("তথ্য সংরক্ষণ করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।", "Could not save the data. Please try again."));
       }
     } finally {
       setSaving(false);
@@ -215,6 +219,7 @@ export function DocumentFieldsPanel({
         labelBn={meta.label_bn}
         value={val}
         derivedValue={derivedVal}
+        derivedUnit={derivedPath?.endsWith("shatangsho") ? "shatangsho" : undefined}
         flags={flags}
         editable={meta.editable}
         enumOptions={meta.enum_options}
@@ -263,7 +268,7 @@ export function DocumentFieldsPanel({
             >
               <div className="flex items-center justify-between border-b border-line/60 pb-1">
                 <span className="text-xs font-bold font-heading text-ink">
-                  {itemLabelPrefix} {idx + 1}
+                  {itemLabelPrefix} {en ? idx + 1 : bnDigits(idx + 1)}
                 </span>
                 <button
                   type="button"
@@ -350,7 +355,7 @@ export function DocumentFieldsPanel({
               {/* Identity & Location */}
               <div className="space-y-2">
                 <h4 className="text-xs font-bold font-heading text-muted uppercase tracking-wider">
-                  জরিপ ও এলাকা
+                  {t("জরিপ ও এলাকা", "Survey and area")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {renderField("survey_type")}
@@ -365,7 +370,7 @@ export function DocumentFieldsPanel({
               </div>
 
               {/* Owners */}
-              {renderList("owners", "মালিক", [
+              {renderList("owners", t("মালিক", "Owners"), [
                 { name: "name", derivedName: "name_normalized" },
                 { name: "father_or_husband_name" },
                 { name: "relation_marker" },
@@ -374,7 +379,7 @@ export function DocumentFieldsPanel({
               ])}
 
               {/* Plots */}
-              {renderList("plots", "দাগ", [
+              {renderList("plots", t("দাগ", "Plots"), [
                 { name: "dag_no" },
                 { name: "land_class" },
                 { name: "area_text", derivedName: "area_shatangsho" },
@@ -385,7 +390,7 @@ export function DocumentFieldsPanel({
               {/* Totals */}
               <div className="space-y-2 pt-2 border-t border-line">
                 <h4 className="text-xs font-bold font-heading text-muted uppercase tracking-wider">
-                  মোট জমি ও অন্যান্য
+                  {t("মোট জমি ও অন্যান্য", "Total land and other")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {renderField("total_area_text", "total_area_shatangsho")}
@@ -402,7 +407,7 @@ export function DocumentFieldsPanel({
             <>
               <div className="space-y-2">
                 <h4 className="text-xs font-bold font-heading text-muted uppercase tracking-wider">
-                  দলিলের বিবরণ
+                  {t("দলিলের বিবরণ", "Deed details")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {renderField("deed_type")}
@@ -415,7 +420,7 @@ export function DocumentFieldsPanel({
                 </div>
               </div>
 
-              {renderList("sellers", "বিক্রেতা", [
+              {renderList("sellers", t("বিক্রেতা", "Sellers"), [
                 { name: "name", derivedName: "name_normalized" },
                 { name: "father_or_husband_name" },
                 { name: "relation_marker" },
@@ -423,7 +428,7 @@ export function DocumentFieldsPanel({
                 { name: "address_text" },
               ])}
 
-              {renderList("buyers", "ক্রেতা", [
+              {renderList("buyers", t("ক্রেতা", "Buyers"), [
                 { name: "name", derivedName: "name_normalized" },
                 { name: "father_or_husband_name" },
                 { name: "relation_marker" },
@@ -433,7 +438,7 @@ export function DocumentFieldsPanel({
 
               <div className="space-y-2 pt-2 border-t border-line">
                 <h4 className="text-xs font-bold font-heading text-muted uppercase tracking-wider">
-                  তফসিল ও হস্তান্তর
+                  {t("তফসিল ও হস্তান্তর", "Schedule and transfer")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {renderField("schedule_location.district")}
@@ -447,19 +452,19 @@ export function DocumentFieldsPanel({
                 </div>
               </div>
 
-              {renderList("schedule_plots", "তফসিল দাগ", [
+              {renderList("schedule_plots", t("তফসিল দাগ", "Schedule plots"), [
                 { name: "dag_no" },
                 { name: "land_class" },
                 { name: "area_text", derivedName: "area_shatangsho" },
                 { name: "plot_total_area_text" },
               ])}
 
-              {renderList("schedule_khatians", "তফসিল খতিয়ান", [
+              {renderList("schedule_khatians", t("তফসিল খতিয়ান", "Schedule khatians"), [
                 { name: "survey_type" },
                 { name: "khatian_no" },
               ])}
 
-              {renderList("prior_deeds", "বায়া দলিল", [
+              {renderList("prior_deeds", t("বায়া দলিল", "Prior deeds"), [
                 { name: "deed_no" },
                 { name: "deed_year" },
               ])}
@@ -470,7 +475,7 @@ export function DocumentFieldsPanel({
             <>
               <div className="space-y-2">
                 <h4 className="text-xs font-bold font-heading text-muted uppercase tracking-wider">
-                  নামজারি আদেশ ও খতিয়ান
+                  {t("নামজারি আদেশ ও খতিয়ান", "Mutation order and khatian")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {renderField("case_no")}
@@ -485,7 +490,7 @@ export function DocumentFieldsPanel({
 
               <div className="space-y-2 pt-2 border-t border-line">
                 <h4 className="text-xs font-bold font-heading text-muted uppercase tracking-wider">
-                  ডি.সি.আর. ও এলাকা
+                  {t("ডি.সি.আর. ও এলাকা", "DCR and area")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {renderField("dcr_no")}
@@ -497,7 +502,7 @@ export function DocumentFieldsPanel({
                 </div>
               </div>
 
-              {renderList("owners", "মালিক", [
+              {renderList("owners", t("মালিক", "Owners"), [
                 { name: "name", derivedName: "name_normalized" },
                 { name: "father_or_husband_name" },
                 { name: "relation_marker" },
@@ -505,7 +510,7 @@ export function DocumentFieldsPanel({
                 { name: "address_text" },
               ])}
 
-              {renderList("plots", "দাগ", [
+              {renderList("plots", t("দাগ", "Plots"), [
                 { name: "dag_no" },
                 { name: "land_class" },
                 { name: "area_text", derivedName: "area_shatangsho" },
@@ -522,7 +527,7 @@ export function DocumentFieldsPanel({
             <>
               <div className="space-y-2">
                 <h4 className="text-xs font-bold font-heading text-muted uppercase tracking-wider">
-                  সনদ ও মৃত ব্যক্তির বিবরণ
+                  {t("সনদ ও মৃত ব্যক্তির বিবরণ", "Certificate and deceased person")}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {renderField("certificate_no")}
@@ -538,7 +543,7 @@ export function DocumentFieldsPanel({
                 </div>
               </div>
 
-              {renderList("heirs", "ওয়ারিশ", [
+              {renderList("heirs", t("ওয়ারিশ", "Heirs"), [
                 { name: "name", derivedName: "name_normalized" },
                 { name: "father_or_husband_name" },
                 { name: "relation" },
@@ -554,8 +559,8 @@ export function DocumentFieldsPanel({
         <div className="flex items-center justify-between p-4 bg-surface border border-line rounded-xl sticky bottom-4 shadow-md">
           <div className="text-xs text-muted">
             {hasPendingChanges
-              ? "পরিবর্তন বা নিশ্চিতকরণগুলো সংরক্ষণ করতে বোতাম চাপুন"
-              : "সব তথ্য যাচাইকৃত"}
+              ? t("পরিবর্তন বা নিশ্চিতকরণগুলো সংরক্ষণ করতে বোতাম চাপুন", "Press the button to save your edits and confirmations")
+              : t("সব তথ্য যাচাইকৃত", "All data checked")}
           </div>
           <button
             type="button"

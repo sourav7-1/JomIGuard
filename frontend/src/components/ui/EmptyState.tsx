@@ -1,7 +1,9 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { Button } from "./Button";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/lib/lang";
 
 export interface EmptyStateProps {
   title?: string;
@@ -13,13 +15,16 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({
-  title = strings.empty.noDocumentsTitle,
-  description = strings.empty.noDocumentsDesc,
+  title,
+  description,
   actionLabel,
   actionHref,
   onAction,
   className = "",
 }: EmptyStateProps) {
+  const strings = useStrings();
+  title ??= strings.empty.noDocumentsTitle;
+  description ??= strings.empty.noDocumentsDesc;
   return (
     <div
       className={`flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed border-line bg-surface/50 ${className}`}

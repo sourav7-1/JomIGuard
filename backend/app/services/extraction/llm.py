@@ -246,7 +246,11 @@ class AnthropicExtractor(LLMExtractor):
         key = settings.anthropic_api_key
         if key is None:
             raise ValueError("ANTHROPIC_API_KEY is not set")
-        return anthropic.Anthropic(api_key=key.get_secret_value())
+        # the SDK itself retries 429/5xx/timeouts with exponential backoff and honours
+        # Retry-After; after that FallbackExtractor (fallback.py) tries the next extractor
+        return anthropic.Anthropic(
+            api_key=key.get_secret_value(), max_retries=2, timeout=settings.llm_timeout_s
+        )
 
     def _call(self, data: bytes, media_type: str, doc_type: str):
         try:

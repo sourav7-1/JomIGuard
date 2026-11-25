@@ -5,10 +5,14 @@ const BASE_URL = "/api";
 
 export type LandIn = components["schemas"]["LandIn"];
 export type LandOut = components["schemas"]["LandOut"];
+export type LandListItemOut = components["schemas"]["LandListItemOut"];
 export type IdentityVerificationOut = {
   id: string; land_id: string | null; party: "buyer" | "seller";
   seller_name_on_deed: string | null; status: "pending" | "verified" | "failed";
   name_bn_as_per_nid: string | null; father_name_as_per_nid: string | null;
+  name_en_as_per_nid?: string | null;
+  match_result?: "matched" | "partial" | "no_match" | "unreadable" | null;
+  match_confidence?: number | null; name_source?: "ai" | "ocr" | "typed";
   provider: string; provider_ref: string; verified_at: string | null; created_at: string;
 };
 export type DocumentStatusOut = components["schemas"]["DocumentStatusOut"];
@@ -118,7 +122,11 @@ export const api = {
     apiFetch<{ id: string; username: string }>("/auth/login", { method: "POST", body: { username, password } }),
   logout: () => apiFetch<void>("/auth/logout", { method: "POST" }),
   getMe: () => apiFetch<{ id: string; username: string }>("/auth/me", { method: "GET" }),
-  getLands: () => apiFetch<LandOut[]>("/lands", { method: "GET" }),
+  getLands: () => apiFetch<LandListItemOut[]>("/lands", { method: "GET" }),
+  // judge demo (backend app/api/demo.py)
+  demoPackCase: (packId: string) => apiFetch<LandOut>(`/demo/packs/${packId}/case`, { method: "POST" }),
+  demoPlotCase: (plotId: string) => apiFetch<LandOut>(`/demo/plots/${plotId}/case`, { method: "POST" }),
+  demoStatus: () => apiFetch<DemoStatus>("/demo/status", { method: "GET" }),
   createSellerLink: (landId: string, sellerName: string) =>
     apiFetch<{ url: string; expires_at: string }>(`/lands/${landId}/seller-links`, {
       method: "POST", body: { seller_name_on_deed: sellerName },
@@ -146,6 +154,15 @@ export const api = {
     apiFetch<{ consented: boolean }>(`/verify/${token}/consent`, { method: "POST", body: { consent: true } }),
   completeSellerVerification: (token: string, body: { name: string; father_name: string; outcome: "verified" | "failed" | "pending" }) =>
     apiFetch<IdentityVerificationOut>(`/verify/${token}/complete`, { method: "POST", body }),
+  // NID photo: read on the server for the name fields only; the image is not kept
+  readSellerNid: (token: string, image: Blob, outcome: "verified" | "failed" | "pending") => {
+    const body = new FormData(); body.append("image", image, "nid.jpg"); body.append("outcome", outcome);
+    return apiFetch<IdentityVerificationOut>(`/verify/${token}/nid`, { method: "POST", body });
+  },
+  readBuyerNid: (image: Blob, outcome: "verified" | "failed" | "pending") => {
+    const body = new FormData(); body.append("image", image, "nid.jpg"); body.append("outcome", outcome); body.append("consent", "true");
+    return apiFetch<IdentityVerificationOut>("/me/verification/nid", { method: "POST", body });
+  },
   deleteSellerVerification: (token: string) => apiFetch<void>(`/verify/${token}`, { method: "DELETE" }),
   verifyBuyer: (body: { name: string; father_name: string; outcome: "verified" | "failed" | "pending"; consent: true }) =>
     apiFetch<IdentityVerificationOut>("/me/verification", { method: "POST", body }),
@@ -161,7 +178,7 @@ export const api = {
     apiFetch<T>(endpoint, { ...options, method: "DELETE" }),
 
   // Specific domain helpers
-  createLand: (data: { mouza: string; dag_no?: string; upazila?: string; district?: string }) =>
+  createLand: (data: { mouza: string; dag_no?: string; upazila?: string; district?: string; khatian_no?: string }) =>
     apiFetch<LandOut>("/lands", {
       method: "POST",
       body: {
@@ -338,3 +355,5 @@ export type SatelliteCheckOut = {
 };
 
 export type { paths };
+
+export type DemoStatus = { backend: boolean; sentinel: boolean; earth_engine: boolean | null; last_check_at: string | null; last_ok_at: string | null; satellite_limit_per_hour: number };

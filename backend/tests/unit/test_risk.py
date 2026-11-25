@@ -3,7 +3,13 @@ from pathlib import Path
 import pytest
 from scenario_loader import load_scenario
 
-from app.services.risk import DISCLAIMER_BN, HEADLINES_BN, assess, forbidden_words_in
+from app.services.risk import (
+    DISCLAIMER_BN,
+    HEADLINE_LOW_PARTIAL_BN,
+    HEADLINES_BN,
+    assess,
+    forbidden_words_in,
+)
 from app.services.rules import run_rules
 
 SCENARIOS = Path(__file__).parents[1] / "scenarios"
@@ -27,7 +33,15 @@ def assessed(name: str, flags: dict | None = None):
 )
 def test_risk_level_per_finding_mix(scenario, level):
     a = assessed(scenario)
-    assert a.risk_level == level and a.headline_bn == HEADLINES_BN[level]
+    partial = level == "low" and not a.coverage.complete
+    assert a.risk_level == level
+    assert a.headline_bn == (HEADLINE_LOW_PARTIAL_BN if partial else HEADLINES_BN[level])
+
+
+def test_low_risk_with_skipped_checks_never_says_no_mismatch():
+    a = assessed("02_sells_within_share")  # low, but the chain check could not run
+    assert a.risk_level == "low" and not a.coverage.complete
+    assert a.headline_bn == HEADLINE_LOW_PARTIAL_BN != HEADLINES_BN["low"]
 
 
 def test_coverage_incomplete_does_not_change_risk():
@@ -57,9 +71,11 @@ def test_passed_and_findings_lists():
 
 
 def test_headlines_and_disclaimer_have_no_forbidden_words():
-    for text in [*HEADLINES_BN.values(), DISCLAIMER_BN]:
+    assert "নিরাপদ" not in DISCLAIMER_BN
+    assert DISCLAIMER_BN.startswith("এই অ্যাপের ফল জমির মালিকানা বা ঝুঁকিহীনতার নিশ্চয়তা নয়।")
+    for text in [*HEADLINES_BN.values(), HEADLINE_LOW_PARTIAL_BN, DISCLAIMER_BN]:
         assert forbidden_words_in(text) == [], text
-    # the check itself still catches a forbidden word outside the disclaimer's negation
+    # the check itself still catches a forbidden word
     assert forbidden_words_in("এই জমি নিরাপদ") == ["নিরাপদ"]
     assert forbidden_words_in("100% safe") == ["safe"]
 

@@ -19,6 +19,7 @@ are always kept. No action says the land is safe (forbidden-words test).
 | `khatian_mismatch` | 1 | land_office | `দলিলে লেখা {survey} খতিয়ান {deed_khatian_no}-এর সার্টিফায়েড কপি ভূমি অফিস থেকে তুলে মিলিয়ে নিন।` | The deed cites another khatian; its official copy shows what it covers. |
 | `mouza_mismatch` | 1 | land_office | `জমিটি কোন মৌজার ({deed_mouza} না {khatian_mouza}), ভূমি অফিসে যাচাই করুন।` | Different mouza means possibly different land. |
 | `chain_break` | 1 | lawyer | `{to_document}-এর আগের হস্তান্তরের কাগজ চেয়ে নিন এবং মালিকানার ধারা একজন আইনজীবীকে দেখান।` | A gap in the ownership chain needs the missing transfer document and a professional reading. |
+| `seller_nid_name_partial` | 2 | buyer | `বিক্রেতার পরিচয়পত্রের নাম ও পিতা/স্বামীর নাম দলিল ও খতিয়ানের সঙ্গে মিলিয়ে দেখুন।` | The NID name matched only partly (one document, or a different father/husband); possibly a different person. |
 | `seller_father_mismatch` | 2 | seller | `{seller}-এর পরিচয় (পিতা/স্বামীর নাম) কাগজ দিয়ে নিশ্চিত হোন।` | Same name, different father: possibly a different person. |
 | `heir_missing_from_mutation` | 2 | land_office | `{heir}-এর নাম নামজারিতে কেন নেই, ভূমি অফিসে জেনে নিন।` | An heir may still have a claim if the mutation left them out. |
 | `document_missing` | 2 | seller | `বিক্রেতার কাছ থেকে {missing_document}-এর কপি চেয়ে নিন।` | The deed relies on a document (e.g. heir certificate) the case does not have. |
@@ -30,10 +31,24 @@ are always kept. No action says the land is safe (forbidden-words test).
 
 | id | priority | who | action | when |
 |---|---|---|---|---|
+| `verify_ocr_numbers` | 1 | buyer | `{count} টি কাগজ OCR দিয়ে পড়া — অংশ ও জমির পরিমাণ আসল কাগজের সঙ্গে মিলিয়ে নিন, অথবা “আবার চেষ্টা করুন” দিয়ে AI দিয়ে পড়ান।` | The case has a document read by the Tesseract fallback (`ocr_read`) **and** a non-empty `to_verify` (rules.md, "OCR guard"). `{count}` = number of OCR-read documents, in Bangla digits. |
 | `upload_documents` | 2 | buyer | `এই কাগজটি upload করুন: {documents}।` | Coverage is incomplete and a document role would let a skipped check run. |
 | `review_fields` | 2 | buyer | `এই তথ্যগুলো নিজে মিলিয়ে নিন: {fields}।` | A rule used an extraction field flagged low/medium confidence. |
 | `amin_field_survey` | 3 | amin | `একজন আমিন দিয়ে মাঠে জমি মাপান ও দখল দেখুন।` | **Always.** Possession and the real boundary are not in the documents. |
 | `check_mortgage_and_cases` | 3 | lawyer | `সাব-রেজিস্ট্রি অফিস ও আদালতে বন্ধক বা মামলা আছে কিনা খোঁজ নিন।` | **Always.** Mortgages and court cases are not in these documents. |
+
+### `verify_ocr_numbers`: order and link
+
+- **For:** the buyer, who checks the shares and areas against the paper documents, or re-reads
+  them with AI.
+- **Order:** always the first action. It has priority 1 and sorts ahead of every other priority-1
+  action. On the case page, only the blocking journey notices (failed documents, stale check)
+  come before it in "এখন কী করবেন".
+- **Sources:** the sources of every `to_verify` item.
+- **Link:** the case page shows "ধাপ ২ খুলুন" next to it (`NextActions.tsx`). Step 2 has the
+  documents and "আবার চেষ্টা করুন", which re-reads them.
+- **Never shown** when no document is OCR-read, or when OCR-read documents leave nothing in
+  `to_verify` (no numeric check used them).
 
 Actions that imply a legal step are listed in `docs/legal-notes.md` under "Actions to verify
 with an expert".

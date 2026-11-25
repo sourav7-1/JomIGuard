@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { ConfidenceBadge } from "./ConfidenceBadge";
-import { strings } from "@/lib/strings";
 import { type EnumOption } from "@/lib/api";
+import { useLang, useStrings } from "@/lib/lang";
+import { bnDigits } from "@/lib/digits";
 
 interface FieldRowProps {
   id?: string;
@@ -12,6 +13,7 @@ interface FieldRowProps {
   labelBn: string;
   value: unknown;
   derivedValue?: unknown;
+  derivedUnit?: "shatangsho";
   flags?: string[] | string;
   editable: boolean;
   enumOptions?: EnumOption[] | null;
@@ -29,6 +31,7 @@ export function FieldRow({
   labelBn,
   value,
   derivedValue,
+  derivedUnit,
   flags,
   editable,
   enumOptions,
@@ -38,6 +41,9 @@ export function FieldRow({
   onConfirm,
   onEdit,
 }: FieldRowProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState<string>("");
 
@@ -56,10 +62,18 @@ export function FieldRow({
     setEditValue(value !== undefined && value !== null ? String(value) : "");
   };
 
+  // enum values ("father") show their Bangla label; numbers drop trailing zeros ("6.0000000" -> ৬)
+  const enumLabel = enumOptions?.find((o) => o.value === value)?.label_bn;
   const displayVal =
     value !== undefined && value !== null && String(value).trim() !== ""
-      ? String(value)
+      ? (!en && enumLabel) || String(value)
       : strings.casePage.emptyValue;
+  const derivedNum = Number(derivedValue);
+  const derivedText = typeof derivedValue === "string" || typeof derivedValue === "number"
+    ? Number.isFinite(derivedNum) && String(derivedValue).trim() !== ""
+      ? (en ? String : bnDigits)(String(Number(derivedNum.toFixed(4)))) + (derivedUnit ? t(" শতাংশ", " decimal") : "")
+      : String(derivedValue)
+    : "";
 
   const flagList = Array.isArray(flags)
     ? flags
@@ -92,7 +106,7 @@ export function FieldRow({
             <ConfidenceBadge flags={effectiveFlags} />
             {isEdited && (
               <span className="text-[10px] font-medium bg-accent-soft text-accent px-1.5 py-0.2 rounded">
-                সংশোধিত
+                {t("সংশোধিত", "Corrected")}
               </span>
             )}
           </div>
@@ -102,9 +116,9 @@ export function FieldRow({
               <span className="text-sm font-medium font-mono text-ink break-words">
                 {displayVal}
               </span>
-              {derivedValue !== undefined && derivedValue !== null && String(derivedValue).trim() !== "" && (
+              {derivedText.trim() !== "" && (
                 <span className="text-xs text-muted font-mono bg-bg/60 px-1.5 py-0.5 rounded border border-line/50 self-start">
-                  হিসাবকৃত: {String(derivedValue)}
+                  {t("হিসাবকৃত", "Calculated")}: {derivedText}
                 </span>
               )}
             </div>
@@ -116,7 +130,7 @@ export function FieldRow({
                   onChange={(e) => setEditValue(e.target.value)}
                   className="w-full text-sm p-1.5 rounded border border-line bg-surface text-ink focus:outline-accent"
                 >
-                  <option value="">নির্বাচন করুন</option>
+                  <option value="">{t("নির্বাচন করুন", "Select")}</option>
                   {enumOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label_bn} ({opt.value})
@@ -167,7 +181,7 @@ export function FieldRow({
                   : "bg-surface hover:bg-bg text-ink border-line"
               }`}
             >
-              {isConfirmed ? "✓ নিশ্চিত" : strings.casePage.confirmField}
+              {isConfirmed ? t("✓ নিশ্চিত", "✓ Confirmed") : strings.casePage.confirmField}
             </button>
             <button
               type="button"

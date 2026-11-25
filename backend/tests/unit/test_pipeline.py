@@ -169,13 +169,14 @@ def test_no_label_and_not_a_land_document_fails(db, classified):
     assert extractor.calls == [] and extractions(db, doc) == []
 
 
-def test_extractor_error_fails_with_message(db, classified):
+def test_extractor_error_fails_with_a_friendly_message_and_logs_the_reason(db, classified, caplog):
     doc = new_document(db)
     bad = FakeExtractor(ExtractionResult(error="invalid output: 3 errors",
                                          meta=ExtractionMeta(model="fake-model")))  # fmt: skip
     assert run(db, doc, bad) == DocStatus.failed
     db.refresh(doc)
-    assert "invalid output" in doc.error_message
+    assert doc.error_message == pipeline.EXTRACT_FAILED_BN  # no technical text for the user
+    assert "invalid output" in caplog.text
     [row] = extractions(db, doc)
     assert row.status == ExtractionStatus.failed and row.data is None
 
@@ -199,7 +200,7 @@ def test_storage_error_marks_failed_and_reraises_for_retry(db, classified):
     with pytest.raises(ConnectionError):
         pipeline.process_document(doc.id, db, storage, FakeExtractor())
     db.refresh(doc)
-    assert doc.status == DocStatus.failed and "ConnectionError" in doc.error_message
+    assert doc.status == DocStatus.failed and doc.error_message == pipeline.EXTRACT_FAILED_BN
 
 
 def test_unreadable_image_fails(db, classified):
@@ -230,7 +231,7 @@ def test_make_extractor_rejects_unknown_name():
         pipeline.make_extractor("magic")
 
 
-def test_extractor_config_error_fails_the_document(db, monkeypatch):
+def test_extractor_config_error_fails_the_document(db, monkeypatch, caplog):
     doc = new_document(db)
 
     def missing(name):
@@ -239,7 +240,7 @@ def test_extractor_config_error_fails_the_document(db, monkeypatch):
     monkeypatch.setattr(pipeline, "make_extractor", missing)
     assert pipeline.process_with_settings(doc.id, db, FakeStorage({}), "llm") == DocStatus.failed
     db.refresh(doc)
-    assert "LLM_MODEL" in doc.error_message
+    assert doc.error_message == pipeline.CONFIG_BN and "LLM_MODEL" in caplog.text
 
 
 def test_pipeline_sets_current_step_in_order(db, classified):

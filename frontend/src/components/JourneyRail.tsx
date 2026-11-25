@@ -1,44 +1,113 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { strings } from "@/lib/strings";
+import { usePathname, useRouter } from "next/navigation";
+import { useLang } from "@/lib/lang";
+import { api } from "@/lib/api";
+import { Modal } from "@/components/ui/Modal";
+import { forgetSession, useSession } from "@/lib/session";
+import { ACCOUNT_LINKS, APP_NAV, HELP_LINKS, PUBLIC_NAV, activeNav, type NavKey, type NavLink } from "@/lib/nav";
 
-const items = [
-  { label: "মূল পাতা", mobile: "হোম", href: "/", match: (p: string) => p === "/", icon: "m3 11 9-8 9 8 M5.5 10v10h13V10 M9.5 20v-6h5v6" },
-  { label: "কাগজ যাচাই", mobile: "যাচাই", href: "/cases", match: (p: string) => (p.startsWith("/cases") && !p.includes("/timeline")) || p.startsWith("/upload"), icon: "M6 3.75h8l4 4v12.5H6z M14 3.75v4h4 M9 12h6 M9 15.5h6" },
-  { label: "জমির ইতিহাস", mobile: "ইতিহাস", desktopOnly: true, href: "/cases/801bc1b6-b43c-5147-9b4f-b0baa3815cd0/timeline", match: (p: string) => p.includes("/timeline"), icon: "M4 6h12 M12 2l4 4-4 4 M20 18H8 M12 14l-4 4 4 4" },
-  { label: strings.nav.chat, mobile: "সহায়ক", href: "/chat", match: (p: string) => p.startsWith("/chat"), icon: "M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-5 4v-4.3A2.5 2.5 0 0 1 4 13.5z" },
-  { label: "বায়না escrow", mobile: "বায়না", desktopOnly: true, href: "/escrow", match: (p: string) => p.startsWith("/escrow"), icon: "M3 8h18v11H3z M3 11h18 M7 15h4 M7 4h10" },
-  { label: "প্রবাসী গার্ডিয়ান", mobile: "গার্ডিয়ান", href: "/guardian", match: (p: string) => p.startsWith("/guardian"), icon: "M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6z M9 11.5l2 2 4-4" },
-  { label: strings.identity.profile, mobile: strings.identity.profileShort, href: "/profile", match: (p: string) => p.startsWith("/profile"), icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21a8 8 0 0 1 16 0" },
-];
+const ICONS: Record<NavKey, string> = {
+  home: "m3 11 9-8 9 8 M5.5 10v10h13V10 M9.5 20v-6h5v6",
+  how: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z M12 8v5 M12 16.5v.01",
+  demo: "M4 7h16v12H4z M8 7V4h8v3 M9 12h6 M9 15.5h4",
+  docs: "M6 3.75h8l4 4v12.5H6z M14 3.75v4h4 M9 12h6 M9 15.5h6",
+  cases: "M4 4h7v7H4z M13 4h7v4h-7z M13 10h7v10h-7z M4 13h7v7H4z",
+  new: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z M20 20l-4-4 M11 8v6 M8 11h6",
+  help: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6 M12 17h.01",
+  account: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21a8 8 0 0 1 16 0",
+};
 
-function NavIcon({ path }: { path: string }) {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-[19px] w-[19px] shrink-0"><path d={path} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+function NavIcon({ k }: { k: NavKey }) {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-[19px] w-[19px] shrink-0"><path d={ICONS[k]} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+
+const desk = (active: boolean) =>
+  `hidden min-h-12 items-center gap-2 border-b-2 px-3 text-sm font-medium transition-colors md:flex focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent ${active ? "border-gold text-accent" : "border-transparent text-muted hover:text-ink"}`;
+const dock = (active: boolean) =>
+  `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] font-medium md:hidden ${active ? "bg-accent-soft text-accent" : "text-muted hover:text-ink"}`;
+
+/** Help ▾ on desktop: native <details>, closed on route change and outside click. */
+function HelpMenu({ active, en }: { active: boolean; en: boolean }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const pathname = usePathname();
+  useEffect(() => { if (ref.current) ref.current.open = false; }, [pathname]);
+  useEffect(() => {
+    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) ref.current.open = false; };
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, []);
+  return (
+    <details ref={ref} className="relative hidden md:block">
+      <summary className={`${desk(active)} cursor-pointer list-none [&::-webkit-details-marker]:hidden`} aria-current={active ? "page" : undefined}>
+        <NavIcon k="help" />{en ? "Help" : "সাহায্য"}<span aria-hidden="true" className="text-xs">▾</span>
+      </summary>
+      <ul className="absolute left-0 top-full z-50 mt-1 min-w-52 rounded-[var(--radius-control)] border border-edge bg-surface p-1 shadow-overlay">
+        {HELP_LINKS.map((l) => (
+          <li key={l.href}><Link href={l.href} className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm text-ink hover:bg-bg"><NavIcon k={l.key} />{en ? l.en : l.bn}</Link></li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+function SheetLinks({ links, en, onPick }: { links: NavLink[]; en: boolean; onPick: () => void }) {
+  return (
+    <ul className="space-y-1">
+      {links.map((l) => (
+        <li key={l.href}><Link href={l.href} onClick={onPick} className="flex min-h-12 items-center gap-3 rounded-[var(--radius-control)] border border-edge bg-bg/60 px-3 text-sm font-medium text-ink"><NavIcon k={l.key} />{en ? l.en : l.bn}</Link></li>
+      ))}
+    </ul>
+  );
 }
 
 export function JourneyRail() {
   const pathname = usePathname();
+  const router = useRouter();
+  const en = useLang() === "en";
+  const user = useSession();
+  const signedIn = !!user;
+  const active = activeNav(pathname, signedIn);
+  const [sheet, setSheet] = useState<"help" | "account" | null>(null);
+  if (user === undefined) return <div className="h-14 md:h-12" />;
+
+  const label = en ? "Main navigation" : "প্রধান নেভিগেশন";
+  const links = signedIn ? APP_NAV : PUBLIC_NAV;
+  const logout = async () => {
+    await api.logout().catch(() => undefined);
+    forgetSession();
+    setSheet(null);
+    router.replace("/");
+  };
 
   return (
-    <nav aria-label="প্রধান নেভিগেশন" className="mobile-dock md:static md:mx-auto md:max-w-7xl md:px-8 md:pb-0">
+    <nav aria-label={label} className="mobile-dock md:static md:mx-auto md:max-w-7xl md:px-8 md:pb-0">
       <div className="flex items-stretch justify-around border-t border-line bg-surface/95 px-1 pt-1 backdrop-blur-md md:justify-start md:gap-2 md:border-0 md:border-t md:bg-transparent md:p-0">
-        {items.map((item) => {
-          const active = item.match(pathname);
-          return (
-            <Link
-              key={item.href + item.label}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent md:min-h-12 md:flex-row md:flex-none md:gap-2 md:rounded-none md:border-b-2 md:px-3 md:text-sm ${"desktopOnly" in item ? "hidden md:flex" : ""} ${active ? "bg-accent-soft text-accent md:border-gold md:bg-transparent" : "border-transparent text-muted hover:bg-surface hover:text-ink md:hover:bg-transparent"}`}
-            >
-              <NavIcon path={item.icon} />
-              <span className="truncate"> <span className="md:hidden">{item.mobile}</span><span className="hidden md:inline">{item.label}</span></span>
-            </Link>
-          );
-        })}
+        {links.map((l) => (
+          <Link key={l.href} href={l.href} aria-current={active === l.key ? "page" : undefined} className={desk(active === l.key)}>
+            <NavIcon k={l.key} />{en ? l.en : l.bn}
+          </Link>
+        ))}
+        {signedIn && <HelpMenu active={active === "help"} en={en} />}
+        {links.map((l) => (
+          <Link key={`m-${l.href}`} href={l.href} aria-current={active === l.key ? "page" : undefined} className={dock(active === l.key)}>
+            <NavIcon k={l.key} /><span className="truncate">{en ? l.en : l.bn}</span>
+          </Link>
+        ))}
+        {signedIn && <>
+          <button type="button" aria-haspopup="dialog" onClick={() => setSheet("help")} className={dock(active === "help")}><NavIcon k="help" /><span className="truncate">{en ? "Help" : "সাহায্য"}</span></button>
+          <button type="button" aria-haspopup="dialog" onClick={() => setSheet("account")} className={dock(active === "account")}><NavIcon k="account" /><span className="truncate">{en ? "Account" : "অ্যাকাউন্ট"}</span></button>
+        </>}
       </div>
+      <Modal open={sheet === "help"} onClose={() => setSheet(null)} title={en ? "Help" : "সাহায্য"}>
+        <SheetLinks links={HELP_LINKS} en={en} onPick={() => setSheet(null)} />
+      </Modal>
+      <Modal open={sheet === "account"} onClose={() => setSheet(null)} title={user?.username ?? (en ? "Account" : "অ্যাকাউন্ট")}>
+        <SheetLinks links={ACCOUNT_LINKS} en={en} onPick={() => setSheet(null)} />
+        <button type="button" onClick={() => void logout()} className="mt-3 flex min-h-12 w-full items-center justify-center rounded-[var(--radius-control)] border border-line bg-surface text-sm font-semibold text-ink">{en ? "Log out" : "বের হন"}</button>
+      </Modal>
     </nav>
   );
 }

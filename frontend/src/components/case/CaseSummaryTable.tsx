@@ -2,7 +2,7 @@
 
 import React from "react";
 import { CaseViewDocOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
+import { useLang, useStrings } from "@/lib/lang";
 
 interface CaseSummaryTableProps {
   documents: CaseViewDocOut[];
@@ -15,6 +15,9 @@ export function CaseSummaryTable({
   selectedDocId,
   onSelectDoc,
 }: CaseSummaryTableProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   if (documents.length === 0) {
     return null;
   }
@@ -37,7 +40,7 @@ export function CaseSummaryTable({
       }
     } else if (docType === "heir_cert") {
       if (raw.deceased_name) {
-        owners = `মৃত ${raw.deceased_name}`;
+        owners = `${t("মৃত", "Late")} ${raw.deceased_name}`;
       }
     }
 
@@ -72,11 +75,11 @@ export function CaseSummaryTable({
     let area = "—";
     if (docType === "khatian" || docType === "dcr") {
       if (raw.total_area_shatangsho !== undefined && raw.total_area_shatangsho !== null) {
-        area = raw.total_area_text ? `${raw.total_area_text} · ${raw.total_area_shatangsho} শতাংশ` : "—";
+        area = raw.total_area_text ? `${raw.total_area_text} · ${raw.total_area_shatangsho} ${t("শতাংশ", "shatangsho")}` : "—";
       }
     } else if (docType === "deed") {
       if (raw.transferred_area_shatangsho !== undefined && raw.transferred_area_shatangsho !== null) {
-        area = raw.transferred_area_text ? `${raw.transferred_area_text} · ${raw.transferred_area_shatangsho} শতাংশ` : "—";
+        area = raw.transferred_area_text ? `${raw.transferred_area_text} · ${raw.transferred_area_shatangsho} ${t("শতাংশ", "shatangsho")}` : "—";
       }
     }
 
@@ -115,6 +118,12 @@ export function CaseSummaryTable({
                   <td className="py-2.5 px-3">
                     <button type="button" onClick={() => onSelectDoc?.(doc.id)} aria-pressed={isSelected} className="min-h-11 text-left font-medium text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-accent">{doc.label_bn}</button>
                     <span className="text-[11px] text-muted">{doc.original_filename}</span>
+                    {doc.latest_extraction?.extractor === "tesseract_regex" && (
+                      <span title={en ? "Read by OCR after the AI reader failed; some fields may be missing" : "AI দিয়ে পড়া যায়নি, তাই OCR দিয়ে পড়া; কিছু তথ্য বাদ থাকতে পারে"}
+                        className="ml-1 inline-block rounded-full border border-warn/40 bg-warn-bg px-2 py-0.5 text-[11px] font-semibold text-warn">
+                        {en ? "Limited read (OCR)" : "সীমিত পাঠ (OCR)"}
+                      </span>
+                    )}
                   </td>
                   <td className="py-2.5 px-3 text-ink max-w-[200px] truncate" title={owners}>
                     {owners}

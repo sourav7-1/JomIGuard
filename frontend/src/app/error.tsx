@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/lib/lang";
 
 export default function ErrorPage({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
+  const strings = useStrings();
   return (
     <section className="mx-auto max-w-xl space-y-4 py-16 text-center">
       <h1 className="text-2xl font-semibold">{strings.error.serverErrorTitle}</h1>

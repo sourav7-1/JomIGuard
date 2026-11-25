@@ -3,8 +3,12 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Modal } from "@/components/ui/Modal";
+import { ListSkeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/Toast";
 import { api, ApiError, GuardianAlertOut, GuardianLandOut } from "@/lib/api";
-import { strings, guardianFlow as copy } from "@/lib/strings";
+import { useGuardianFlow, useLang, useStrings } from "@/lib/lang";
 
 function value(data: Record<string, unknown>, field: string) {
   if (field === "owners") return Array.isArray(data.owners) ? data.owners.map((o) => (o as { name?: string }).name).join(", ") : "—";
@@ -16,6 +20,10 @@ function value(data: Record<string, unknown>, field: string) {
 }
 
 export function GuardianDashboard() {
+  const strings = useStrings();
+  const copy = useGuardianFlow();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [lands, setLands] = useState<GuardianLandOut[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [alerts, setAlerts] = useState<GuardianAlertOut[]>([]);
@@ -23,14 +31,18 @@ export function GuardianDashboard() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [guide, setGuide] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const toast = useToast();
 
   const refresh = useCallback(async () => {
     try {
       const rows = await api.getGuardianLands();
-      setLands(rows);
+      // one card per watched land, even if the API repeats a row
+      setLands(rows.filter((row, i) => rows.findIndex((r) => r.id === row.id) === i));
       if (!selected && rows[0]) setSelected(rows[0].id);
     } catch { setMessage(copy.error); }
-  }, [selected]);
+    finally { setLoaded(true); }
+  }, [selected, copy.error]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void refresh(), 0);
@@ -39,7 +51,7 @@ export function GuardianDashboard() {
   useEffect(() => {
     if (!selected) return;
     void api.getGuardianAlerts(selected).then((rows) => { setAlerts(rows); setActive(rows[0] ?? null); }).catch(() => setMessage(copy.error));
-  }, [selected]);
+  }, [selected, copy.error]);
 
   const upload = async (event: ChangeEvent<HTMLInputElement>, land?: GuardianLandOut) => {
     const file = event.target.files?.[0];
@@ -59,6 +71,7 @@ export function GuardianDashboard() {
       else await api.addGuardianLand(doc.id);
       await refresh();
       setMessage("");
+      toast("ok", land ? t("নতুন কপি মিলিয়ে দেখা হয়েছে।", "New copy compared.") : t("জমি নজরদারিতে যোগ হয়েছে।", "Land added to the watch."));
     } catch (error) {
       setMessage(error instanceof ApiError ? error.message : error instanceof Error ? error.message : copy.error);
     } finally { setBusy(false); }
@@ -71,7 +84,8 @@ export function GuardianDashboard() {
       await refresh();
       const rows = selected ? await api.getGuardianAlerts(selected) : [];
       setAlerts(rows); setActive(rows[0] ?? null);
-    } catch { setMessage(copy.error); }
+      toast("ok", t("মাসিক যাচাই শেষ হয়েছে।", "Monthly check done."));
+    } catch { setMessage(copy.error); toast("bad", copy.error); }
     finally { setBusy(false); }
   };
 
@@ -84,13 +98,16 @@ export function GuardianDashboard() {
 
   const selectedLand = lands.find((land) => land.id === selected);
   const hasDemo = lands.some((land) => land.demo_document_id);
+  const INTEGRITY_EN: Record<string, string> = { "কপি অপরিবর্তিত": "Copy unchanged", "কপি বদলেছে": "Copy changed", "fingerprint নেই": "No fingerprint", "ফাইল পাওয়া যায়নি": "File not found" };
+  const asciiDigits = (v: string) => v.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d)));
+  const shown = (v: string) => (en ? asciiDigits(v) : v);
   const statusLabel = (status: GuardianLandOut["status"]) => status === "bad" ? copy.changed : status === "warn" ? copy.review : copy.unchanged;
   const statusStyle = (status: GuardianLandOut["status"]) => status === "bad" ? "border-bad/40 bg-bad/10 text-bad" : status === "warn" ? "border-warn/40 bg-warn/10 text-warn" : "border-ok/40 bg-ok/10 text-ok";
 
   return (
     <main className="mx-auto max-w-6xl space-y-7 py-2 sm:space-y-9">
       <header className="max-w-3xl border-b border-line pb-6">
-        <p className="mb-3 text-sm font-semibold text-accent">জমি কেনার পরে</p>
+        <p className="mb-3 text-sm font-semibold text-accent">{t("জমি কেনার পরে", "After buying land")}</p>
         <h1 className="text-3xl font-semibold leading-tight text-ink sm:text-4xl">{strings.pages.guardian.title}</h1>
         <p className="mt-3 text-sm leading-7 text-muted">{strings.pages.guardian.desc}</p>
       </header>
@@ -104,27 +121,28 @@ export function GuardianDashboard() {
       </section>
       {message && <p role="status" className="rounded-md border border-warn/40 bg-warn/10 p-3 text-sm text-ink">{message}</p>}
 
-      {!lands.length && <section className="rounded-xl border border-line bg-surface p-6 text-sm text-muted">{copy.noLands}</section>}
+      {!loaded && <ListSkeleton rows={2} />}
+      {loaded && !lands.length && <Card as="section" className="p-6 text-sm text-muted">{copy.noLands}</Card>}
       <div className="grid gap-6 lg:grid-cols-[minmax(270px,0.8fr)_minmax(0,1.4fr)]">
-        <section aria-label="নজরদারির জমি" className="space-y-3">
+        <section aria-label={t("নজরদারির জমি", "Land under watch")} className="space-y-3">
           {lands.map((land) => (
-            <article key={land.id} className={`rounded-xl border p-4 ${selected === land.id ? "border-accent/60 bg-surface" : "border-line bg-surface/60"}`}>
-              <button className="w-full text-left" onClick={() => setSelected(land.id)} aria-pressed={selected === land.id}>
-                <div className="flex flex-wrap items-start justify-between gap-2"><h2 className="font-semibold text-ink">{land.label_bn}</h2><Badge className={statusStyle(land.status)}>{statusLabel(land.status)}</Badge></div>
-                <p className="mt-2 text-sm text-muted">{land.district} · {land.upazila} · {land.mouza}</p>
-                <p className="mt-1 text-xs text-muted">শেষ যাচাই: {land.last_checked_at ? new Date(land.last_checked_at).toLocaleDateString("bn-BD") : "এখনও হয়নি"}</p>
+            <Card as="article" key={land.id} variant="interactive" className={selected === land.id ? "!border-accent/50 ring-1 ring-accent/20" : ""}>
+              <button className="w-full rounded-[var(--radius-control)] text-left" onClick={() => setSelected(land.id)} aria-pressed={selected === land.id}>
+                <div className="flex flex-wrap items-start justify-between gap-2"><h2 className="font-semibold text-ink">{en ? `Dag ${asciiDigits(land.dag_no)} · ${land.upazila}` : land.label_bn}</h2><Badge className={statusStyle(land.status)}>{statusLabel(land.status)}</Badge></div>
+                <p className="mt-2 text-sm text-muted">{land.district} · {land.upazila} · {shown(land.mouza)}</p>
+                <p className="mt-1 text-xs text-muted">{t("শেষ যাচাই", "Last check")}: {land.last_checked_at ? new Date(land.last_checked_at).toLocaleDateString(en ? "en-GB" : "bn-BD") : t("এখনও হয়নি", "not yet")}</p>
               </button>
-              {land.documents.length > 0 && <div className="mt-3 space-y-1 text-xs text-muted"><p>{copy.documents}</p>{land.documents.map((doc) => <p key={doc.id} className="break-words">{doc.original_filename} · {doc.integrity}</p>)}</div>}
+              {land.documents.length > 0 && <div className="mt-3 space-y-1 text-xs text-muted"><p>{copy.documents}</p>{land.documents.map((doc) => <p key={doc.id} className="break-words">{shown(doc.original_filename)} · {en ? INTEGRITY_EN[doc.integrity] ?? doc.integrity : doc.integrity}</p>)}</div>}
               <label className="mt-3 inline-flex min-h-10 cursor-pointer items-center rounded-md border border-line px-3 py-2 text-sm text-ink hover:bg-surface">
                 {copy.upload}<input className="sr-only" type="file" accept="image/*,.pdf" disabled={busy} onChange={(event) => void upload(event, land)} />
               </label>
-            </article>
+            </Card>
           ))}
         </section>
 
         <section className="min-w-0 space-y-4">
-          {selectedLand && <div className="rounded-xl border border-line bg-surface p-4 sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-semibold text-ink">{selectedLand.label_bn}</h2><Badge className={statusStyle(selectedLand.status)}>{statusLabel(selectedLand.status)}</Badge></div>
+          {selectedLand && <div className="surface-grad rounded-[var(--radius-card)] border border-edge bg-surface p-4 shadow-raised sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-semibold text-ink">{en ? `Dag ${asciiDigits(selectedLand.dag_no)} · ${selectedLand.upazila}` : selectedLand.label_bn}</h2><Badge className={statusStyle(selectedLand.status)}>{statusLabel(selectedLand.status)}</Badge></div>
             {!active ? <p className="mt-4 text-sm text-muted">{copy.noChanges}</p> : <>
               <div className={`mt-4 rounded-lg border p-4 ${statusStyle(active.severity === "bad" ? "bad" : active.severity === "info" ? "warn" : "warn")}`}>
                 <p className="font-semibold">{active.message_bn}</p>
@@ -136,20 +154,22 @@ export function GuardianDashboard() {
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => void api.downloadGuardianCase(active.id)}>{copy.sendLawyer}</Button>
                 <Button size="sm" variant="ghost" onClick={() => void showGuide()}>{copy.guide}</Button>
-                {!active.read_at && <Button size="sm" variant="ghost" onClick={() => void api.readGuardianAlert(active.id).then(() => refresh())}>পড়া হয়েছে</Button>}
+                {!active.read_at && <Button size="sm" variant="ghost" onClick={() => void api.readGuardianAlert(active.id).then(() => refresh())}>{t("পড়া হয়েছে", "Mark as read")}</Button>}
               </div>
-              {alerts.length > 1 && <div className="mt-4 flex flex-wrap gap-2">{alerts.map((alert) => <button key={alert.id} onClick={() => setActive(alert)} className="rounded-full border border-line px-3 py-1.5 text-xs text-ink">{new Date(alert.created_at).toLocaleDateString("bn-BD")} · {alert.message_bn}</button>)}</div>}
+              {alerts.length > 1 && <div className="mt-4 flex flex-wrap gap-2">{alerts.map((alert) => <button key={alert.id} onClick={() => setActive(alert)} className="rounded-full border border-line px-3 py-1.5 text-xs text-ink">{new Date(alert.created_at).toLocaleDateString(en ? "en-GB" : "bn-BD")} · {alert.message_bn}</button>)}</div>}
             </>}
           </div>}
         </section>
       </div>
-      {guide && <div role="dialog" aria-modal="true" aria-label={copy.guide} className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center"><section className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl bg-surface p-5 shadow-xl sm:p-7"><div className="flex justify-between gap-4"><h2 className="text-xl font-semibold text-ink">{copy.guide}</h2><button className="min-h-11 px-3" onClick={() => setGuide("")}>বন্ধ</button></div><p className="mt-4 rounded bg-warn/10 p-3 text-sm font-semibold text-warn">{copy.verifiedNotice}</p><pre className="mt-4 whitespace-pre-wrap text-sm leading-7 text-ink">{guide}</pre></section></div>}
+      <Modal wide open={!!guide} onClose={() => setGuide("")} title={copy.guide}><p className="rounded-[var(--radius-control)] bg-warn/10 p-3 text-sm font-semibold text-warn">{copy.verifiedNotice}</p><pre className="mt-4 whitespace-pre-wrap font-body text-sm leading-7 text-ink">{guide}</pre></Modal>
     </main>
   );
 }
 
 function SnapshotCard({ title, data, changes }: { title: string; data: Record<string, unknown>; changes: GuardianAlertOut["changes"] }) {
-  const entries = [["owners", "মালিক"], ["khatian_no", "খতিয়ান নম্বর"], ["mutation_case_ref", "নামজারি মামলা"], ["annual_revenue_text", "খাজনা"], ["total_area_text", "মোট জমি"]] as const;
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
+  const entries = [["owners", t("মালিক", "Owners")], ["khatian_no", t("খতিয়ান নম্বর", "Khatian number")], ["mutation_case_ref", t("নামজারি মামলা", "Mutation case")], ["annual_revenue_text", t("খাজনা", "Land tax")], ["total_area_text", t("মোট জমি", "Total land")]] as const;
   const changed = new Set(changes.map((change) => change.field));
   return <article className="min-w-0 rounded-lg border border-line p-3 sm:p-4"><h3 className="font-semibold text-ink">{title}</h3><dl className="mt-2 space-y-2">{entries.map(([field, label]) => <div key={field} className={`rounded px-2 py-1.5 ${changed.has(field) || (field === "owners" && changed.has("owners.share")) ? "bg-warn/15" : ""}`}><dt className="text-xs text-muted">{label}</dt><dd className="break-words text-sm text-ink">{value(data, field)}</dd></div>)}</dl></article>;
 }

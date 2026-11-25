@@ -75,7 +75,10 @@ class CoOwnerConsent(Rule):
             "co_owner_names": " বা ".join(names),
             "co_owner_shares": {owners[j].name: owners[j].share_text for j in co_heirs},
             "dags": sale.dags,
-        }
+            # the shortfall comes from these documents' numbers (OCR guard, rules.md)
+            "number_source_ids": list(dict.fromkeys(s.source_id for p in sale.parts
+                                                    for s in p.sources)),
+        }  # fmt: skip
         seller_sources = [
             ref(deed, f"sellers[{i}].name_normalized") for i in range(len(deed.data.sellers))
         ]

@@ -1,5 +1,7 @@
+"use client";
+
 import React from "react";
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/lib/lang";
 
 export type CheckItemStatus = "ok" | "warn" | "bad";
 
@@ -18,6 +20,7 @@ export function CheckItem({
   className = "",
   ...props
 }: CheckItemProps) {
+  const strings = useStrings();
   const configs: Record<
     CheckItemStatus,
     { mark: string; bg: string; text: string; label: string }

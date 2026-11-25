@@ -2,6 +2,7 @@
 
 import React, { useSyncExternalStore } from "react";
 import { strings } from "@/lib/strings";
+import { useT } from "@/lib/lang";
 
 function subscribe(callback: () => void) {
   window.addEventListener("storage", callback);
@@ -21,6 +22,7 @@ function getServerSnapshot(): "light" | "dark" {
 
 export function ThemeToggle() {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const t = useT();
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
@@ -33,7 +35,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      aria-label={strings.buttons.themeToggle}
+      aria-label={t(strings.buttons.themeToggle, "Change theme")}
       className="min-h-[44px] min-w-[44px] px-2 py-2 rounded-md border border-line bg-surface text-ink hover:bg-bg transition-colors flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-3"
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4">
@@ -44,7 +46,7 @@ export function ThemeToggle() {
         )}
       </svg>
       <span className="hidden sm:inline">
-        {theme === "dark" ? strings.labels.lightTheme : strings.labels.darkTheme}
+        {theme === "dark" ? t(strings.labels.lightTheme, "Light") : t(strings.labels.darkTheme, "Dark")}
       </span>
     </button>
   );

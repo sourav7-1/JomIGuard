@@ -1,73 +1,113 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #F7F9F6;
+  --bg: #F7F7FA;
   --surface: #FFFFFF;
-  --ink: #172821;
-  --muted: #586A61;
-  --line: #D8E1DB;
-  --accent: #0D624D;
-  --accent-soft: #E3EFE8;
-  --gold: #916707;
+  --ink: #1A1F33;
+  --muted: #555C72;
+  --line: #DADDE8;
+  --accent: #2D3E8F;
+  --accent-soft: #E7EAF6;
+  --gold: #A4502A;
   --ok: #2E7D4F;
   --ok-bg: #E3F1E8;
-  --warn: #A86A00;
+  --warn: #8A5700;
   --warn-bg: #FBF0D9;
   --bad: #B3261E;
   --bad-bg: #F9E3E1;
+  --sat: #0F766E;
+  --sat-soft: #DFF2EE;
+  --edge: rgb(45 62 143 / 0.13);
+  --elev-rest: 0 1px 2px rgb(45 62 143 / 0.06), 0 1px 4px rgb(26 31 51 / 0.04);
+  --elev-raised: 0 2px 4px rgb(45 62 143 / 0.06), 0 10px 28px -6px rgb(45 62 143 / 0.18);
+  --elev-overlay: 0 4px 10px rgb(45 62 143 / 0.08), 0 28px 64px -10px rgb(45 62 143 / 0.32);
+  --surface-grad: linear-gradient(180deg, #FFFFFF 0%, #FAFAFD 100%);
+  --glow-a: rgb(45 62 143 / 0.13);
+  --glow-b: rgb(15 118 110 / 0.11);
+  --glass: rgb(255 255 255 / 0.74);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #101713;
-    --surface: #18201C;
-    --ink: #E6ECE8;
-    --muted: #9AA8A1;
-    --line: #2A3530;
-    --accent: #66C6A5;
-    --accent-soft: #1C3229;
-    --gold: #E2B84F;
+    --bg: #11131C;
+    --surface: #191C28;
+    --ink: #E7E9F2;
+    --muted: #A0A6BC;
+    --line: #2C3144;
+    --accent: #A9B6F0;
+    --accent-soft: #1F2542;
+    --gold: #E3A07E;
     --ok: #6CC08E;
     --ok-bg: #1A2E22;
     --warn: #E2B04A;
     --warn-bg: #33291A;
     --bad: #F08A82;
     --bad-bg: #3A1F1D;
+    --sat: #5CC7B6;
+    --sat-soft: #12302C;
+    --edge: rgb(255 255 255 / 0.08);
+    --elev-rest: 0 1px 2px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.03);
+    --elev-raised: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 30px -8px rgb(8 10 30 / 0.8), 0 0 0 1px rgb(169 182 240 / 0.10);
+    --elev-overlay: 0 28px 70px -10px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(169 182 240 / 0.12);
+    --surface-grad: linear-gradient(180deg, #1D2132 0%, #191C28 100%);
+    --glow-a: rgb(169 182 240 / 0.14);
+    --glow-b: rgb(92 199 182 / 0.10);
+    --glass: rgb(25 28 40 / 0.74);
   }
 }
 
 [data-theme="dark"] {
-  --bg: #101713;
-  --surface: #18201C;
-  --ink: #E6ECE8;
-  --muted: #9AA8A1;
-  --line: #2A3530;
-  --accent: #66C6A5;
-  --accent-soft: #1C3229;
-  --gold: #E2B84F;
+  --bg: #11131C;
+  --surface: #191C28;
+  --ink: #E7E9F2;
+  --muted: #A0A6BC;
+  --line: #2C3144;
+  --accent: #A9B6F0;
+  --accent-soft: #1F2542;
+  --gold: #E3A07E;
   --ok: #6CC08E;
   --ok-bg: #1A2E22;
   --warn: #E2B04A;
   --warn-bg: #33291A;
   --bad: #F08A82;
   --bad-bg: #3A1F1D;
+  --sat: #5CC7B6;
+  --sat-soft: #12302C;
+  --edge: rgb(255 255 255 / 0.08);
+  --elev-rest: 0 1px 2px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.03);
+  --elev-raised: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 30px -8px rgb(8 10 30 / 0.8), 0 0 0 1px rgb(169 182 240 / 0.10);
+  --elev-overlay: 0 28px 70px -10px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(169 182 240 / 0.12);
+  --surface-grad: linear-gradient(180deg, #1D2132 0%, #191C28 100%);
+  --glow-a: rgb(169 182 240 / 0.14);
+  --glow-b: rgb(92 199 182 / 0.10);
+  --glass: rgb(25 28 40 / 0.74);
 }
 
 [data-theme="light"] {
-  --bg: #F7F9F6;
+  --bg: #F7F7FA;
   --surface: #FFFFFF;
-  --ink: #172821;
-  --muted: #586A61;
-  --line: #D8E1DB;
-  --accent: #0D624D;
-  --accent-soft: #E3EFE8;
-  --gold: #916707;
+  --ink: #1A1F33;
+  --muted: #555C72;
+  --line: #DADDE8;
+  --accent: #2D3E8F;
+  --accent-soft: #E7EAF6;
+  --gold: #A4502A;
   --ok: #2E7D4F;
   --ok-bg: #E3F1E8;
-  --warn: #A86A00;
+  --warn: #8A5700;
   --warn-bg: #FBF0D9;
   --bad: #B3261E;
   --bad-bg: #F9E3E1;
+  --sat: #0F766E;
+  --sat-soft: #DFF2EE;
+  --edge: rgb(45 62 143 / 0.13);
+  --elev-rest: 0 1px 2px rgb(45 62 143 / 0.06), 0 1px 4px rgb(26 31 51 / 0.04);
+  --elev-raised: 0 2px 4px rgb(45 62 143 / 0.06), 0 10px 28px -6px rgb(45 62 143 / 0.18);
+  --elev-overlay: 0 4px 10px rgb(45 62 143 / 0.08), 0 28px 64px -10px rgb(45 62 143 / 0.32);
+  --surface-grad: linear-gradient(180deg, #FFFFFF 0%, #FAFAFD 100%);
+  --glow-a: rgb(45 62 143 / 0.13);
+  --glow-b: rgb(15 118 110 / 0.11);
+  --glass: rgb(255 255 255 / 0.74);
 }
 
 @theme inline {
@@ -85,6 +125,24 @@
   --color-warn-bg: var(--warn-bg);
   --color-bad: var(--bad);
   --color-bad-bg: var(--bad-bg);
+  --color-sat: var(--sat);
+  --color-sat-soft: var(--sat-soft);
+
+  /* one radius + shadow scale for cards and controls */
+  --color-edge: var(--edge);
+
+  /* radius scale: card 16px, button/control 12px, chip full */
+  --radius-card: 1rem;
+  --radius-control: 0.75rem;
+
+  /* elevation: rest / raised / overlay (indigo-tinted; dark mode uses a crisp edge) */
+  --shadow-rest: var(--elev-rest);
+  --shadow-raised: var(--elev-raised);
+  --shadow-overlay: var(--elev-overlay);
+  --shadow-card: var(--elev-rest);
+
+  /* motion */
+  --ease-out-soft: cubic-bezier(0.22, 0.8, 0.3, 1);
 
   --font-heading: var(--font-tiro-bangla), serif;
   --font-body: var(--font-hind-siliguri), sans-serif;
@@ -97,6 +155,23 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   min-height: 100%;
+  /* Bangla conjuncts and vowel signs need more room than Latin text */
+  line-height: 1.65;
+}
+
+/* one visible focus ring for every keyboard-focusable control */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* disabled controls stay readable: opacity alone drops their text below AA contrast */
+:where(button, input, select, textarea):disabled {
+  opacity: 1 !important;
+  background-color: var(--bg) !important;
+  color: var(--muted) !important;
+  border-color: var(--line) !important;
+  cursor: not-allowed;
 }
 
 ::selection {
@@ -155,3 +230,113 @@ pre,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- depth, surfaces and motion ---------- */
+:root {
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --ease: cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+.surface-grad { background-image: var(--surface-grad); }
+
+/* soft indigo -> teal glow behind the home hero */
+.hero-glow { position: relative; isolation: isolate; }
+.hero-glow::before {
+  content: "";
+  position: absolute;
+  inset: -4rem 0 0;
+  z-index: -1;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(closest-side, black 60%, transparent);
+  mask-image: radial-gradient(farthest-side, black 55%, transparent);
+  background:
+    radial-gradient(42rem 22rem at 18% 30%, var(--glow-a), transparent 70%),
+    radial-gradient(34rem 20rem at 85% 45%, var(--glow-b), transparent 70%);
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, var(--accent) 10%, var(--sat) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Bangla vowel signs (ি, ী) reach outside the inline box; pad so the clip keeps them */
+  display: inline-block;
+  padding: 0.2em 0.12em;
+  margin: -0.2em -0.12em;
+}
+
+/* hover lift for interactive cards */
+.lift { transition: transform var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease), border-color var(--dur-fast) var(--ease); }
+.lift:hover { transform: translateY(-3px); box-shadow: var(--elev-raised); }
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scale-in { from { opacity: 0; transform: translateY(6px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 var(--glow-ring, rgb(45 62 143 / 0.45)); } 100% { box-shadow: 0 0 0 10px transparent; } }
+@keyframes draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes draw-line { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+.animate-fade-up { animation: fade-up 450ms var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms); }
+.animate-draw { stroke-dasharray: 24; animation: draw 400ms var(--ease) both; }
+.animate-pulse-ring { animation: pulse-ring 1.6s var(--ease) infinite; }
+.animate-grow-x { transform-origin: left; animation: grow-x 700ms var(--ease) both; }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--line) 30%, var(--bg) 50%, var(--line) 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-control);
+}
+
+/* native <dialog>: centred modal on desktop, bottom sheet under 640px */
+dialog.modal {
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: min(44rem, calc(100vw - 2rem));
+  width: 100%;
+  max-height: calc(100dvh - 4rem);
+  overflow: visible;
+}
+dialog.modal.modal-wide { max-width: min(72rem, calc(100vw - 2rem)); }
+dialog.modal::backdrop { background: rgb(12 15 32 / 0.5); backdrop-filter: blur(3px); }
+dialog.modal[open]::backdrop { animation: fade-in var(--dur-base) var(--ease); }
+dialog.modal[open] .modal-panel { animation: scale-in var(--dur-base) var(--ease); }
+@media (max-width: 639px) {
+  dialog.modal, dialog.modal.modal-wide { margin: auto 0 0; max-width: 100vw; max-height: 92dvh; }
+  dialog.modal .modal-panel { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  dialog.modal[open] .modal-panel { animation: sheet-up 300ms var(--ease); }
+}
+html:has(dialog.modal[open]) { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lift:hover { transform: none; }
+  .animate-pulse-ring { animation: none; }
+}
+
+/* dark mode: accent/teal fills are pale there, so text on them turns dark (AA contrast) */
+[data-theme="dark"] .bg-accent.text-white,
+[data-theme="dark"] .bg-sat.text-white,
+[data-theme="dark"] .bg-bad.text-white,
+[data-theme="dark"] .from-accent.text-white { color: var(--bg); }
+[data-theme="dark"] .from-accent { background-image: none; background-color: var(--accent); }
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .bg-accent.text-white,
+  html:not([data-theme="light"]) .bg-sat.text-white,
+  html:not([data-theme="light"]) .bg-bad.text-white,
+  html:not([data-theme="light"]) .from-accent.text-white { color: var(--bg); }
+  html:not([data-theme="light"]) .from-accent { background-image: none; background-color: var(--accent); }
+}
+
+/* Guided tour: full-screen transparent dialog, spotlight hole, tooltip docked at the bottom. */
+dialog.tour { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; overflow: hidden; }
+dialog.tour::backdrop { background: transparent; }
+.tour-spot { position: fixed; border-radius: var(--radius-card); box-shadow: 0 0 0 200vmax rgb(12 15 32 / 0.55), 0 0 0 3px var(--accent); transition: all var(--dur-base) var(--ease); pointer-events: none; }
+.tour-tip { position: fixed; left: 0.75rem; right: 0.75rem; bottom: calc(5.5rem + env(safe-area-inset-bottom)); max-height: 55dvh; overflow-y: auto; }
+@media (min-width: 768px) { .tour-tip { left: auto; right: 1.5rem; bottom: 1.5rem; width: 26rem; } }

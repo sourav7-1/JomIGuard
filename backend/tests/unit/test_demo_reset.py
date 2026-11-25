@@ -133,3 +133,24 @@ def test_satellite_demo_seeds_recorded_check_with_findings_idempotently(storage)
         assert "satellite_water_rising" in ids and "satellite_water_spike" not in ids
         assert result["satellite_check_id"] == str(checks[0].id)
         assert forbidden_words_in(json.dumps(result, ensure_ascii=False)) == []
+
+
+def test_demo_cases_are_listed_and_test_leftovers_are_hidden_not_deleted(tmp_path, storage):
+    from app.scripts.demo_reset import seed_satellite_demo, unlisted_lands
+    from app.services.journey import is_listed
+
+    # the dashboard's junk rule: no district or dag, no Bangla mouza, "??" from bad encoding
+    assert is_listed("ঢাকা", "বিরুলিয়া", "৪১৭", "সাভার")
+    assert not is_listed("ঢাকা", "savar", "", "")
+    assert not is_listed("ঢাকা", "birulia", "417")
+    assert not is_listed("", "ঢাকাদক্ষিণ", "1")
+    assert not is_listed("সিলেট", "??????", "1", "??????")
+
+    with TestSession() as db:
+        bhola = seed_satellite_demo(db, storage)
+        junk = Land(district="ঢাকা", upazila="", mouza="savar", dag_no="", khatian_no="")
+        db.add(junk)
+        db.commit()
+        hidden = {land.id for land in unlisted_lands(db)}
+        assert bhola not in hidden and junk.id in hidden  # a seeded demo case is never hidden
+        assert db.get(Land, junk.id) is not None  # hidden, not deleted

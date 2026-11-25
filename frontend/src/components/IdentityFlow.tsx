@@ -3,11 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { api, IdentityVerificationOut } from "@/lib/api";
-import { strings } from "@/lib/strings";
+import { useLang, useStrings } from "@/lib/lang";
+import { Card } from "@/components/ui";
+
+type MatchResult = NonNullable<IdentityVerificationOut["match_result"]>;
 
 type Outcome = "verified" | "failed" | "pending";
 
 function CameraStep({ title, onContinue }: { title: string; onContinue: () => void }) {
+  const strings = useStrings();
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const previewRef = useRef("");
@@ -61,7 +65,49 @@ function CameraStep({ title, onContinue }: { title: string; onContinue: () => vo
   </section>;
 }
 
+/** NID photo -> the server reads only the name fields; the photo is not kept anywhere. */
+function NidStep({ busy, outcome, setOutcome, onRead }: {
+  busy: boolean; outcome: Outcome; setOutcome: (o: Outcome) => void; onRead: (file: File) => void;
+}) {
+  const strings = useStrings();
+  const [file, setFile] = useState<File | null>(null);
+  return <section className="space-y-4">
+    <h2 className="font-heading text-xl font-bold">{strings.identity.nidPhoto}</h2>
+    <p className="rounded-lg border border-accent/30 bg-accent-soft p-3 text-sm font-semibold">{strings.identity.nidConsent}</p>
+    <label className="block space-y-1 text-sm"><span>{strings.identity.nidPick}</span>
+      <input type="file" accept="image/*" capture="environment" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="block min-h-11 w-full rounded-lg border border-line bg-bg p-2" /></label>
+    <label className="block space-y-1 text-sm"><span>{strings.identity.ecResult}</span><select value={outcome} onChange={(e) => setOutcome(e.target.value as Outcome)} className="min-h-11 w-full rounded-lg border border-line bg-bg px-3"><option value="verified">{strings.identity.outcomeVerified}</option><option value="failed">{strings.identity.outcomeFailed}</option><option value="pending">{strings.identity.outcomePending}</option></select></label>
+    <button type="button" disabled={busy || !file} onClick={() => file && onRead(file)} className="min-h-11 rounded-lg bg-accent px-4 font-semibold text-white disabled:opacity-60">{busy ? strings.identity.nidReading : strings.identity.nidRead}</button>
+  </section>;
+}
+
+function matchLabel(strings: ReturnType<typeof useStrings>, match: MatchResult) {
+  return { matched: strings.identity.matchMatched, partial: strings.identity.matchPartial, no_match: strings.identity.matchNoMatch, unreadable: strings.identity.matchUnreadable }[match];
+}
+
+const MATCH_TONE = { matched: "ok", partial: "warn", no_match: "bad", unreadable: "warn" } as const;
+
+/** Only the result: names read, the match, how it was read, and what it does not prove. */
+function NidResultCard({ result }: { result: IdentityVerificationOut }) {
+  const strings = useStrings();
+  const match = result.match_result;
+  const source = result.name_source === "ocr" ? strings.identity.readByOcr : result.name_source === "ai" ? strings.identity.readByAi : strings.identity.readTyped;
+  return <Card variant="highlight" tone={match ? MATCH_TONE[match] : "info"} title={match ? `${strings.identity.nidMatch}: ${matchLabel(strings, match)}` : strings.identity.resultTitle}>
+    {!match && result.party === "buyer" && result.name_source !== "typed" && <p className="text-sm text-muted">{strings.identity.matchNone}</p>}
+    <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+      <dt className="text-muted">{strings.identity.nidReadNames}</dt><dd>{[result.name_bn_as_per_nid, result.name_en_as_per_nid].filter(Boolean).join(" · ") || "—"}</dd>
+      <dt className="text-muted">{strings.identity.nidFather}</dt><dd>{result.father_name_as_per_nid || "—"}</dd>
+      <dt className="text-muted">{strings.identity.ecResult}</dt><dd>{result.status === "verified" ? strings.identity.verified : result.status === "failed" ? strings.identity.failed : strings.identity.pending}</dd>
+    </dl>
+    <p className="mt-2 text-sm text-muted">{source}</p>
+    <p className="mt-2 rounded-lg border border-warn/40 bg-warn-bg p-2 text-sm">{strings.identity.notGenuine}</p>
+  </Card>;
+}
+
 export function IdentityFlow({ mode, token }: { mode: "seller" | "buyer"; token?: string }) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [step, setStep] = useState(0);
   const [land, setLand] = useState<{ mouza: string; dag_no: string; message_bn: string; escrow_agreement_requested: boolean } | null>(null);
   const [sellerAgreed, setSellerAgreed] = useState(false);
@@ -81,7 +127,7 @@ export function IdentityFlow({ mode, token }: { mode: "seller" | "buyer"; token?
     }
     if (!token) return;
     api.getSellerLink(token).then(setLand).catch(() => setError(strings.identity.expired));
-  }, [mode, token]);
+  }, [mode, token, strings.identity.expired]);
 
   const consent = async () => {
     setBusy(true); setError("");
@@ -98,6 +144,17 @@ export function IdentityFlow({ mode, token }: { mode: "seller" | "buyer"; token?
         : await api.verifyBuyer({ name, father_name: fatherName, outcome, consent: true });
       setResult(saved); setStep(5);
       if (mode === "buyer") setSavedBuyerResults((old) => [saved, ...old]);
+    } catch (e) { setError(e instanceof Error ? e.message : strings.identity.error); }
+    finally { setBusy(false); }
+  };
+
+  const readNid = async (file: File) => {
+    setBusy(true); setError("");
+    try {
+      const saved = mode === "seller" && token ? await api.readSellerNid(token, file, outcome) : await api.readBuyerNid(file, outcome);
+      if (mode === "buyer") setSavedBuyerResults((old) => [saved, ...old]);
+      if (saved.match_result === "unreadable") { setError(strings.identity.unreadableHelp); return; }
+      setResult(saved); setStep(5);
     } catch (e) { setError(e instanceof Error ? e.message : strings.identity.error); }
     finally { setBusy(false); }
   };
@@ -128,7 +185,7 @@ export function IdentityFlow({ mode, token }: { mode: "seller" | "buyer"; token?
     {mode === "seller" && land && <div className="rounded-xl border border-line bg-bg p-4"><p>{land.message_bn}</p><p className="mt-2 text-sm text-muted">{strings.casePage.mouza}: {land.mouza} · {strings.casePage.dag}: {land.dag_no}</p></div>}
     {mode === "seller" && !land && !error && <p className="text-sm text-muted">{strings.labels.loading}</p>}
     {mode === "buyer" && <p className="text-sm text-muted">{strings.identity.buyerPrompt}</p>}
-    {mode === "buyer" && savedBuyerResults.map((item) => <section key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-3"><span>{item.name_bn_as_per_nid || strings.identity.pending} · {item.status === "verified" ? strings.identity.verified : item.status === "failed" ? strings.identity.failed : strings.identity.pending}</span><button type="button" onClick={() => api.deleteBuyerVerification(item.id).then(() => setSavedBuyerResults((old) => old.filter((saved) => saved.id !== item.id))).catch(() => setError(strings.identity.error))} className="min-h-11 rounded-lg border border-line px-3 text-sm">{strings.identity.delete}</button></section>)}
+    {mode === "buyer" && savedBuyerResults.map((item) => <section key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-3"><span>{item.name_bn_as_per_nid || strings.identity.pending} · {item.status === "verified" ? strings.identity.verified : item.status === "failed" ? strings.identity.failed : strings.identity.pending}{item.match_result && ` · ${strings.identity.nidMatch}: ${matchLabel(strings, item.match_result)}`}</span><button type="button" onClick={() => api.deleteBuyerVerification(item.id).then(() => setSavedBuyerResults((old) => old.filter((saved) => saved.id !== item.id))).catch(() => setError(strings.identity.error))} className="min-h-11 rounded-lg border border-line px-3 text-sm">{strings.identity.delete}</button></section>)}
     {mode === "buyer" && step === 0 && <p className="text-sm text-muted">{strings.identity.noPhone}</p>}
     {step === 0 && mode === "seller" && land && <button type="button" onClick={() => setStep(1)} className="min-h-11 rounded-lg bg-accent px-4 font-semibold text-white">{strings.identity.continue}</button>}
     {step === 0 && mode === "buyer" && <button type="button" onClick={() => setStep(1)} className="min-h-11 rounded-lg bg-accent px-4 font-semibold text-white">{strings.identity.continue}</button>}
@@ -136,14 +193,16 @@ export function IdentityFlow({ mode, token }: { mode: "seller" | "buyer"; token?
       <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed"><li>{strings.identity.consentWhat}</li><li>{strings.identity.consentWho}</li><li>{mode === "seller" ? strings.identity.consentWhySeller : strings.identity.consentWhyBuyer}</li><li>{strings.identity.consentKeep}</li><li>{strings.identity.consentDelete}</li></ul>
       <button type="button" disabled={busy} onClick={consent} className="min-h-11 rounded-lg bg-accent px-4 font-semibold text-white disabled:opacity-60">{busy ? strings.labels.loading : strings.identity.agree}</button>
     </section>}
-    {(step === 2 || step === 3) && <CameraStep title={step === 2 ? strings.identity.nidPhoto : strings.identity.selfie} onContinue={() => setStep(step + 1)} />}
+    {step === 2 && <CameraStep title={strings.identity.selfie} onContinue={() => setStep(3)} />}
+    {step === 3 && <NidStep busy={busy} outcome={outcome} setOutcome={setOutcome} onRead={readNid} />}
+    {step === 3 && error === strings.identity.unreadableHelp && <button type="button" onClick={() => { setError(""); setStep(4); }} className="min-h-11 rounded-lg border border-line px-4 text-sm">{strings.identity.typeInstead}</button>}
     {step === 4 && <section className="space-y-4"><p className="rounded-lg border border-warn/40 bg-warn-bg p-3 text-sm">{strings.identity.demoNote}</p>
       <label className="block space-y-1 text-sm"><span>{strings.identity.name}</span><input required value={name} onChange={(e) => setName(e.target.value)} className="min-h-11 w-full rounded-lg border border-line bg-bg px-3" /></label>
       <label className="block space-y-1 text-sm"><span>{strings.identity.fatherName}</span><input required value={fatherName} onChange={(e) => setFatherName(e.target.value)} className="min-h-11 w-full rounded-lg border border-line bg-bg px-3" /></label>
       <label className="block space-y-1 text-sm"><span>{strings.identity.outcome}</span><select value={outcome} onChange={(e) => setOutcome(e.target.value as Outcome)} className="min-h-11 w-full rounded-lg border border-line bg-bg px-3"><option value="verified">{strings.identity.outcomeVerified}</option><option value="failed">{strings.identity.outcomeFailed}</option><option value="pending">{strings.identity.outcomePending}</option></select></label>
       <button type="button" disabled={busy || !name.trim() || !fatherName.trim()} onClick={submit} className="min-h-11 rounded-lg bg-accent px-4 font-semibold text-white disabled:opacity-60">{busy ? strings.labels.loading : strings.identity.submit}</button>
     </section>}
-    {step === 5 && result && <section className="space-y-3 rounded-xl border border-line p-4"><h2 className="font-heading text-xl font-bold">{strings.identity.resultTitle}</h2><p>{result.status === "verified" ? strings.identity.verified : result.status === "failed" ? strings.identity.failed : strings.identity.pending}</p><p className="text-sm text-muted">{result.name_bn_as_per_nid || "—"}</p>{land?.escrow_agreement_requested && result.status === "verified" && <button type="button" disabled={busy || sellerAgreed} onClick={agreeEscrow} className="min-h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-white">{sellerAgreed ? "বায়না চুক্তিতে সম্মতি দেওয়া হয়েছে" : "বায়না চুক্তিতে সম্মতি দিন"}</button>}<button type="button" disabled={busy} onClick={remove} className="min-h-11 rounded-lg border border-line px-4 text-sm">{busy ? strings.labels.loading : strings.identity.delete}</button></section>}
+    {step === 5 && result && <section className="space-y-3 rounded-xl border border-line p-4"><h2 className="font-heading text-xl font-bold">{strings.identity.resultTitle}</h2><NidResultCard result={result} />{land?.escrow_agreement_requested && result.status === "verified" && <button type="button" disabled={busy || sellerAgreed} onClick={agreeEscrow} className="min-h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-white">{sellerAgreed ? t("বায়না চুক্তিতে সম্মতি দেওয়া হয়েছে", "Bayna contract agreed") : t("বায়না চুক্তিতে সম্মতি দিন", "Agree to the bayna contract")}</button>}<button type="button" disabled={busy} onClick={remove} className="min-h-11 rounded-lg border border-line px-4 text-sm">{busy ? strings.labels.loading : strings.identity.delete}</button></section>}
     {error && <p role="alert" className="rounded-lg border border-warn/40 bg-warn-bg p-3 text-sm">{error}</p>}
   </main>;
 }

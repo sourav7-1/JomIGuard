@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { Spinner } from "@/components/ui/Spinner";
 import { UploadFlowClient } from "./UploadFlowClient";
+import { T } from "@/lib/lang";
 import { strings } from "@/lib/strings";
 
 interface PageProps {
@@ -18,7 +19,7 @@ export default function UploadFlowPage({ params }: PageProps) {
       fallback={
         <div className="flex flex-col items-center justify-center p-16 space-y-3">
           <Spinner size="lg" />
-          <p className="text-sm text-muted">{strings.labels.loading}</p>
+          <p className="text-sm text-muted"><T bn={strings.labels.loading} en="Loading…" /></p>
         </div>
       }
     >

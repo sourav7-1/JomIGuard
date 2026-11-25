@@ -71,3 +71,34 @@ def names_match(a: str | None, b: str | None) -> tuple[bool, float, str]:
 def person_key(name: str | None) -> str:
     """Printed name (with honorifics) -> match key; for fields without a normalized copy."""
     return match_key(normalize_name(name or ""))
+
+
+NID_RESULTS = ("matched", "partial", "no_match", "unreadable")  # মিলেছে / আংশিক / মেলেনি / পড়া যায়নি
+
+
+def nid_match(
+    name: str | None, father: str | None, *groups: list[tuple[str, str | None]]
+) -> tuple[str, float]:
+    """Name read from an NID vs groups of (printed name, father/husband) from the documents,
+    e.g. the deed sellers and the matching khatian owners. -> (result, score 0-1).
+
+    matched: the name matches someone in every group and the father/husband name (when both are
+    known) matches one of them; partial: some groups only, or the father/husband differs;
+    no_match: nobody; unreadable: no name was read.
+    """
+    if not (name or "").strip():
+        return "unreadable", 0.0
+    hits = [
+        [(names_match(person_key(name), person_key(n))[1], f) for n, f in g
+         if names_match(person_key(name), person_key(n))[0]]
+        for g in groups
+    ]  # fmt: skip
+    found = [h for group in hits for h in group]
+    if not found:
+        return "no_match", 0.0
+    score = round(max(s for s, _ in found) / 100, 2)
+    fathers = [f for _, f in found if f]
+    father_differs = bool(father and fathers) and not any(
+        names_match(person_key(father), person_key(f))[0] for f in fathers
+    )
+    return ("matched" if all(hits) and not father_differs else "partial"), score

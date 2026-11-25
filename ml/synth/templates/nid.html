@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<style>
+  {% for face in font_faces %}
+  @font-face { font-family: "Synth"; src: url("{{ face.uri }}"); font-weight: {{ face.weight }}; }
+  {% endfor %}
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #111; font-family: "Synth"; }
+  .card { position: relative; width: 1000px; margin: 40px; padding: 36px 48px; border: 3px solid #2f5d50;
+          border-radius: 18px; background: #f4f8f1; overflow: hidden; font-size: 34px; line-height: 1.8; }
+  .head { text-align: center; font-weight: 700; font-size: 30px; border-bottom: 2px solid #2f5d50; margin-bottom: 14px; }
+  .row { display: flex; gap: 32px; }
+  .photo { width: 190px; height: 230px; border: 2px dashed #777; color: #777; font-size: 22px;
+           display: flex; align-items: center; justify-content: center; text-align: center; }
+  .wm { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        transform: rotate(-18deg); font-size: 120px; font-weight: 700; color: rgba(200, 40, 40, .16); pointer-events: none; }
+  .foot { font-size: 22px; color: #444; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">নমুনা পরিচয়পত্র (কৃত্রিম) / SAMPLE ID CARD</div>
+  <div class="row">
+    <div class="photo">ছবি নেই<br>NO PHOTO</div>
+    <div>
+      <div>নাম: {{ name_bn }}</div>
+      <div>Name: {{ name_en }}</div>
+      <div>{{ guardian_label }}: {{ guardian }}</div>
+      <div>মাতা: {{ mother }}</div>
+      <div>Date of Birth: {{ dob }}</div>
+      <div>ID NO: {{ id_no }}</div>
+    </div>
+  </div>
+  <div class="foot">নমুনা / SAMPLE — কৃত্রিম তথ্য, বাস্তব পরিচয়পত্র নয়</div>
+  <div class="wm">নমুনা / SAMPLE</div>
+</div>
+</body>
+</html>

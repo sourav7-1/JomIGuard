@@ -1,8 +1,9 @@
 "use client";
 
-import { strings } from "@/lib/strings";
+import { useStrings } from "@/lib/lang";
 
 export default function GlobalError({ retry }: { error: Error & { digest?: string }; retry: () => void }) {
+  const strings = useStrings();
   return (
     <html lang="bn"><body style={{ margin: 0, padding: 32, fontFamily: "sans-serif", textAlign: "center" }}>
       <h1>{strings.error.serverErrorTitle}</h1>

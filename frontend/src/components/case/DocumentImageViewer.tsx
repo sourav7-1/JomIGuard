@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { strings } from "@/lib/strings";
+import { useLang, useStrings } from "@/lib/lang";
 
 interface DocumentImageViewerProps {
   fileUrl: string | null;
@@ -9,6 +9,9 @@ interface DocumentImageViewerProps {
 }
 
 export function DocumentImageViewer({ fileUrl, filename }: DocumentImageViewerProps) {
+  const strings = useStrings();
+  const en = useLang() === "en";
+  const t = (b: string, e: string) => (en ? e : b);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -117,7 +120,7 @@ export function DocumentImageViewer({ fileUrl, filename }: DocumentImageViewerPr
           className="relative w-full h-[360px] md:h-[500px] overflow-hidden bg-bg/20 flex items-center justify-center cursor-grab active:cursor-grabbing select-none"
         >
           {!fileUrl ? (
-            <div className="text-xs text-muted">ফাইল লোড হচ্ছে...</div>
+            <div className="text-xs text-muted">{t("ফাইল লোড হচ্ছে...", "Loading file…")}</div>
           ) : isPdf ? (
             <iframe
               src={fileUrl}
