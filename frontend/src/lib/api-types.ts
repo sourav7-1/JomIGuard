@@ -81,6 +81,23 @@ export interface paths {
         patch: operations["patch_document_extraction_documents__document_id__extraction_patch"];
         trace?: never;
     };
+    "/documents/{document_id}/fingerprint/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Document Fingerprint */
+        post: operations["verify_document_fingerprint_documents__document_id__fingerprint_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/documents/{document_id}/file": {
         parameters: {
             query?: never;
@@ -101,7 +118,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/lands": {
+    "/documents/{document_id}/provenance": {
         parameters: {
             query?: never;
             header?: never;
@@ -109,6 +126,27 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Document Provenance */
+        patch: operations["update_document_provenance_documents__document_id__provenance_patch"];
+        trace?: never;
+    };
+    "/lands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Lands
+         * @description The user's lands, each with a dashboard summary (risk, journey progress, next action).
+         */
+        get: operations["list_lands_lands_get"];
         put?: never;
         /** Create Land */
         post: operations["create_land_lands_post"];
@@ -164,6 +202,63 @@ export interface paths {
          * @description The land case as the rule engine will see it (debug view until the case page).
          */
         get: operations["get_land_case_lands__land_id__case_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lands/{land_id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Land Timeline
+         * @description Document-backed ownership events with status from the latest assessment.
+         */
+        get: operations["land_timeline_lands__land_id__timeline_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lands/{land_id}/deeds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Land Deeds
+         * @description List the land's deed documents, source extractions and adjacent deed comparisons.
+         */
+        get: operations["list_land_deeds_lands__land_id__deeds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lands/{land_id}/deeds/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Compare Land Deeds */
+        get: operations["compare_land_deeds_lands__land_id__deeds_compare_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -229,6 +324,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/lands/{land_id}/assessments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Assessments */
+        get: operations["list_assessments_lands__land_id__assessments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lands/{land_id}/assessments/{assessment_id}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Assessment Diff */
+        get: operations["assessment_diff_lands__land_id__assessments__assessment_id__diff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lands/{land_id}/actions/{action_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Action */
+        put: operations["update_action_lands__land_id__actions__action_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/lands/{land_id}/assessments/{assessment_id}/report.pdf": {
         parameters: {
             query?: never;
@@ -249,6 +395,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/lands/{land_id}/geometry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Land Geometry
+         * @description Save the plot outline drawn on the map (Polygon, inside Bangladesh, <= 50 acres).
+         */
+        put: operations["set_land_geometry_lands__land_id__geometry_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lands/{land_id}/satellite-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Satellite Check
+         * @description Queue a satellite check; poll GET .../satellite-check/latest for the result.
+         */
+        post: operations["start_satellite_check_lands__land_id__satellite_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lands/{land_id}/satellite-check/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Latest Satellite Check
+         * @description Latest check (any status); for an ok one, also its findings against the khatian.
+         */
+        get: operations["latest_satellite_check_lands__land_id__satellite_check_latest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/meta/fields": {
         parameters: {
             query?: never;
@@ -261,6 +467,687 @@ export interface paths {
          * @description Field metadata for all four supported document types.
          */
         get: operations["get_fields_meta_meta_fields_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Logout */
+        post: operations["logout_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Me */
+        get: operations["me_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lands/{land_id}/seller-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Seller Link */
+        post: operations["create_seller_link_lands__land_id__seller_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verify/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Seller Link Details */
+        get: operations["seller_link_details_verify__token__get"];
+        put?: never;
+        post?: never;
+        /** Delete Seller Verification */
+        delete: operations["delete_seller_verification_verify__token__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verify/{token}/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Seller Consent */
+        post: operations["seller_consent_verify__token__consent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verify/{token}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete Seller Verification */
+        post: operations["complete_seller_verification_verify__token__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Verifications */
+        get: operations["my_verifications_me_verification_get"];
+        put?: never;
+        /** Verify Buyer */
+        post: operations["verify_buyer_me_verification_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/verification/{verification_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Buyer Verification */
+        delete: operations["delete_buyer_verification_me_verification__verification_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/guardian/lands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Guarded Lands */
+        get: operations["list_guarded_lands_guardian_lands_get"];
+        put?: never;
+        /** Add Guarded Land */
+        post: operations["add_guarded_land_guardian_lands_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/guardian/lands/{land_id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check Land */
+        post: operations["check_land_guardian_lands__land_id__check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/guardian/demo-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Demo Check */
+        post: operations["demo_check_guardian_demo_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/guardian/lands/{land_id}/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Alerts */
+        get: operations["list_alerts_guardian_lands__land_id__alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/guardian/alerts/{alert_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read Alert */
+        post: operations["read_alert_guardian_alerts__alert_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/guardian/alerts/{alert_id}/case-file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Alert Case File */
+        post: operations["alert_case_file_guardian_alerts__alert_id__case_file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/guardian/objection-guide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Objection Guide */
+        get: operations["objection_guide_guardian_objection_guide_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lands/{land_id}/escrow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Deal */
+        post: operations["create_deal_lands__land_id__escrow_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Deal */
+        get: operations["get_deal_escrow__deal_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/escrow/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Demo Deal */
+        get: operations["get_demo_deal_demo_escrow__case_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}/agree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Buyer Agree */
+        post: operations["buyer_agree_escrow__deal_id__agree_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verify/{token}/escrow-agree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Seller Agree */
+        post: operations["seller_agree_verify__token__escrow_agree_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}/deposit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deposit */
+        post: operations["deposit_escrow__deal_id__deposit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check Conditions */
+        post: operations["check_conditions_escrow__deal_id__check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}/registration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register Deed */
+        post: operations["register_deed_escrow__deal_id__registration_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Release */
+        post: operations["release_escrow__deal_id__release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund */
+        post: operations["refund_escrow__deal_id__refund_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_escrow__deal_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}/demo/expire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Demo Expire */
+        post: operations["demo_expire_escrow__deal_id__demo_expire_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/escrow/{deal_id}/baynanama.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Baynanama */
+        get: operations["baynanama_escrow__deal_id__baynanama_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/packs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Packs */
+        get: operations["list_packs_demo_packs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/packs/{pack_id}.zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Pack */
+        get: operations["download_pack_demo_packs__pack_id__zip_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/packs/{pack_id}/case": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pack Case
+         * @description A NEW case owned by the caller, with the pack's documents uploaded and queued.
+         */
+        post: operations["pack_case_demo_packs__pack_id__case_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/plots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Plots */
+        get: operations["list_plots_demo_plots_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/plots/{plot_id}/case": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plot Case
+         * @description A NEW case owned by the caller with the demo plot's outline; start the check separately.
+         */
+        post: operations["plot_case_demo_plots__plot_id__case_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Status
+         * @description Read-only health for the docs page. No URLs, versions or secrets.
+         */
+        get: operations["status_demo_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/lands/{land_id}/sample-sets/{scenario}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sample Set Info
+         * @description The files of one scenario for this land, and the engine's result on their ground truth.
+         */
+        get: operations["sample_set_info_demo_lands__land_id__sample_sets__scenario__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/lands/{land_id}/sample-sets/{scenario}/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sample Set File */
+        get: operations["sample_set_file_demo_lands__land_id__sample_sets__scenario___name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/lands/{land_id}/samples/{kind}.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Single Sample File */
+        get: operations["single_sample_file_demo_lands__land_id__samples__kind__png_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/demo/lands/{land_id}/samples.zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Samples Zip
+         * @description Every scenario for this land, one folder each, to try drag-and-drop by hand.
+         */
+        get: operations["samples_zip_demo_lands__land_id__samples_zip_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -304,8 +1191,24 @@ export interface components {
             from_codes?: string[];
             /** Sources */
             sources?: components["schemas"]["SourceRef"][];
+            /**
+             * Done
+             * @default false
+             */
+            done: boolean;
+        };
+        /** ActionUpdateIn */
+        ActionUpdateIn: {
             /** Done */
-            done?: boolean;
+            done: boolean;
+        };
+        /** AddLandIn */
+        AddLandIn: {
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
         };
         /**
          * Address
@@ -338,10 +1241,18 @@ export interface components {
             review_needed?: components["schemas"]["ReviewItem"][];
             /** Findings */
             findings?: components["schemas"]["RuleResult"][];
+            /** To Verify */
+            to_verify?: components["schemas"]["RuleResult"][];
+            /** Identity Verifications */
+            identity_verifications?: components["schemas"]["IdentityVerificationOut"][];
             /** Passed */
             passed?: components["schemas"]["RuleResult"][];
             /** Actions */
             actions?: components["schemas"]["Action"][];
+            /** Satellite Findings */
+            satellite_findings?: components["schemas"]["RuleResult"][];
+            /** Satellite Check Id */
+            satellite_check_id?: string | null;
             /** Disclaimer Bn */
             disclaimer_bn: string;
             /**
@@ -367,6 +1278,11 @@ export interface components {
             doc_type?: components["schemas"]["DocType"] | null;
             /** Land Id */
             land_id?: string | null;
+            /**
+             * Source Type
+             * @default user_upload
+             */
+            source_type: string;
         };
         /**
          * BuilderWarning
@@ -379,6 +1295,23 @@ export interface components {
             message_bn: string;
             /** Source Ids */
             source_ids?: string[];
+        };
+        /** BuyerVerificationIn */
+        BuyerVerificationIn: {
+            /** Name */
+            name: string;
+            /** Father Name */
+            father_name: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "verified" | "failed" | "pending";
+            /**
+             * Consent
+             * @constant
+             */
+            consent: true;
         };
         /** CaseDocument */
         CaseDocument: {
@@ -397,12 +1330,51 @@ export interface components {
             field_flags?: {
                 [key: string]: string[];
             };
+            /**
+             * Handwritten
+             * @default false
+             */
+            handwritten: boolean;
+            /**
+             * Ocr Read
+             * @default false
+             */
+            ocr_read: boolean;
         };
         /**
          * CaseRole
          * @enum {string}
          */
         CaseRole: "current_khatian" | "older_khatian" | "proposed_deed" | "prior_deed" | "mutation" | "heir_cert" | "unknown";
+        /**
+         * CaseSummary
+         * @description One dashboard card: same journey logic as the case page.
+         */
+        CaseSummary: {
+            /** Risk Level */
+            risk_level?: string | null;
+            /** Complete */
+            complete: boolean;
+            /** Progress Done */
+            progress_done: number;
+            /**
+             * Progress Total
+             * @default 5
+             */
+            progress_total: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Next Action Bn */
+            next_action_bn?: string | null;
+            /**
+             * Listed
+             * @default true
+             */
+            listed: boolean;
+        };
         /** CaseViewDocOut */
         CaseViewDocOut: {
             /**
@@ -441,12 +1413,24 @@ export interface components {
             field_flags?: {
                 [key: string]: unknown;
             };
-            handwritten?: boolean;
+            /**
+             * Handwritten
+             * @default false
+             */
+            handwritten: boolean;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
+        };
+        /** ConsentIn */
+        ConsentIn: {
+            /**
+             * Consent
+             * @constant
+             */
+            consent: true;
         };
         /** CorrectionRequest */
         CorrectionRequest: {
@@ -470,6 +1454,101 @@ export interface components {
             documents_missing?: string[];
             /** Documents Missing Bn */
             documents_missing_bn?: string[];
+        };
+        /** DealIn */
+        DealIn: {
+            /** Price */
+            price: number | string;
+            /** Bayna */
+            bayna: number | string;
+            /**
+             * Deadline
+             * Format: date
+             */
+            deadline: string;
+        };
+        /** DeedArchiveFieldOut */
+        DeedArchiveFieldOut: {
+            /** Key */
+            key: string;
+            /** Label Bn */
+            label_bn: string;
+            /** Current */
+            current?: unknown;
+            /** Previous */
+            previous?: unknown;
+            /** Current Field */
+            current_field: string;
+            /** Previous Field */
+            previous_field: string;
+        };
+        /** DeedArchiveItemOut */
+        DeedArchiveItemOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Original Filename */
+            original_filename: string;
+            /** File Url Endpoint */
+            file_url_endpoint: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Uploaded By */
+            uploaded_by?: string | null;
+            /**
+             * Uploaded At
+             * Format: date-time
+             */
+            uploaded_at: string;
+            /** Content Sha256 */
+            content_sha256?: string | null;
+            data?: components["schemas"]["DeedData"] | null;
+            /** Previous Document Id */
+            previous_document_id?: string | null;
+            /** Comparison */
+            comparison?: components["schemas"]["DeedArchiveFieldOut"][];
+            /**
+             * Source Type
+             * @default user_upload
+             */
+            source_type: string;
+            /** Integrity */
+            integrity: string;
+            /**
+             * Verification Status
+             * @default সরকারি উৎসে যাচাই হয়নি
+             */
+            verification_status: string;
+            /** Extraction Id */
+            extraction_id?: string | null;
+            /** Extraction Created At */
+            extraction_created_at?: string | null;
+            /** Extraction Created By */
+            extraction_created_by?: string | null;
+            /** Audit */
+            audit?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** DeedArchiveOut */
+        DeedArchiveOut: {
+            /** Items */
+            items: components["schemas"]["DeedArchiveItemOut"][];
+            /**
+             * Official Source Verified
+             * @default false
+             */
+            official_source_verified: boolean;
+            /**
+             * Notice Bn
+             * @default সরকারি উৎসে আসলত্ব যাচাই করা হয়নি।
+             */
+            notice_bn: string;
         };
         /** DeedData */
         DeedData: {
@@ -687,7 +1766,11 @@ export interface components {
             field_flags?: {
                 [key: string]: unknown;
             };
-            handwritten?: boolean;
+            /**
+             * Handwritten
+             * @default false
+             */
+            handwritten: boolean;
             /**
              * Created At
              * Format: date-time
@@ -740,6 +1823,25 @@ export interface components {
             /** Heir Cert */
             heir_cert?: components["schemas"]["FieldMeta"][];
         };
+        /** FingerprintVerificationOut */
+        FingerprintVerificationOut: {
+            /** Stored Sha256 */
+            stored_sha256: string | null;
+            /** Current Sha256 */
+            current_sha256: string;
+            /** Unchanged Since Upload */
+            unchanged_since_upload: boolean | null;
+            /**
+             * Official Source Verified
+             * @default false
+             */
+            official_source_verified: boolean;
+            /**
+             * Notice Bn
+             * @default সরকারি উৎসে আসলত্ব যাচাই করা হয়নি।
+             */
+            notice_bn: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -790,6 +1892,98 @@ export interface components {
             /** Heirs */
             heirs: components["schemas"]["Heir"][];
         };
+        /** IdentityCaseResult */
+        IdentityCaseResult: {
+            /** Party */
+            party: string;
+            /** Seller Name On Deed */
+            seller_name_on_deed?: string | null;
+            /** Status */
+            status: string;
+            /** Name Bn As Per Nid */
+            name_bn_as_per_nid?: string | null;
+            /** Father Name As Per Nid */
+            father_name_as_per_nid?: string | null;
+            /** Verified At */
+            verified_at?: string | null;
+        };
+        /** IdentityVerificationOut */
+        IdentityVerificationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Land Id */
+            land_id: string | null;
+            /**
+             * Party
+             * @enum {string}
+             */
+            party: "buyer" | "seller";
+            /** Seller Name On Deed */
+            seller_name_on_deed?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "verified" | "failed";
+            /** Name Bn As Per Nid */
+            name_bn_as_per_nid?: string | null;
+            /** Father Name As Per Nid */
+            father_name_as_per_nid?: string | null;
+            /** Provider */
+            provider: string;
+            /** Provider Ref */
+            provider_ref: string;
+            /** Verified At */
+            verified_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** Journey */
+        Journey: {
+            /** Steps */
+            steps: components["schemas"]["JourneyStep"][];
+            /** Progress Done */
+            progress_done: number;
+            /**
+             * Progress Total
+             * @default 5
+             */
+            progress_total: number;
+            /** Incomplete Reasons Bn */
+            incomplete_reasons_bn?: string[];
+            /** Next Action Bn */
+            next_action_bn?: string | null;
+            /** Escrow Deal Id */
+            escrow_deal_id?: string | null;
+        };
+        /** JourneyStep */
+        JourneyStep: {
+            /** N */
+            n: number;
+            /** Key */
+            key: string;
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "before" | "during" | "after";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "done" | "action" | "waiting" | "locked" | "todo";
+            /**
+             * Note Bn
+             * @default
+             */
+            note_bn: string;
+        };
         /** KhatianData */
         KhatianData: {
             /**
@@ -838,6 +2032,10 @@ export interface components {
             documents?: components["schemas"]["CaseDocument"][];
             /** Builder Warnings */
             builder_warnings?: components["schemas"]["BuilderWarning"][];
+            /** Identity */
+            identity?: components["schemas"]["IdentityCaseResult"][] | null;
+            /** Identity Records */
+            identity_records?: components["schemas"]["IdentityVerificationOut"][];
         };
         /** LandCaseViewOut */
         LandCaseViewOut: {
@@ -847,6 +2045,9 @@ export interface components {
             /** Assessment Stale */
             assessment_stale: boolean;
             latest_assessment?: components["schemas"]["AssessmentOut"] | null;
+            /** Identity Verifications */
+            identity_verifications?: components["schemas"]["IdentityVerificationOut"][];
+            journey: components["schemas"]["Journey"];
         };
         /** LandIn */
         LandIn: {
@@ -860,6 +2061,29 @@ export interface components {
             upazila?: string | null;
             /** Khatian No */
             khatian_no?: string | null;
+        };
+        /** LandListItemOut */
+        LandListItemOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** District */
+            district: string;
+            /** Upazila */
+            upazila: string;
+            /** Mouza */
+            mouza: string;
+            /** Dag No */
+            dag_no: string;
+            /** Khatian No */
+            khatian_no: string;
+            /** Geometry */
+            geometry?: {
+                [key: string]: unknown;
+            } | null;
+            summary: components["schemas"]["CaseSummary"];
         };
         /** LandOut */
         LandOut: {
@@ -878,6 +2102,10 @@ export interface components {
             dag_no: string;
             /** Khatian No */
             khatian_no: string;
+            /** Geometry */
+            geometry?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** LatestExtractionOut */
         LatestExtractionOut: {
@@ -887,6 +2115,8 @@ export interface components {
              */
             id: string;
             status: components["schemas"]["ExtractionStatus"];
+            /** Extractor */
+            extractor?: string | null;
             /** Needs Review Count */
             needs_review_count: number;
             /** Warnings Count */
@@ -902,6 +2132,13 @@ export interface components {
             mouza: string;
             /** Jl No */
             jl_no?: string | null;
+        };
+        /** LoginIn */
+        LoginIn: {
+            /** Username */
+            username: string;
+            /** Password */
+            password: string;
         };
         /**
          * MutationData
@@ -984,12 +2221,40 @@ export interface components {
             /** Area Shatangsho */
             area_shatangsho?: string | null;
         };
+        /**
+         * PlotGeometry
+         * @description GeoJSON Polygon of the plot. First ring is the outline, any further rings are holes.
+         */
+        PlotGeometry: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "Polygon";
+            /** Coordinates */
+            coordinates: number[][][];
+        };
         /** PriorDeed */
         PriorDeed: {
             /** Deed No */
             deed_no: string;
             /** Deed Year */
             deed_year?: string | null;
+        };
+        /** ProvenancePatch */
+        ProvenancePatch: {
+            /** Source Type */
+            source_type: string;
+        };
+        /** RegistrationIn */
+        RegistrationIn: {
+            /** Deed No */
+            deed_no: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
         };
         /**
          * Relation
@@ -1043,6 +2308,109 @@ export interface components {
             /** Skip Reason */
             skip_reason?: string | null;
         };
+        /** SatelliteCheckIn */
+        SatelliteCheckIn: {
+            /**
+             * Buffer M
+             * @default 200
+             */
+            buffer_m: number;
+            /** Years */
+            years?: number[] | null;
+        };
+        /** SatelliteCheckOut */
+        SatelliteCheckOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Land Id
+             * Format: uuid
+             */
+            land_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "ok" | "failed";
+            /** Buffer M */
+            buffer_m: number;
+            /** Years */
+            years: number[] | null;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            } | null;
+            /** Error */
+            error: string | null;
+        };
+        /**
+         * SatelliteCheckView
+         * @description Latest check plus its findings (services/satellite_findings.py) for the results card.
+         */
+        SatelliteCheckView: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Land Id
+             * Format: uuid
+             */
+            land_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "ok" | "failed";
+            /** Buffer M */
+            buffer_m: number;
+            /** Years */
+            years: number[] | null;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            } | null;
+            /** Error */
+            error: string | null;
+            /** Findings */
+            findings?: components["schemas"]["RuleResult"][];
+            /**
+             * Group Title Bn
+             * @default স্যাটেলাইট যাচাই
+             */
+            group_title_bn: string;
+            /** Area Note Bn */
+            area_note_bn?: string | null;
+        };
+        /** SellerLinkCreate */
+        SellerLinkCreate: {
+            /** Seller Name On Deed */
+            seller_name_on_deed: string;
+        };
+        /** SellerLinkCreated */
+        SellerLinkCreated: {
+            /** Url */
+            url: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
         /** SkippedCheck */
         SkippedCheck: {
             /** Rule Id */
@@ -1081,6 +2449,13 @@ export interface components {
          * @enum {string}
          */
         SurveyType: "CS" | "SA" | "RS" | "BS" | "CITY";
+        /** UserOut */
+        UserOut: {
+            /** Id */
+            id: string;
+            /** Username */
+            username: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1093,6 +2468,18 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VerificationCompleteIn */
+        VerificationCompleteIn: {
+            /** Name */
+            name: string;
+            /** Father Name */
+            father_name: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "verified" | "failed" | "pending";
         };
     };
     responses: never;
@@ -1334,6 +2721,37 @@ export interface operations {
             };
         };
     };
+    verify_document_fingerprint_documents__document_id__fingerprint_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FingerprintVerificationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_document_file_documents__document_id__file_get: {
         parameters: {
             query?: never;
@@ -1361,6 +2779,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_document_provenance_documents__document_id__provenance_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProvenancePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_lands_lands_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LandListItemOut"][];
                 };
             };
         };
@@ -1491,6 +2964,102 @@ export interface operations {
             };
         };
     };
+    land_timeline_lands__land_id__timeline_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_land_deeds_lands__land_id__deeds_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeedArchiveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_land_deeds_lands__land_id__deeds_compare_get: {
+        parameters: {
+            query: {
+                a: string;
+                b: string;
+            };
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_land_case_view_lands__land_id__case_view_get: {
         parameters: {
             query?: never;
@@ -1584,6 +3153,105 @@ export interface operations {
             };
         };
     };
+    list_assessments_lands__land_id__assessments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assessment_diff_lands__land_id__assessments__assessment_id__diff_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+                assessment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_action_lands__land_id__actions__action_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActionUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Action"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     assessment_report_lands__land_id__assessments__assessment_id__report_pdf_get: {
         parameters: {
             query?: never;
@@ -1616,6 +3284,107 @@ export interface operations {
             };
         };
     };
+    set_land_geometry_lands__land_id__geometry_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlotGeometry"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LandOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_satellite_check_lands__land_id__satellite_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SatelliteCheckIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SatelliteCheckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    latest_satellite_check_lands__land_id__satellite_check_latest_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SatelliteCheckView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_fields_meta_meta_fields_get: {
         parameters: {
             query?: never;
@@ -1632,6 +3401,1239 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FieldsMetaResponse"];
+                };
+            };
+        };
+    };
+    login_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    me_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+        };
+    };
+    create_seller_link_lands__land_id__seller_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SellerLinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerLinkCreated"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    seller_link_details_verify__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_seller_verification_verify__token__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    seller_consent_verify__token__consent_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_seller_verification_verify__token__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerificationCompleteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityVerificationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_verifications_me_verification_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityVerificationOut"][];
+                };
+            };
+        };
+    };
+    verify_buyer_me_verification_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuyerVerificationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityVerificationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_buyer_verification_me_verification__verification_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                verification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_guarded_lands_guardian_lands_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    add_guarded_land_guardian_lands_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddLandIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_land_guardian_lands__land_id__check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddLandIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    demo_check_guardian_demo_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    list_alerts_guardian_lands__land_id__alerts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_alert_guardian_alerts__alert_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    alert_case_file_guardian_alerts__alert_id__case_file_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    objection_guide_guardian_objection_guide_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    create_deal_lands__land_id__escrow_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DealIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_deal_escrow__deal_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_demo_deal_demo_escrow__case_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    buyer_agree_escrow__deal_id__agree_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    seller_agree_verify__token__escrow_agree_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deposit_escrow__deal_id__deposit_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_conditions_escrow__deal_id__check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_deed_escrow__deal_id__registration_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    release_escrow__deal_id__release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refund_escrow__deal_id__refund_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_escrow__deal_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    demo_expire_escrow__deal_id__demo_expire_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    baynanama_escrow__deal_id__baynanama_pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_packs_demo_packs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    download_pack_demo_packs__pack_id__zip_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pack_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pack_case_demo_packs__pack_id__case_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pack_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LandOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_plots_demo_plots_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    plot_case_demo_plots__plot_id__case_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LandOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    status_demo_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    sample_set_info_demo_lands__land_id__sample_sets__scenario__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+                scenario: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sample_set_file_demo_lands__land_id__sample_sets__scenario___name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+                scenario: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    single_sample_file_demo_lands__land_id__samples__kind__png_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+                kind: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    samples_zip_demo_lands__land_id__samples_zip_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                land_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

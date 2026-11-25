@@ -53,7 +53,10 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 8192
     gemini_api_key: SecretStr | None = None
     gemini_model: str | None = None
-    gemini_max_retries: int = 5  # HTTP 429 (free-tier rate limit): back off and retry
+    gemini_max_retries: int = 2  # 429/5xx/timeout: retry twice (4 s, 8 s), then fall back
+    # tried when the main model keeps failing (fallback.py); empty = no second Gemini model
+    gemini_fallback_model: str = ""
+    llm_timeout_s: float = 60.0  # one provider call; a timeout counts as a retryable error
     llm_budget_file: str = "../data/llm/spend.json"  # relative to the working directory
     llm_cache_dir: str = "../data/cache/llm"
 

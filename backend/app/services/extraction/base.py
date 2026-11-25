@@ -31,6 +31,7 @@ class ExtractionResult:
     error: str | None = None  # set when no valid document came back; never both
     meta: ExtractionMeta = field(default_factory=ExtractionMeta)
     handwritten: bool = False
+    extractor: str | None = None  # set by FallbackExtractor: which step produced this result
 
 
 class Extractor(Protocol):

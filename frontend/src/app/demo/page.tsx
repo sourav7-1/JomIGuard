@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/Toast";
 import { startTour } from "@/components/GuidedTour";
 import { bnDigits } from "@/lib/digits";
 import { useLang } from "@/lib/lang";
+import { useSession } from "@/lib/session";
 
 const btn = "inline-flex min-h-11 flex-col justify-center rounded-[var(--radius-control)] px-3 py-1 text-sm font-semibold";
 const primary = `${btn} bg-accent text-white shadow-rest hover:shadow-raised disabled:opacity-60`;
@@ -35,14 +36,19 @@ export default function DemoPage() {
   const toast = useToast();
   const [expected, setExpected] = useState<DemoPack | null>(null);
   const [progress, setProgress] = useState<{ title: string; text: string } | null>(null);
+  // /demo is public; actions that create a case need a login first
+  const signedOut = useSession() === null;
 
   // One click: new case from the pack -> wait for every page to be read -> check -> open at the findings.
   const packCase = async (pack: DemoPack) => {
+    if (signedOut) return router.push("/login?next=/demo");
     setProgress({ title: en ? pack.en : pack.title, text: t("নতুন কেস তৈরি হচ্ছে…", "Creating a new case…") });
     try {
       const land = await api.demoPackCase(pack.id);
       for (let tries = 0; tries < 120; tries++) {
-        const docs = await api.getLandDocuments(land.id);
+        // one failed poll (backend restart, network blip) must not abandon the new case
+        const docs = await api.getLandDocuments(land.id).catch(() => null);
+        if (!docs) { await sleep(3000); continue; }
         const done = docs.filter((d) => d.status === "done" || d.status === "failed").length;
         setProgress({ title: en ? pack.en : pack.title, text: en ? `Reading documents: ${done} / ${docs.length}` : `নথি পড়া হচ্ছে: ${bnNum(done)} / ${bnNum(docs.length)}` });
         if (docs.length && done === docs.length) {
@@ -66,6 +72,7 @@ export default function DemoPage() {
 
   // Satellite: new case with the plot's outline, start a live check, open the satellite panel.
   const plotCase = async (plotId: string, title: string) => {
+    if (signedOut) return router.push("/login?next=/demo");
     setProgress({ title, text: t("প্লটসহ নতুন কেস তৈরি হচ্ছে…", "Creating a new case with the plot…") });
     try {
       const land = await api.demoPlotCase(plotId);
@@ -82,6 +89,7 @@ export default function DemoPage() {
   };
 
   const geojson = async (plotId: string) => {
+    if (signedOut) return router.push("/login?next=/demo");
     try {
       const res = await fetch("/api/demo/plots", { credentials: "include" });
       const plot = (await res.json() as { id: string; geometry: unknown }[]).find((p) => p.id === plotId);
@@ -95,9 +103,9 @@ export default function DemoPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-10 pb-10">
       <header className="hero-glow space-y-3">
-        <p className="text-sm font-semibold text-accent">{t("বিচারকদের জন্য", "For judges")}</p>
-        <h1 className="font-heading text-4xl font-bold text-ink sm:text-5xl">{t("নমুনা ডেটা", "Demo data")}</h1>
+                <h1 className="font-heading text-4xl font-bold text-ink sm:text-5xl">{t("নমুনা ডেটা", "Demo data")}</h1>
         <p className="max-w-2xl text-base leading-7 text-muted">{t("সব নথি কৃত্রিম, “নমুনা / SAMPLE” ছাপ দেওয়া; আসল কারো নাম বা নম্বর নেই। এক ক্লিকে আপনার নিজের নতুন কেস তৈরি হয়, প্রস্তুত নমুনা কেস বদলায় না।", "All documents are synthetic and watermarked. One click makes your own new case; prepared samples never change.")}</p>
+        {signedOut && <p role="status" className="text-sm font-semibold text-ink">{t("কেস তৈরি বা খুলতে আগে প্রবেশ করুন।", "Log in first to create or open a case.")} <Link href="/login?next=/demo" className="text-accent underline underline-offset-4">{t("প্রবেশ করুন", "Log in")}</Link></p>}
       </header>
 
       <section aria-labelledby="packs-title" className="space-y-4">

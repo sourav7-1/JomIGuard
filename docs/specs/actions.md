@@ -30,10 +30,24 @@ are always kept. No action says the land is safe (forbidden-words test).
 
 | id | priority | who | action | when |
 |---|---|---|---|---|
+| `verify_ocr_numbers` | 1 | buyer | `{count} টি কাগজ OCR দিয়ে পড়া — অংশ ও জমির পরিমাণ আসল কাগজের সঙ্গে মিলিয়ে নিন, অথবা “আবার চেষ্টা করুন” দিয়ে AI দিয়ে পড়ান।` | The case has a document read by the Tesseract fallback (`ocr_read`) **and** a non-empty `to_verify` (rules.md, "OCR guard"). `{count}` = number of OCR-read documents, in Bangla digits. |
 | `upload_documents` | 2 | buyer | `এই কাগজটি upload করুন: {documents}।` | Coverage is incomplete and a document role would let a skipped check run. |
 | `review_fields` | 2 | buyer | `এই তথ্যগুলো নিজে মিলিয়ে নিন: {fields}।` | A rule used an extraction field flagged low/medium confidence. |
 | `amin_field_survey` | 3 | amin | `একজন আমিন দিয়ে মাঠে জমি মাপান ও দখল দেখুন।` | **Always.** Possession and the real boundary are not in the documents. |
 | `check_mortgage_and_cases` | 3 | lawyer | `সাব-রেজিস্ট্রি অফিস ও আদালতে বন্ধক বা মামলা আছে কিনা খোঁজ নিন।` | **Always.** Mortgages and court cases are not in these documents. |
+
+### `verify_ocr_numbers`: order and link
+
+- **For:** the buyer, who checks the shares and areas against the paper documents, or re-reads
+  them with AI.
+- **Order:** always the first action. It has priority 1 and sorts ahead of every other priority-1
+  action. On the case page, only the blocking journey notices (failed documents, stale check)
+  come before it in "এখন কী করবেন".
+- **Sources:** the sources of every `to_verify` item.
+- **Link:** the case page shows "ধাপ ২ খুলুন" next to it (`NextActions.tsx`). Step 2 has the
+  documents and "আবার চেষ্টা করুন", which re-reads them.
+- **Never shown** when no document is OCR-read, or when OCR-read documents leave nothing in
+  `to_verify` (no numeric check used them).
 
 Actions that imply a legal step are listed in `docs/legal-notes.md` under "Actions to verify
 with an expert".

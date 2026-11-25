@@ -7,6 +7,7 @@ priority then severity, always-actions included. Texts never call land safe.
 
 from app.schemas.assessment import Action, Assessment
 from app.schemas.land_case import CaseRole, LandCase
+from app.services.normalize import to_bangla_digits
 from app.services.rules import RuleResult, RuleRun, Status
 from app.services.rules.messages import render
 
@@ -48,6 +49,10 @@ FINDING_ACTIONS: dict[str, tuple[str, int, str, str]] = {
     "missing_unit": ("upload_clear_copy", 2, "buyer",
         "{document}-এর পরিষ্কার কপি upload করুন, যাতে জমির একক পড়া যায়।"),
 }  # fmt: skip
+# OCR-read documents with numbers to check by hand (assessment.to_verify): first action
+OCR_ACTION = ("verify_ocr_numbers", 1, "buyer",
+    "{count} টি কাগজ OCR দিয়ে পড়া — অংশ ও জমির পরিমাণ আসল কাগজের সঙ্গে মিলিয়ে নিন, "
+    "অথবা “আবার চেষ্টা করুন” দিয়ে AI দিয়ে পড়ান।")  # fmt: skip
 UPLOAD_ACTION = ("upload_documents", 2, "buyer", "এই কাগজটি upload করুন: {documents}।")
 REVIEW_ACTION = ("review_fields", 2, "buyer", "এই তথ্যগুলো নিজে মিলিয়ে নিন: {fields}।")
 ALWAYS_ACTIONS = (
@@ -82,6 +87,11 @@ def next_actions(case: LandCase, run: RuleRun, assessment: Assessment) -> list[A
     def add(severity: int, action: Action) -> None:
         ranked.append((action.priority, severity, len(ranked), action))
 
+    ocr_docs = [d for d in case.documents if d.ocr_read]
+    if ocr_docs and assessment.to_verify:
+        action = _plain(OCR_ACTION, {"count": to_bangla_digits(str(len(ocr_docs)))})
+        action.sources = [s for r in assessment.to_verify for s in r.sources]
+        add(-1, action)  # severity -1: ahead of every other priority-1 action
     for f in assessment.findings:
         if f.code in FINDING_ACTIONS:
             add(*_from_finding(f))

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, LandOut } from "@/lib/api";
 import { divisionOf, divisions, isListedLand, norm } from "@/lib/bd-locations";
@@ -55,7 +54,7 @@ function FindCase() {
         ...(khatian.trim() && { khatian_no: khatian.trim() }),
       });
       toast("ok", t("নতুন কেস তৈরি হয়েছে। এবার কাগজ যোগ করুন।", "New case created. Now add papers."));
-      router.push(`/upload/${land.id}`);
+      router.push(`/cases/${land.id}#step-2`);
     } catch (e) {
       toast("bad", e instanceof Error ? e.message : t("কেস তৈরি করা যায়নি।", "Could not create the case."));
       setBusy(false);
@@ -74,7 +73,6 @@ function FindCase() {
     && (!dag.trim() || norm(l.dag_no) === norm(dag))
     && (!khatian.trim() || !l.khatian_no || norm(l.khatian_no) === norm(khatian)));
 
-  const newCase = "/upload?" + new URLSearchParams(Object.entries({ district, upazila, mouza, dag, khatian }).filter(([, v]) => v.trim())).toString();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -145,7 +143,7 @@ function FindCase() {
         title={t("নতুন কেস শুরু করুন", "Start a new case")}
         description={t("বেছে নেওয়া ঠিকানা দেখে নিন। কেস তৈরি হলে কাগজ যোগ করার ধাপে যাবেন।", "Check the chosen address. Once the case is created you go to adding papers.")}
         footer={<>
-          <Link href={newCase} className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-bg">{t("ফর্মে বদলান", "Edit in form")}</Link>
+          <button type="button" onClick={() => setCreating(false)} className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-bg">{t("ঠিকানা বদলান", "Change the address")}</button>
           <button type="button" onClick={createCase} disabled={busy || !district || !mouza.trim()} className="min-h-11 rounded-[var(--radius-control)] bg-accent px-4 text-sm font-semibold text-white shadow-rest">{busy ? t("তৈরি হচ্ছে…", "Creating…") : t("কেস তৈরি করুন →", "Create case →")}</button>
         </>}
       >

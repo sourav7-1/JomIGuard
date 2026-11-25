@@ -32,7 +32,7 @@ export default function HelpPage() {
     <div className="mx-auto max-w-4xl space-y-10">
       <header className="space-y-2">
         <p className="flex items-center gap-3 text-sm font-semibold text-accent"><span className="h-px w-8 bg-gold" />{t("সাহায্য", "Help")}</p>
-        <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{t("কীভাবে ব্যবহার করবেন", "How to use it")}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{t("প্রশ্নোত্তর", "Questions and answers")}</h1>
         <p className="text-base leading-7 text-muted">{t("প্রতিটি সেবার ধাপ আর সচরাচর জিজ্ঞাসার উত্তর।", "Steps for every service and answers to common questions.")}</p>
       </header>
 

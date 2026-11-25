@@ -37,7 +37,8 @@ export function GuardianDashboard() {
   const refresh = useCallback(async () => {
     try {
       const rows = await api.getGuardianLands();
-      setLands(rows);
+      // one card per watched land, even if the API repeats a row
+      setLands(rows.filter((row, i) => rows.findIndex((r) => r.id === row.id) === i));
       if (!selected && rows[0]) setSelected(rows[0].id);
     } catch { setMessage(copy.error); }
     finally { setLoaded(true); }
@@ -97,6 +98,9 @@ export function GuardianDashboard() {
 
   const selectedLand = lands.find((land) => land.id === selected);
   const hasDemo = lands.some((land) => land.demo_document_id);
+  const INTEGRITY_EN: Record<string, string> = { "কপি অপরিবর্তিত": "Copy unchanged", "কপি বদলেছে": "Copy changed", "fingerprint নেই": "No fingerprint", "ফাইল পাওয়া যায়নি": "File not found" };
+  const asciiDigits = (v: string) => v.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d)));
+  const shown = (v: string) => (en ? asciiDigits(v) : v);
   const statusLabel = (status: GuardianLandOut["status"]) => status === "bad" ? copy.changed : status === "warn" ? copy.review : copy.unchanged;
   const statusStyle = (status: GuardianLandOut["status"]) => status === "bad" ? "border-bad/40 bg-bad/10 text-bad" : status === "warn" ? "border-warn/40 bg-warn/10 text-warn" : "border-ok/40 bg-ok/10 text-ok";
 
@@ -124,11 +128,11 @@ export function GuardianDashboard() {
           {lands.map((land) => (
             <Card as="article" key={land.id} variant="interactive" className={selected === land.id ? "!border-accent/50 ring-1 ring-accent/20" : ""}>
               <button className="w-full rounded-[var(--radius-control)] text-left" onClick={() => setSelected(land.id)} aria-pressed={selected === land.id}>
-                <div className="flex flex-wrap items-start justify-between gap-2"><h2 className="font-semibold text-ink">{land.label_bn}</h2><Badge className={statusStyle(land.status)}>{statusLabel(land.status)}</Badge></div>
-                <p className="mt-2 text-sm text-muted">{land.district} · {land.upazila} · {land.mouza}</p>
+                <div className="flex flex-wrap items-start justify-between gap-2"><h2 className="font-semibold text-ink">{en ? `Dag ${asciiDigits(land.dag_no)} · ${land.upazila}` : land.label_bn}</h2><Badge className={statusStyle(land.status)}>{statusLabel(land.status)}</Badge></div>
+                <p className="mt-2 text-sm text-muted">{land.district} · {land.upazila} · {shown(land.mouza)}</p>
                 <p className="mt-1 text-xs text-muted">{t("শেষ যাচাই", "Last check")}: {land.last_checked_at ? new Date(land.last_checked_at).toLocaleDateString(en ? "en-GB" : "bn-BD") : t("এখনও হয়নি", "not yet")}</p>
               </button>
-              {land.documents.length > 0 && <div className="mt-3 space-y-1 text-xs text-muted"><p>{copy.documents}</p>{land.documents.map((doc) => <p key={doc.id} className="break-words">{doc.original_filename} · {doc.integrity}</p>)}</div>}
+              {land.documents.length > 0 && <div className="mt-3 space-y-1 text-xs text-muted"><p>{copy.documents}</p>{land.documents.map((doc) => <p key={doc.id} className="break-words">{shown(doc.original_filename)} · {en ? INTEGRITY_EN[doc.integrity] ?? doc.integrity : doc.integrity}</p>)}</div>}
               <label className="mt-3 inline-flex min-h-10 cursor-pointer items-center rounded-md border border-line px-3 py-2 text-sm text-ink hover:bg-surface">
                 {copy.upload}<input className="sr-only" type="file" accept="image/*,.pdf" disabled={busy} onChange={(event) => void upload(event, land)} />
               </label>
@@ -138,7 +142,7 @@ export function GuardianDashboard() {
 
         <section className="min-w-0 space-y-4">
           {selectedLand && <div className="surface-grad rounded-[var(--radius-card)] border border-edge bg-surface p-4 shadow-raised sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-semibold text-ink">{selectedLand.label_bn}</h2><Badge className={statusStyle(selectedLand.status)}>{statusLabel(selectedLand.status)}</Badge></div>
+            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-semibold text-ink">{en ? `Dag ${asciiDigits(selectedLand.dag_no)} · ${selectedLand.upazila}` : selectedLand.label_bn}</h2><Badge className={statusStyle(selectedLand.status)}>{statusLabel(selectedLand.status)}</Badge></div>
             {!active ? <p className="mt-4 text-sm text-muted">{copy.noChanges}</p> : <>
               <div className={`mt-4 rounded-lg border p-4 ${statusStyle(active.severity === "bad" ? "bad" : active.severity === "info" ? "warn" : "warn")}`}>
                 <p className="font-semibold">{active.message_bn}</p>
@@ -152,7 +156,7 @@ export function GuardianDashboard() {
                 <Button size="sm" variant="ghost" onClick={() => void showGuide()}>{copy.guide}</Button>
                 {!active.read_at && <Button size="sm" variant="ghost" onClick={() => void api.readGuardianAlert(active.id).then(() => refresh())}>{t("পড়া হয়েছে", "Mark as read")}</Button>}
               </div>
-              {alerts.length > 1 && <div className="mt-4 flex flex-wrap gap-2">{alerts.map((alert) => <button key={alert.id} onClick={() => setActive(alert)} className="rounded-full border border-line px-3 py-1.5 text-xs text-ink">{new Date(alert.created_at).toLocaleDateString("bn-BD")} · {alert.message_bn}</button>)}</div>}
+              {alerts.length > 1 && <div className="mt-4 flex flex-wrap gap-2">{alerts.map((alert) => <button key={alert.id} onClick={() => setActive(alert)} className="rounded-full border border-line px-3 py-1.5 text-xs text-ink">{new Date(alert.created_at).toLocaleDateString(en ? "en-GB" : "bn-BD")} · {alert.message_bn}</button>)}</div>}
             </>}
           </div>}
         </section>

@@ -21,6 +21,14 @@ Passing checks are not listed.
 | `medium` | no `bad`, at least one `warn` |
 | `low` | no findings |
 
+**OCR-read documents (rules.md, "OCR guard"):** an `area` result that uses a document read by the
+Tesseract fallback is not a finding, and neither is `heir_consent_missing` when its sale vs share
+numbers came from such a document. It is listed under `to_verify` ("যাচাই করা যায়নি / মিলিয়ে নিন")
+and **never raises the risk level**. It does count as a check that could not run, so a case with
+`to_verify` items never gets the clean `low` headline ("কাগজে বড় কোনো অমিল পাওয়া যায়নি"); it
+gets the partial one instead. Every other code keeps its severity, and its message carries an
+OCR note.
+
 A `low` risk only means the documents in the case agree with each other. The app never calls land
 safe (CLAUDE.md): disputes, possession and mortgages do not show up in these documents.
 

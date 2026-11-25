@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { type EnumOption } from "@/lib/api";
 import { useLang, useStrings } from "@/lib/lang";
+import { bnDigits } from "@/lib/digits";
 
 interface FieldRowProps {
   id?: string;
@@ -12,6 +13,7 @@ interface FieldRowProps {
   labelBn: string;
   value: unknown;
   derivedValue?: unknown;
+  derivedUnit?: "shatangsho";
   flags?: string[] | string;
   editable: boolean;
   enumOptions?: EnumOption[] | null;
@@ -29,6 +31,7 @@ export function FieldRow({
   labelBn,
   value,
   derivedValue,
+  derivedUnit,
   flags,
   editable,
   enumOptions,
@@ -59,10 +62,18 @@ export function FieldRow({
     setEditValue(value !== undefined && value !== null ? String(value) : "");
   };
 
+  // enum values ("father") show their Bangla label; numbers drop trailing zeros ("6.0000000" -> ৬)
+  const enumLabel = enumOptions?.find((o) => o.value === value)?.label_bn;
   const displayVal =
     value !== undefined && value !== null && String(value).trim() !== ""
-      ? String(value)
+      ? (!en && enumLabel) || String(value)
       : strings.casePage.emptyValue;
+  const derivedNum = Number(derivedValue);
+  const derivedText = typeof derivedValue === "string" || typeof derivedValue === "number"
+    ? Number.isFinite(derivedNum) && String(derivedValue).trim() !== ""
+      ? (en ? String : bnDigits)(String(Number(derivedNum.toFixed(4)))) + (derivedUnit ? t(" শতাংশ", " decimal") : "")
+      : String(derivedValue)
+    : "";
 
   const flagList = Array.isArray(flags)
     ? flags
@@ -105,9 +116,9 @@ export function FieldRow({
               <span className="text-sm font-medium font-mono text-ink break-words">
                 {displayVal}
               </span>
-              {derivedValue !== undefined && derivedValue !== null && String(derivedValue).trim() !== "" && (
+              {derivedText.trim() !== "" && (
                 <span className="text-xs text-muted font-mono bg-bg/60 px-1.5 py-0.5 rounded border border-line/50 self-start">
-                  {t("হিসাবকৃত", "Calculated")}: {String(derivedValue)}
+                  {t("হিসাবকৃত", "Calculated")}: {derivedText}
                 </span>
               )}
             </div>

@@ -220,6 +220,46 @@ positive.
   and the person who should connect (e.g. the 1985 deed's seller আব্দুল করিম is not an owner of
   SA খতিয়ান ২১৪, owned by নূর মোহাম্মদ).
 
+## OCR guard (`rules/engine.py`)
+
+A document read by the Tesseract fallback, not by an AI model, is marked `ocr_read` on its
+`CaseDocument`. The UI calls it "সীমিত পাঠ (OCR)". Its printed numbers are not trusted. After every
+rule has run, the engine checks each `bad`/`warn` result: if any of its sources is an
+`ocr_read` document, the result is changed as follows. Results from AI-read documents are never
+changed.
+
+**Becomes "to verify" (group `area`, numbers):**
+
+| rule | code it would have raised |
+|---|---|
+| `shares_add_up` | `area_sum_mismatch` |
+| `sold_within_share` | `area_exceeds_share` |
+| `units` | `unsupported_unit`, `missing_unit` |
+| `co_owner_consent` | `heir_consent_missing`, only when its trigger, the sale vs share numbers of `sold_within_share`, came from an OCR-read document |
+
+The result becomes `skipped`, titled **"যাচাই করা যায়নি / মিলিয়ে নিন"**. Its message names the
+OCR-read documents, says their numbers were read by OCR and should be checked against the paper,
+and then repeats what the read numbers would mean. It keeps its sources. `values.ocr_read`,
+`values.ocr_original_code` and `values.ocr_original_title` record what it was. It is listed in
+`RuleRun.to_verify` and `Assessment.to_verify`, not in `findings`.
+
+`co_owner_consent` records the documents its numbers came from in `values.number_source_ids`
+(the sources of `compute_sale_vs_share`). The guard moves it only when one of those is
+OCR-read. When the sale numbers were AI-read and only a name document (e.g. the heir
+certificate) is OCR-read, it stays a finding with the OCR note.
+
+**Stays a finding, with an OCR note:** every other code: identity (`dag_mismatch`,
+`khatian_mismatch`, `mouza_mismatch`, `seller_not_owner`, `seller_father_mismatch`,
+`seller_identity_unverified`, `seller_nid_name_mismatch`), `heir_missing_from_mutation`,
+`heir_consent_missing` when its numbers were AI-read, `chain_break` and `document_missing`. Identifiers and names are
+compared as text and stay mismatches. The message gets " (দ্রষ্টব্য: …-এর লেখা OCR দিয়ে পড়া;
+আসল কাগজের সঙ্গে মিলিয়ে নিন।)" and `values.ocr_read` is set.
+
+**Action:** when a case has an `ocr_read` document and a non-empty `to_verify`, the first action is
+`verify_ocr_numbers` (buyer). Its text is "N টি কাগজ OCR দিয়ে পড়া — অংশ ও জমির পরিমাণ আসল কাগজের
+সঙ্গে মিলিয়ে নিন, অথবা “আবার চেষ্টা করুন” দিয়ে AI দিয়ে পড়ান।", with Bangla digits. The case
+page links it to step 2.
+
 ## Known limits (heirs and chain)
 
 - **Consent:** only co-sellers on the same deed count as consent. A power of attorney

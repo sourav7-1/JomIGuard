@@ -171,10 +171,10 @@ export function UploadFlowClient({ landId }: UploadFlowClientProps) {
         </div>
 
         <Link
-          href="/upload"
+          href={`/cases/${landId}#step-2`}
           className="min-h-[44px] px-3.5 py-2 text-xs font-medium rounded-lg border border-line bg-surface text-ink hover:bg-bg transition-colors flex items-center justify-center self-start sm:self-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          ← {strings.buttons.newCheck}
+          ← {t("কেসে ফিরুন", "Back to the case")}
         </Link>
       </div>
 

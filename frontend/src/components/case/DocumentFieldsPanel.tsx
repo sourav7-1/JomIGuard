@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import { Spinner } from "@/components/ui/Spinner";
 import { useLang, useStrings } from "@/lib/lang";
+import { bnDigits } from "@/lib/digits";
 
 interface DocumentFieldsPanelProps {
   document: CaseViewDocOut;
@@ -218,6 +219,7 @@ export function DocumentFieldsPanel({
         labelBn={meta.label_bn}
         value={val}
         derivedValue={derivedVal}
+        derivedUnit={derivedPath?.endsWith("shatangsho") ? "shatangsho" : undefined}
         flags={flags}
         editable={meta.editable}
         enumOptions={meta.enum_options}
@@ -266,7 +268,7 @@ export function DocumentFieldsPanel({
             >
               <div className="flex items-center justify-between border-b border-line/60 pb-1">
                 <span className="text-xs font-bold font-heading text-ink">
-                  {itemLabelPrefix} {idx + 1}
+                  {itemLabelPrefix} {en ? idx + 1 : bnDigits(idx + 1)}
                 </span>
                 <button
                   type="button"

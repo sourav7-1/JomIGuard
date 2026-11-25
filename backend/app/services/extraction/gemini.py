@@ -3,8 +3,9 @@
 Same behaviour as AnthropicExtractor (LLMExtractor: cache with the provider in the key, budget
 guard, validation, error results instead of exceptions). Structured output through
 response_schema, built from the same extractor-only schema; Gemini's schema subset has no $ref,
-anyOf or const, so to_gemini_schema inlines and simplifies it. On HTTP 429 (free-tier rate limit)
-or 503 the call backs off and retries.
+anyOf or const, so to_gemini_schema inlines and simplifies it. On HTTP 429/500/503/504 or a
+timeout the call backs off (4 s, 8 s; a longer Retry-After wins) and retries; after that
+FallbackExtractor (fallback.py) tries the next extractor.
 
 Gemini's free tier may use inputs to improve Google's models: synthetic documents only
 (CLAUDE.md).
@@ -14,6 +15,7 @@ import json
 import time
 from functools import cache
 
+import httpx
 from google import genai
 from google.genai import errors, types
 
@@ -21,9 +23,9 @@ from app.core.config import settings
 from app.services.extraction.llm import LLMExtractor, ProviderError, extractor_response_schema
 from app.services.extraction.prompts import DOC_NOTES, SYSTEM
 
-RETRY_STATUS = {429, 503}
-BACKOFF_S = 2.0  # first wait; doubles each retry, at most MAX_BACKOFF_S
-MAX_BACKOFF_S = 60.0
+RETRY_STATUS = {429, 500, 503, 504}
+BACKOFF_S = 4.0  # first wait; doubles each retry (default 2 retries: 4 s + 8 s)
+MAX_BACKOFF_S = 30.0  # a longer Retry-After is cut to this; the fallback chain takes over
 KEEP = ("type", "description", "enum", "nullable", "required", "properties", "items")
 # the shared prompt asks for a tool call; Gemini answers with JSON instead
 JSON_NOTE = (
@@ -70,6 +72,21 @@ def to_gemini_schema(schema: dict) -> dict:
     return convert(schema)
 
 
+def retry_after_s(e: errors.APIError) -> float | None:
+    """Seconds the provider asked us to wait: the Retry-After header, or Gemini's RetryInfo
+    retryDelay ("17s") in the error body. None when absent or not a number."""
+    headers = getattr(getattr(e, "response", None), "headers", None)
+    value = headers.get("retry-after") if headers is not None else None
+    if value is None and isinstance(e.details, dict):
+        for d in e.details.get("error", {}).get("details") or []:
+            if isinstance(d, dict) and str(d.get("@type", "")).endswith("RetryInfo"):
+                value = str(d.get("retryDelay", "")).removesuffix("s")
+    try:
+        return float(value) if value is not None else None
+    except ValueError:  # an HTTP date: use our own backoff
+        return None
+
+
 @cache
 def gemini_schema(doc_type: str) -> dict:
     return to_gemini_schema(extractor_response_schema(doc_type))
@@ -86,7 +103,10 @@ class GeminiExtractor(LLMExtractor):
         key = settings.gemini_api_key
         if key is None:
             raise ValueError("GEMINI_API_KEY is not set")
-        return genai.Client(api_key=key.get_secret_value())
+        return genai.Client(
+            api_key=key.get_secret_value(),
+            http_options=types.HttpOptions(timeout=int(settings.llm_timeout_s * 1000)),  # ms
+        )
 
     def _generate(self, contents, config):
         retries = settings.gemini_max_retries
@@ -95,10 +115,13 @@ class GeminiExtractor(LLMExtractor):
                 return self.client.models.generate_content(
                     model=self.model, contents=contents, config=config
                 )
-            except errors.APIError as e:
-                code = getattr(e, "code", None)
-                if code in RETRY_STATUS and attempt < retries:
-                    sleep(min(BACKOFF_S * 2**attempt, MAX_BACKOFF_S))
+            except (errors.APIError, httpx.TimeoutException) as e:
+                code = getattr(e, "code", None) if isinstance(e, errors.APIError) else "timeout"
+                if (code in RETRY_STATUS or code == "timeout") and attempt < retries:
+                    wait = BACKOFF_S * 2**attempt
+                    if isinstance(e, errors.APIError):
+                        wait = max(wait, retry_after_s(e) or 0)
+                    sleep(min(wait, MAX_BACKOFF_S))
                     continue
                 raise ProviderError(f"{type(e).__name__} {code or ''}".strip()) from e
         raise ProviderError("no response")  # not reached

@@ -34,6 +34,7 @@ from app.models.document import DocStep
 from app.schemas.extracted import DeedData, HeirCertData, KhatianData, MutationData
 from app.services.actions import next_actions
 from app.services.extraction.prompts import PROMPT_VERSION
+from app.services.journey import is_listed
 from app.services.normalize import normalize_document
 from app.services.risk import assess
 from app.services.rules import run_rules
@@ -487,9 +488,21 @@ def reset(
             deal_id = seed_escrow(db)
             if deal_id:
                 print(f"escrow 00026: {deal_id} | /escrow/demo-00026")
+        hidden = unlisted_lands(db)
+        if hidden:  # kept, never deleted; the dashboard hides them (services/journey.is_listed)
+            print(f"hidden test cases (kept): {len(hidden)}")
     finally:
         if owned:
             db.close()
+
+
+def unlisted_lands(db: Session) -> list[Land]:
+    """Leftover test cases the dashboard hides. Reset leaves them alone (no delete)."""
+    return [
+        land
+        for land in db.scalars(select(Land)).all()
+        if not is_listed(land.district, land.mouza, land.dag_no, land.upazila)
+    ]
 
 
 def main():

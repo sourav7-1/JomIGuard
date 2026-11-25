@@ -32,6 +32,7 @@ from app.schemas.document import (
 from app.schemas.extracted import DeedData, ExtractedDocument
 from app.schemas.extraction import ExtractionWarningOut
 from app.schemas.identity import IdentityVerificationOut
+from app.schemas.journey import CaseSummary, Journey
 from app.schemas.land_case import CaseRole, LandCase, LandIn, LandOut
 from app.schemas.satellite import (
     PlotGeometry,
@@ -42,9 +43,16 @@ from app.schemas.satellite import (
 from app.services import demo_guard
 from app.services.actions import next_actions
 from app.services.deed_archive import compare_deeds, integrity_status
+from app.services.journey import (
+    build_journey,
+    case_summary,
+    journey_input,
+    latest_assessment_row,
+    safe_headline,
+)
 from app.services.land_case import load_land_case
 from app.services.report import render_report_html, render_report_pdf
-from app.services.risk import assess
+from app.services.risk import DISCLAIMER_BN, assess
 from app.services.rules import run_rules
 from app.services.rules.names import names_match, person_key
 from app.services.satellite import NO_GEOMETRY_BN, latest_check, start_check
@@ -82,6 +90,7 @@ def _doc_status_out(doc: Document, db: Session) -> DocumentStatusOut:
         latest_extraction = LatestExtractionOut(
             id=latest.id,
             status=latest.status,
+            extractor=latest.extractor,
             needs_review_count=count_needs_review(latest.field_flags),
             warnings_count=len(latest.warnings or []),
         )
@@ -142,11 +151,20 @@ def get_land(land_id: uuid.UUID, db: Db, user: CurrentUser):
     return _owned_land(db, land_id, user)
 
 
-@router.get("", response_model=list[LandOut])
+class LandListItemOut(LandOut):
+    summary: CaseSummary
+
+
+@router.get("", response_model=list[LandListItemOut])
 def list_lands(db: Db, user: CurrentUser):
-    return db.scalars(
+    """The user's lands, each with a dashboard summary (risk, journey progress, next action)."""
+    lands = db.scalars(
         select(Land).where(Land.owner_id == user.id).order_by(Land.created_at.desc())
     ).all()
+    return [
+        LandListItemOut(**LandOut.model_validate(land).model_dump(), summary=case_summary(db, land))
+        for land in lands
+    ]
 
 
 @router.get("/{land_id}/documents", response_model=list[DocumentStatusOut])
@@ -212,6 +230,7 @@ class LandCaseViewOut(BaseModel):
     assessment_stale: bool
     latest_assessment: AssessmentOut | None = None
     identity_verifications: list[IdentityVerificationOut] = Field(default_factory=list)
+    journey: Journey
 
 
 class DeedArchiveFieldOut(BaseModel):
@@ -388,7 +407,9 @@ def compare_land_deeds(
 
 
 def _out(row: LandAssessment) -> AssessmentOut:
-    return AssessmentOut(id=row.id, land_id=row.land_id, created_at=row.created_at, **row.result)
+    # stored rows keep the disclaimer of their day; always show today's wording
+    result = {**row.result, "disclaimer_bn": DISCLAIMER_BN}
+    return AssessmentOut(id=row.id, land_id=row.land_id, created_at=row.created_at, **result)
 
 
 @router.get("/{land_id}/case-view", response_model=LandCaseViewOut)
@@ -476,12 +497,16 @@ def get_land_case_view(land_id: uuid.UUID, db: Db, user: CurrentUser):
             )
         )
 
+    journey = build_journey(journey_input(db, land, latest_assess))
+    if assess_out is not None:
+        assess_out.headline_bn = safe_headline(latest_assess.result, journey)
     return LandCaseViewOut(
         land=LandOut.model_validate(land),
         documents=doc_outs,
         assessment_stale=assessment_stale,
         latest_assessment=assess_out,
         identity_verifications=case.identity_records,
+        journey=journey,
     )
 
 
@@ -606,7 +631,11 @@ def assessment_report(land_id: uuid.UUID, assessment_id: uuid.UUID, db: Db, user
     if row is None or row.land_id != land_id:
         raise HTTPException(404, "Assessment not found")
     case = load_land_case(db, land_id)
-    html = render_report_html(case, Assessment(**row.result), datetime.now(UTC))
+    result = {**row.result, "disclaimer_bn": DISCLAIMER_BN}
+    if row.id == getattr(latest_assessment_row(db, land_id), "id", None):
+        journey = build_journey(journey_input(db, land, row))
+        result["headline_bn"] = safe_headline(row.result, journey)
+    html = render_report_html(case, Assessment(**result), datetime.now(UTC))
     return Response(
         render_report_pdf(html),
         media_type="application/pdf",

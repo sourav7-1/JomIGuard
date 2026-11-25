@@ -118,6 +118,12 @@ export function CaseSummaryTable({
                   <td className="py-2.5 px-3">
                     <button type="button" onClick={() => onSelectDoc?.(doc.id)} aria-pressed={isSelected} className="min-h-11 text-left font-medium text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-accent">{doc.label_bn}</button>
                     <span className="text-[11px] text-muted">{doc.original_filename}</span>
+                    {doc.latest_extraction?.extractor === "tesseract_regex" && (
+                      <span title={en ? "Read by OCR after the AI reader failed; some fields may be missing" : "AI দিয়ে পড়া যায়নি, তাই OCR দিয়ে পড়া; কিছু তথ্য বাদ থাকতে পারে"}
+                        className="ml-1 inline-block rounded-full border border-warn/40 bg-warn-bg px-2 py-0.5 text-[11px] font-semibold text-warn">
+                        {en ? "Limited read (OCR)" : "সীমিত পাঠ (OCR)"}
+                      </span>
+                    )}
                   </td>
                   <td className="py-2.5 px-3 text-ink max-w-[200px] truncate" title={owners}>
                     {owners}

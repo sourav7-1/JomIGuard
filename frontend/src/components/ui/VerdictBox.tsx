@@ -5,12 +5,14 @@ import { strings } from "@/lib/strings";
 import { stringsEn } from "@/lib/strings-en";
 import { useLang } from "@/lib/lang";
 
-export type RiskLevel = "low" | "medium" | "high" | "unknown";
+export type RiskLevel = "low" | "medium" | "high" | "unknown" | "incomplete";
 
 export interface VerdictBoxProps extends React.HTMLAttributes<HTMLDivElement> {
   riskLevel: RiskLevel;
   title?: string;
   summary?: string;
+  /** What the paper check could not cover (API journey.incomplete_reasons_bn). */
+  reasons?: string[];
 }
 
 const riskConfig: Record<
@@ -48,6 +50,14 @@ const riskConfig: Record<
     defaultTitle: strings.risk.highTitle,
     defaultSummary: strings.risk.highSummary,
   },
+  incomplete: {
+    border: "border-l-warn",
+    bg: "bg-warn-bg",
+    from: "from-warn-bg",
+    text: "text-warn",
+    defaultTitle: strings.risk.unknownTitle,
+    defaultSummary: strings.risk.unknownSummary,
+  },
   unknown: {
     border: "border-l-line",
     bg: "bg-surface",
@@ -62,14 +72,16 @@ export function VerdictBox({
   riskLevel,
   title,
   summary,
+  reasons = [],
   className = "",
   ...props
 }: VerdictBoxProps) {
   const en = useLang() === "en";
   const config = riskConfig[riskLevel] || riskConfig.unknown;
   const key = (riskLevel in riskConfig ? riskLevel : "unknown") as RiskLevel;
-  const fallbackTitle = en ? stringsEn.risk[`${key}Title` as const] : config.defaultTitle;
-  const fallbackSummary = en ? stringsEn.risk[`${key}Summary` as const] : config.defaultSummary;
+  const textKey = key === "incomplete" ? "unknown" : key;
+  const fallbackTitle = en ? stringsEn.risk[`${textKey}Title` as const] : config.defaultTitle;
+  const fallbackSummary = en ? stringsEn.risk[`${textKey}Summary` as const] : config.defaultSummary;
 
   return (
     <div
@@ -85,6 +97,14 @@ export function VerdictBox({
       <p className="text-sm md:text-base text-ink leading-relaxed">
         {summary || fallbackSummary}
       </p>
+      {reasons.length > 0 && (
+        <div className="mt-3 rounded-[var(--radius-control)] border border-warn/30 bg-surface/70 p-3">
+          <p className="text-sm font-semibold text-ink">{en ? "Could not be checked" : "যা মেলানো যায়নি"}</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm leading-6 text-ink">
+            {reasons.map((r) => <li key={r}>{r}</li>)}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -93,6 +113,7 @@ const badge: Record<RiskLevel, { label: string; en: string; cls: string; icon: s
   high: { label: "উচ্চ ঝুঁকি", en: "High risk", cls: "bg-bad text-surface", icon: "M12 8v5 M12 16.5v.5 M10.3 3.9 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" },
   medium: { label: "মাঝারি ঝুঁকি", en: "Medium risk", cls: "bg-warn text-surface", icon: "M12 8v5 M12 16.5v.5 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z" },
   low: { label: "কম ঝুঁকি", en: "Low risk", cls: "bg-ok text-surface", icon: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z M8.5 12.5l2.5 2.5 4.5-5" },
+  incomplete: { label: "অসম্পূর্ণ যাচাই", en: "Check incomplete", cls: "bg-warn text-surface", icon: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z M12 7v5.5 M12 16v.5" },
   unknown: { label: "তথ্য কম", en: "Not enough data", cls: "bg-muted text-surface", icon: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z M12 11v5 M12 7.5v.5" },
 };
 

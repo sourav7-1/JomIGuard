@@ -266,6 +266,13 @@ export function DocumentProgressCard({
         </div>
       </div>
 
+      {isDone && doc.latest_extraction?.extractor === "tesseract_regex" && (
+        <p role="status" className="rounded-lg border border-warn/30 bg-warn-bg p-3 text-xs text-warn">
+          <b>{en ? "Limited read (OCR)" : "সীমিত পাঠ (OCR)"}:</b>{" "}
+          {en ? "the AI reader was unavailable, so this page was read by OCR. Some fields may be missing; check them on the case page." : "AI দিয়ে পড়া যায়নি, তাই OCR দিয়ে পড়া হয়েছে। কিছু তথ্য বাদ থাকতে পারে; কেসের পাতায় মিলিয়ে নিন।"}
+        </p>
+      )}
+
       {/* Stale Warning & Retry */}
       {doc.is_stale && !isFailed && (
         <div className="rounded-lg bg-warn-bg text-warn border border-warn/30 p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">

@@ -5,15 +5,22 @@ import { usePathname, useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { strings } from "@/lib/strings";
 import { Spinner } from "@/components/ui/Spinner";
+import { useSession } from "@/lib/session";
 
 // Pages anyone can open without signing in.
-const PUBLIC = ["/", "/login", "/offline", "/help", "/docs", "/how-it-works"];
+const PUBLIC = ["/", "/login", "/offline", "/help", "/docs", "/how-it-works", "/demo"];
 const isPublic = (p: string) => PUBLIC.includes(p) || p.startsWith("/verify/");
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [authorizedPath, setAuthorizedPath] = useState("");
+  const user = useSession();
+
+  // Signed-in users opening the public home land on their cases; "/?public=1" keeps the home.
+  useEffect(() => {
+    if (pathname === "/" && user && !new URLSearchParams(window.location.search).has("public")) router.replace("/dashboard");
+  }, [pathname, user, router]);
 
   useEffect(() => {
     if (isPublic(pathname)) return;

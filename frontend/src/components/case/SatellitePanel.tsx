@@ -115,7 +115,9 @@ function SatelliteResults({ check }: { check: SatelliteCheckOut }) {
   );
 }
 
-export function SatellitePanel({ landId, geometry }: { landId: string; geometry: PlotGeometry | null }) {
+/** mapless: the outline is drawn in journey step 1, so step 4 shows only the check.
+ *  onChecked: called when a check finishes, so the page can refresh the journey. */
+export function SatellitePanel({ landId, geometry, mapless = false, onChecked }: { landId: string; geometry: PlotGeometry | null; mapless?: boolean; onChecked?: () => void }) {
   const en = useLang() === "en";
   const t = (b: string, e: string) => (en ? e : b);
   const [shape, setShape] = useState(geometry);
@@ -132,12 +134,13 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
     api.getLatestSatelliteCheck(landId).then((latest) => {
       if (cancelled) return;
       setCheck(latest);
+      if (latest.status !== "pending" && tick > 0) onChecked?.();
       if (latest.status === "pending") timer = window.setTimeout(() => setTick((t) => t + 1), POLL_MS);
     }).catch((e) => {
       if (!cancelled && !(e instanceof ApiError && e.status === 404)) setError(e instanceof Error ? e.message : LOAD_ERROR);
     }).finally(() => { if (!cancelled) setLoaded(true); });
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [landId, tick]);
+  }, [landId, tick, onChecked]);
 
   const start = async () => {
     setStarting(true);
@@ -164,16 +167,16 @@ export function SatellitePanel({ landId, geometry }: { landId: string; geometry:
           {t("মাঠের ছবি", "Field imagery")}
         </p>
         <h2 id="satellite-title" className="scroll-mt-40 font-heading text-xl font-bold text-ink">{t("স্যাটেলাইট যাচাই", "Satellite check")}</h2>
-        <p className="text-sm leading-relaxed text-muted">{t("মানচিত্রে প্লটের সীমানা আঁকুন। ২০১৯ থেকে প্রতি বছরের ফেব্রুয়ারির (শুকনো মৌসুম) স্যাটেলাইট ছবিতে প্লটের আশেপাশে গাছ ও পানি কেমন বদলেছে তা দেখা হবে।", "Draw the plot boundary on the map. February (dry season) satellite images from 2019 onward show how trees and water around the plot changed.")}</p>
+        <p className="text-sm leading-relaxed text-muted">{mapless ? t("ধাপ ১-এ আঁকা সীমানার আশেপাশে ২০১৯ থেকে প্রতি বছরের ফেব্রুয়ারির (শুকনো মৌসুম) স্যাটেলাইট ছবিতে গাছ ও পানি কেমন বদলেছে তা দেখা হবে।", "Using the outline from step 1, February (dry season) satellite images from 2019 onward show how trees and water around the plot changed.") : t("মানচিত্রে প্লটের সীমানা আঁকুন। ২০১৯ থেকে প্রতি বছরের ফেব্রুয়ারির (শুকনো মৌসুম) স্যাটেলাইট ছবিতে প্লটের আশেপাশে গাছ ও পানি কেমন বদলেছে তা দেখা হবে।", "Draw the plot boundary on the map. February (dry season) satellite images from 2019 onward show how trees and water around the plot changed.")}</p>
         <p className="flex items-start gap-2 text-xs leading-relaxed text-muted">
           <span aria-hidden="true" className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-muted text-[10px] font-bold">i</span>
           {t("ছবির প্রতিটি বিন্দু ১০ মিটার, তাই ফলাফল প্লটের চারপাশের প্রায় ২০০ মিটার এলাকার, প্লটের সীমানার ভেতরের নয়।", "Each image pixel is 10 m, so results cover about 200 m around the plot, not only inside its boundary.")}
         </p>
       </div>
-      <div className="-mx-4 sm:mx-0">
+      {!mapless && <div className="-mx-4 sm:mx-0">
         <PlotMap landId={landId} geometry={geometry} onSaved={(g) => { setShape(g); toast("ok", t("সীমানা রাখা হয়েছে।", "Boundary saved.")); }} />
-      </div>
-      {!shape && (
+      </div>}
+      {!shape && !mapless && (
         <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-bg/60 p-4 text-sm leading-relaxed">
           <p className="font-semibold text-ink">{t("এখনো সীমানা আঁকা হয়নি", "No boundary drawn yet")}</p>
           <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-muted">

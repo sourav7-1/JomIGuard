@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  // Old routes folded into the journey (docs/decisions/ux-restructure.md).
+  async redirects() {
+    return [
+      { source: "/cases", destination: "/dashboard", permanent: false },
+      { source: "/upload", has: [{ type: "query", key: "case", value: "(?<id>[0-9a-fA-F-]{36})" }], destination: "/cases/:id#step-2", permanent: false },
+      { source: "/upload", destination: "/find", permanent: false },
+      { source: "/escrow", destination: "/dashboard", permanent: false },
+    ];
+  },
   async rewrites() {
     const backend = process.env.BACKEND_INTERNAL_URL || "http://localhost:8000";
     // FastAPI's docs/schema stay on the backend port only; the public proxy never forwards them

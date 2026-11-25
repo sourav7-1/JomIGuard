@@ -24,6 +24,7 @@ from app.schemas.land_case import (
     LandCase,
     deed_date,
 )
+from app.services.extraction.fallback import TESSERACT
 from app.services.normalize import to_bangla_digits
 
 WARNINGS_BN = {
@@ -130,6 +131,7 @@ def build_land_case(
                 extraction_status=d.extraction_status,
                 field_flags=d.field_flags,
                 handwritten=d.handwritten,
+                ocr_read=d.ocr_read,
             )
         )
     return LandCase(land_id=land_id, documents=case_docs, builder_warnings=warnings)
@@ -165,6 +167,7 @@ def load_land_case(db: Session, land_id: uuid.UUID) -> LandCase:
                 extraction_status=latest.status.value,
                 field_flags=latest.field_flags or {},
                 handwritten=latest.handwritten,
+                ocr_read=latest.extractor == TESSERACT,
             )
         )
     warnings = [_warning("document_not_read", not_read)] if not_read else []

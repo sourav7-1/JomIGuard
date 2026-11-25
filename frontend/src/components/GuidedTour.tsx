@@ -8,27 +8,27 @@ import { bnDigits } from "@/lib/digits";
 
 // Step-by-step judge tour. Spotlight + docked tooltip inside a native <dialog> (focus trap, Esc).
 // Steps on a case page use the case the tour was started for (Bhola by default).
-type Step = { path: string | "case"; sel: string; title: string; en: string; body: string; bodyEn: string };
+type Step = { path: string | "case"; hash?: string; sel: string; title: string; en: string; body: string; bodyEn: string };
 
 const STEPS: Step[] = [
-  { path: "/", sel: '[aria-labelledby="services-title"]', title: "সেবাসমূহ", en: "Services",
-    body: "ছয়টি সেবা: কাগজ যাচাই, মালিকানার ইতিহাস, স্যাটেলাইট যাচাই, বায়না এসক্রো, প্রবাসী গার্ডিয়ান ও বিক্রেতা যাচাই। প্রতিটি কার্ডে “কীভাবে?” চাপলে ধাপগুলো দেখবেন।",
-    bodyEn: "Six services: document check, ownership history, satellite check, bayna escrow, probashi guardian and seller check. Press “How?” on any card to see its steps." },
+  { path: "/", sel: '[data-tour="journey"]', title: "এক জমি, আট ধাপ", en: "One plot, eight steps",
+    body: "কেনার আগে কাগজ ও মাটি যাচাই, কেনার সময় বিক্রেতা যাচাই ও বায়না এসক্রো, কেনার পরে প্রবাসী গার্ডিয়ান। প্রতিটি কেস এই ধাপ ধরে এগোয়।",
+    bodyEn: "Before buying: paper and ground checks. While buying: seller check and bayna escrow. After buying: probashi guardian. Every case follows these steps." },
   { path: "/", sel: '[data-tour="bhola"]', title: "ভোলার নমুনা কেস", en: "The Bhola sample case",
     body: "চর মেঘনার এই প্লটে খতিয়ানে জমি 'নাল', কিন্তু স্যাটেলাইট ছবিতে আশেপাশে পানি বাড়ছে। “পরের ধাপ” চাপলে কেসটি খুলবে।",
     bodyEn: "This Char Meghna plot is listed as 'nal' (cropland) in the khatian, yet satellite images show water rising around it. Press Next to open the case." },
-  { path: "case", sel: '[aria-labelledby="tracker-title"]', title: "যাচাইয়ের অবস্থা", en: "Case tracker",
-    body: "কাগজ জমা থেকে রিপোর্ট পর্যন্ত ৫টি ধাপ: কাগজ জমা, তথ্য পড়া, মিলিয়ে দেখা, স্যাটেলাইট যাচাই, রিপোর্ট। কোনটা শেষ আর কোনটা বাকি, এখানে দেখা যায়।",
-    bodyEn: "Five steps from papers to report: upload, reading, cross-check, satellite check, report. See what is done and what is left." },
-  { path: "case", sel: '[data-tour="findings"]', title: "ঝুঁকির মাত্রা ও “যা মেলেনি”", en: "Risk level and mismatches",
+  { path: "case", sel: '[data-tour="stepper"]', title: "জমির ধাপগুলো", en: "The plot's steps",
+    body: "৮টি ধাপ, তিন ভাগে। কোনটা শেষ (✓), কোনটায় আপনার কাজ (!), কোনটা আগের ধাপের অপেক্ষায় (🔒), এখানে দেখা যায়। একটি ধাপ চাপলে নিচে সেই ধাপ খোলে।",
+    bodyEn: "Eight steps in three phases. See what is done (✓), what needs you (!) and what waits for an earlier step (🔒). Press a step to open it below." },
+  { path: "case", hash: "#step-3", sel: '[data-tour="findings"]', title: "ঝুঁকির মাত্রা ও “যা মেলেনি”", en: "Risk level and mismatches",
     body: "উপরে ঝুঁকির মাত্রা, নিচে প্রতিটি অমিল। অমিলের নিচের উৎস-বোতাম চাপলে নথির যে ঘর থেকে তথ্যটি এসেছে, সেটি চিহ্নিত অবস্থায় খোলে।",
     bodyEn: "Risk level on top, each mismatch below. The source button under a mismatch opens the exact field of the document it came from." },
-  { path: "case", sel: '[aria-labelledby="satellite-title"]', title: "স্যাটেলাইট যাচাই", en: "Satellite check",
+  { path: "case", hash: "#step-4", sel: '[aria-labelledby="satellite-title"]', title: "স্যাটেলাইট যাচাই", en: "Satellite check",
     body: "মানচিত্রে প্লটের সীমানা, প্রতি ফেব্রুয়ারির পানি ও গাছের চার্ট, আর তা থেকে পাওয়া ফল। ফল প্লটের চারপাশের প্রায় ২০০ মিটার এলাকার, প্লটের ভেতরের নয়।",
     bodyEn: "Plot boundary on the map, water and tree charts for every February, and the findings. Results cover about 200 m around the plot, not inside it." },
   { path: "case", sel: '[data-tour="next"]', title: "এখন কী করবেন ও PDF রিপোর্ট", en: "Next steps and PDF report",
-    body: "অমিল থেকে পাওয়া পরের কাজগুলো, সবচেয়ে জরুরিটা আগে। ঝুঁকির কার্ডের নিচে “PDF রিপোর্ট” বোতামে পুরো ফল নামানো যায়।",
-    bodyEn: "Next actions from the mismatches, most urgent first. The “PDF report” button under the risk card downloads the full result." },
+    body: "অমিল থেকে পাওয়া পরের কাজগুলো, সবচেয়ে জরুরিটা আগে; শেষ হলে টিক দিন। ধাপ ৫-এ “PDF রিপোর্ট” বোতামে পুরো ফল নামানো যায়।",
+    bodyEn: "Next actions from the mismatches, most urgent first; tick them when done. The “PDF report” button in step 5 downloads the full result." },
   { path: "/demo", sel: "main h1", title: "নিজে চেষ্টা করুন", en: "Try it yourself",
     body: "নমুনা ডেটা পাতায় নথির প্যাক, এক ক্লিকে নতুন কেস আর স্যাটেলাইট নমুনা প্লট আছে। সব নথি কৃত্রিম; আসল কারো নয়।",
     bodyEn: "The demo data page has document packs, one-click new cases and satellite sample plots. Every document is synthetic; none belongs to a real person." },
@@ -83,6 +83,10 @@ export function GuidedTour() {
   useEffect(() => {
     if (!step || !path) return;
     if (pathname !== path.split("#")[0]) { router.push(path); return; }
+    if (step.hash && window.location.hash !== step.hash) { // open that journey step's panel
+      window.history.pushState(null, "", step.hash);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
     let el: Element | null = null;
     let raf = 0;
     const started = Date.now();

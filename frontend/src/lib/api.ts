@@ -5,6 +5,7 @@ const BASE_URL = "/api";
 
 export type LandIn = components["schemas"]["LandIn"];
 export type LandOut = components["schemas"]["LandOut"];
+export type LandListItemOut = components["schemas"]["LandListItemOut"];
 export type IdentityVerificationOut = {
   id: string; land_id: string | null; party: "buyer" | "seller";
   seller_name_on_deed: string | null; status: "pending" | "verified" | "failed";
@@ -118,7 +119,7 @@ export const api = {
     apiFetch<{ id: string; username: string }>("/auth/login", { method: "POST", body: { username, password } }),
   logout: () => apiFetch<void>("/auth/logout", { method: "POST" }),
   getMe: () => apiFetch<{ id: string; username: string }>("/auth/me", { method: "GET" }),
-  getLands: () => apiFetch<LandOut[]>("/lands", { method: "GET" }),
+  getLands: () => apiFetch<LandListItemOut[]>("/lands", { method: "GET" }),
   // judge demo (backend app/api/demo.py)
   demoPackCase: (packId: string) => apiFetch<LandOut>(`/demo/packs/${packId}/case`, { method: "POST" }),
   demoPlotCase: (plotId: string) => apiFetch<LandOut>(`/demo/plots/${plotId}/case`, { method: "POST" }),

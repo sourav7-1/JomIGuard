@@ -16,12 +16,12 @@ HEADLINES_BN = {
     "medium": "মাঝারি ঝুঁকি: আগে নিচের বিষয়গুলো যাচাই করুন",
     "low": "কাগজে বড় কোনো অমিল পাওয়া যায়নি",
 }
+# low risk but some checks could not run: never the plain "no mismatch" headline
+HEADLINE_LOW_PARTIAL_BN = "যা মেলানো গেছে তাতে বড় অমিল নেই, তবে সব পরীক্ষা চালানো যায়নি"
 DISCLAIMER_BN = (
-    "এই app কখনো জমি নিরাপদ বলে না। কাগজে সব মিললেও মামলা, দখল বা বন্ধক কাগজে ধরা পড়ে না। "
-    "তাই app শুধু বলে কী মিলেছে, কী মেলেনি, আর এরপর কী করতে হবে।"
+    "এই অ্যাপের ফল জমির মালিকানা বা ঝুঁকিহীনতার নিশ্চয়তা নয়। কাগজে সব মিললেও মামলা, দখল বা "
+    "বন্ধক কাগজে ধরা পড়ে না। তাই অ্যাপ শুধু বলে কী মিলেছে, কী মেলেনি, আর এরপর কী করতে হবে।"
 )
-# the only allowed use of a forbidden word: the disclaimer's negation
-ALLOWED_PHRASES = ("জমি নিরাপদ বলে না",)
 
 
 DEED_DISCLAIMER_BN = (
@@ -32,9 +32,7 @@ DEED_DISCLAIMER_BN = (
 
 
 def forbidden_words_in(text: str) -> list[str]:
-    """Forbidden words in user-facing text, ignoring the disclaimer's "… নিরাপদ বলে না"."""
-    for phrase in ALLOWED_PHRASES:
-        text = text.replace(phrase, "")
+    """Forbidden words in user-facing text (the deed disclaimer's "আসল না জাল" is allowed)."""
     text = text.replace(DEED_DISCLAIMER_BN, "")
     words = (*FORBIDDEN_WORDS, "আসল দলিল", "জাল দলিল", "authentic", "genuine", "fake")
     return [w for w in words if w.lower() in text.lower()]
@@ -208,16 +206,22 @@ def condense_passes(run: RuleRun) -> list[RuleResult]:
     return out
 
 
+def _headline(level: str, run: RuleRun) -> str:
+    skipped = any(s in (Status.skipped, Status.error) for s in _rule_outcomes(run).values())
+    return HEADLINE_LOW_PARTIAL_BN if level == "low" and skipped else HEADLINES_BN[level]
+
+
 def assess(case: LandCase, run: RuleRun) -> Assessment:
     level = risk_level(run)
     return Assessment(
         engine_version=run.engine_version,
         risk_level=level,
-        headline_bn=HEADLINES_BN[level],
+        headline_bn=_headline(level, run),
         summary_bn=_summary(run),
         coverage=_coverage(case, run),
         review_needed=_review_needed(case, run),
         findings=run.findings,
+        to_verify=run.to_verify,
         identity_verifications=[
             IdentityVerificationOut.model_validate(row)
             for row in getattr(case, "identity_records", [])

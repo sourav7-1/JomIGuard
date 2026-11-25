@@ -12,21 +12,25 @@ type Guide = { title: string; en: string; points: [string, string][] };
 
 const GUIDES: [(p: string) => boolean, Guide][] = [
   [(p) => p === "/", { title: "মূল পাতা", en: "Home", points: [
-    ["সেবাসমূহ থেকে একটি সেবা বেছে নিন; “কীভাবে?” চাপলে ধাপ দেখাবে।", "Pick a service; “How?” shows its steps."],
-    ["নমুনা কেসগুলো খুলে ফলাফল দেখুন, বিশেষ করে ভোলার স্যাটেলাইট নমুনা।", "Open the sample cases, especially the Bhola satellite case."],
+    ["আট ধাপের পথ: কেনার আগে, কেনার সময়, কেনার পরে।", "The eight-step path: before, while and after buying."],
+    ["ভোলার নমুনা কেস খুলে একটি পুরো ফল দেখুন।", "Open the Bhola sample case to see a full result."],
+  ] }],
+  [(p) => p === "/dashboard", { title: "আমার কেস", en: "My cases", points: [
+    ["প্রতিটি কার্ডে ঝুঁকির মাত্রা, অগ্রগতি আর এরপর কী করবেন।", "Each card shows the risk level, progress and next action."],
+    ["একই জমির পুরনো কেস “আরো N টি” তে থাকে; কিছুই মোছা হয় না।", "Older cases on the same plot sit under “N more”; nothing is deleted."],
   ] }],
   [(p) => /^\/cases\/[^/]+$/.test(p), { title: "কেসের পাতা", en: "Case page", points: [
-    ["উপরে যাচাইয়ের অবস্থা: কাগজ জমা থেকে রিপোর্ট পর্যন্ত ৫টি ধাপ।", "Tracker: five steps from papers to report."],
+    ["উপরের ধাপের সারি: যে ধাপে আপনার কাজ বাকি, সেটি খোলা থাকে।", "The step row on top: the step that needs you is open."],
     ["“যা মেলেনি” অংশে প্রতিটি অমিলের উৎস-বোতাম নথির সেই ঘরটি খোলে।", "Each mismatch opens its source field in the document."],
-    ["স্যাটেলাইট অংশে মানচিত্রে সীমানা এঁকে যাচাই চালানো যায়।", "Draw the plot on the map to run a satellite check."],
+    ["ধাপ ৪-এ স্যাটেলাইট ছবিতে জমির আশেপাশের বদল দেখা যায়।", "Step 4 shows changes around the plot in satellite images."],
     ["“PDF রিপোর্ট” বোতামে পুরো ফল নামানো যায়।", "The “PDF report” button downloads the full result."],
   ] }],
   [(p) => p.includes("/timeline"), { title: "মালিকানার ইতিহাস", en: "Ownership history", points: [
     ["কেসের নথি থেকে কে কবে মালিক হলেন, তার সময়রেখা।", "Who owned the plot and when, built from the case documents."],
   ] }],
-  [(p) => p.startsWith("/find") || p === "/cases" || p.startsWith("/upload"), { title: "কেস খোঁজা ও নতুন কেস", en: "Find or start a case", points: [
+  [(p) => p.startsWith("/find") || p.startsWith("/upload"), { title: "কেস খোঁজা ও নতুন কেস", en: "Find or start a case", points: [
     ["বিভাগ, জেলা, মৌজা ও দাগ দিয়ে আগের কেস খুঁজুন।", "Search by division, district, mouza and dag."],
-    ["না পেলে “নতুন কেস শুরু করুন”, তারপর নথি upload করুন।", "Not found? Start a new case and upload documents."],
+    ["না পেলে নতুন কেস শুরু করুন; কেসের ধাপ ২-এ কাগজ দিন।", "Not found? Start a new case and add papers in its step 2."],
   ] }],
   [(p) => p.startsWith("/escrow"), { title: "বায়না এসক্রো", en: "Bayna escrow", points: [
     ["টাকা থাকে অংশীদার ব্যাংকে; শর্ত মিললে ছাড়, না মিললে ফেরত।", "Money stays with a partner bank; released or refunded by conditions."],

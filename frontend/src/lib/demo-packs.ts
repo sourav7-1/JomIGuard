@@ -40,5 +40,4 @@ export const preparedCases: { href: string; title: string; en: string; line: str
   { href: "/cases/66c09208-d737-59f0-937e-de349f50899a", title: "কেস ০০০০১", en: "Case 00001", line: "উচ্চ ঝুঁকি: বিক্রেতা খতিয়ানের অংশের চেয়ে বেশি জমি বিক্রি করছেন; উৎসের ঘর দেখুন।", lineEn: "High risk: the seller is selling more land than their khatian share; see the source field." },
   { href: "/cases/6c530a00-cc5c-5c6b-a341-ae4491761d4e", title: "কেস ০০০২৬", en: "Case 00026", line: "সাধারণ বিক্রয়; আগের দলিলের প্রমাণ, আর বায়না এসক্রোর নমুনা।", lineEn: "Ordinary sale; earlier-deed evidence and a bayna escrow sample." },
   { href: "/cases/801bc1b6-b43c-5147-9b4f-b0baa3815cd0", title: "কেস ০০০২৯", en: "Case 00029", line: "পারিবারিক (ওয়ারিশ) কেস; মালিকানার ইতিহাসের সময়রেখা।", lineEn: "Family (inheritance) case; ownership history timeline." },
-  { href: "/cases/3122299c-4917-5c21-827d-598119df27ef", title: "ভোলা · চর মেঘনা", en: "Bhola satellite case", line: "কাগজে চাষের জমি, স্যাটেলাইটে আশেপাশে পানি বাড়ছে।", lineEn: "Cropland on paper; satellite shows water rising nearby." },
 ];

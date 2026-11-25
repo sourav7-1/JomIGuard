@@ -54,6 +54,8 @@ class Assessment(BaseModel):
     coverage: Coverage
     review_needed: list[ReviewItem] = Field(default_factory=list)
     findings: list[RuleResult] = Field(default_factory=list)
+    # numeric checks on OCR-read documents: shown as "যাচাই করা যায়নি / মিলিয়ে নিন", no risk
+    to_verify: list[RuleResult] = Field(default_factory=list)
     identity_verifications: list[IdentityVerificationOut] = Field(default_factory=list)
     passed: list[RuleResult] = Field(default_factory=list)
     actions: list[Action] = Field(default_factory=list)

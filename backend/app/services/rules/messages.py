@@ -141,6 +141,13 @@ PASSES_MANY: dict[str, str] = {
 
 SKIPPED_TITLE = "যাচাই করা যায়নি"
 SKIP_MISSING_ROLES = "এই যাচাইয়ের জন্য {missing} দরকার, যা কেসে নেই।"
+# a finding whose numbers come from a Tesseract (OCR) read: not a mismatch, check by hand
+OCR_UNVERIFIED_TITLE = "যাচাই করা যায়নি / মিলিয়ে নিন"
+OCR_NUMBERS_BN = (
+    "{docs}-এর সংখ্যাগুলো OCR দিয়ে পড়া (সীমিত পাঠ), তাই এই হিসাবকে অমিল ধরা হয়নি। "
+    "আসল কাগজের সঙ্গে সংখ্যাগুলো মিলিয়ে নিন। পড়া সংখ্যা ধরলে: {message}"
+)
+OCR_NOTE_BN = " (দ্রষ্টব্য: {docs}-এর লেখা OCR দিয়ে পড়া; আসল কাগজের সঙ্গে মিলিয়ে নিন।)"
 ERROR_TITLE = "যাচাইটি চালানো যায়নি"
 ERROR_MESSAGE = "এই যাচাইটি চালাতে সমস্যা হয়েছে; ফলাফল দেখানো হচ্ছে না।"
 
